@@ -1,0 +1,143 @@
+import Anthropic from '@anthropic-ai/sdk';
+
+const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+// ── Disruption label helpers ──────────────────────────
+const DISRUPTION_LABELS = {
+  cancelled: 'cancellation',
+  delayed: 'delay',
+  denied: 'denied boarding',
+  downgraded: 'downgrade',
+};
+
+const DELAY_LABELS = {
+  under2: 'under 2 hours',
+  '2to3': '2–3 hours',
+  '3to4': '3–4 hours',
+  '4plus': '4+ hours',
+};
+
+const REASON_LABELS = {
+  technical: 'technical/mechanical fault',
+  crew: 'crew/staffing issue',
+  weather: 'severe weather (extraordinary circumstances)',
+  none: 'no reason given by the airline',
+  other: 'other (not specified)',
+};
+
+// ── Build the generation prompt ───────────────────────
+function buildPrompt({ answers, result, details }) {
+  const {
+    flightNumber, flightDate, from, to, disruption, delayLength, reason,
+  } = answers;
+
+  const {
+    verdict, regulation, compensation, verdictNote, distanceKm, depInfo, arrInfo,
+  } = result;
+
+  const {
+    name, email, address, bookingRef, bankDetails,
+  } = details;
+
+  const regFull  = regulation === 'UK261'
+    ? 'UK Statutory Instrument 2019 No. 278 (UK261/2004)'
+    : 'EU Regulation 261/2004 of the European Parliament and of the Council';
+  const compAmt  = compensation?.amount || 'the applicable statutory amount';
+  const distStr  = distanceKm ? `${distanceKm.toLocaleString()} km` : 'unknown distance';
+  const depCity  = depInfo  ? `${depInfo.city}  (${from.toUpperCase()})` : from;
+  const arrCity  = arrInfo  ? `${arrInfo.city} (${to.toUpperCase()})` : to;
+  const disruptionLabel = DISRUPTION_LABELS[disruption] || disruption;
+  const delayLabel      = disruption === 'delayed' ? ` of ${DELAY_LABELS[delayLength] || delayLength}` : '';
+  const reasonLabel     = REASON_LABELS[reason] || reason;
+
+  const today = new Date().toLocaleDateString('en-GB', {
+    day: 'numeric', month: 'long', year: 'numeric',
+  });
+  const deadline = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toLocaleDateString('en-GB', {
+    day: 'numeric', month: 'long', year: 'numeric',
+  });
+
+  return `You are a specialist aviation law letter writer. Write a formal, professional claim letter on behalf of the passenger.
+
+PASSENGER DETAILS:
+- Full name: ${name}
+- Address: ${address}
+- Email: ${email}
+${bookingRef ? `- Booking reference: ${bookingRef}` : ''}
+${bankDetails ? `- Payment details: ${bankDetails}` : ''}
+
+FLIGHT DETAILS:
+- Flight number: ${flightNumber || 'Unknown'}
+- Flight date: ${flightDate || 'Unknown'}
+- Departure: ${depCity}
+- Destination: ${arrCity}
+- Route distance: ${distStr}
+- Disruption type: ${disruptionLabel}${delayLabel}
+- Reason given by airline: ${reasonLabel}
+- Applicable regulation: ${regFull}
+- Compensation tier: ${compAmt} per passenger
+
+ELIGIBILITY VERDICT: ${verdict.toUpperCase()}
+${verdictNote ? `Note: ${verdictNote}` : ''}
+
+LETTER REQUIREMENTS:
+1. Date the letter ${today}
+2. Address it formally to: Customer Relations Department, [Airline Name]
+3. Use the flight number as the subject reference
+4. Open with a clear statement of the claim under ${regulation === 'UK261' ? 'UK261' : 'EU261'}
+5. Cite the specific article numbers: Article 5 (cancellations), Article 6 (delay), Article 7 (compensation), Article 8 (reimbursement/re-routing), Article 9 (care)
+6. State the specific compensation amount: ${compAmt}
+7. Reference the booking reference and flight date
+8. Set a 14-day response deadline: ${deadline}
+9. State that failure to respond will result in escalation to the relevant National Enforcement Body
+10. Close with a formal sign-off
+11. Keep the tone firm but professional — not aggressive
+12. Write the full letter only, no commentary or preamble
+13. Format it as a real business letter with proper spacing between sections
+${bankDetails ? '14. Include a polite request that compensation be paid to the bank details provided' : ''}
+
+Write the complete letter now:`;
+}
+
+// ── Handler ───────────────────────────────────────────
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const { answers, result, details } = req.body;
+
+  if (!answers || !result || !details) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  if (!details.name?.trim() || !details.email?.trim()) {
+    return res.status(400).json({ error: 'Name and email are required' });
+  }
+
+  const prompt = buildPrompt({ answers, result, details });
+
+  try {
+    const message = await client.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2000,
+      messages: [
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+    });
+
+    const letter = message.content[0]?.text || '';
+
+    if (!letter) {
+      throw new Error('Empty response from Claude');
+    }
+
+    return res.status(200).json({ letter });
+  } catch (err) {
+    console.error('[generate-letter] Error:', err.message);
+    return res.status(500).json({ error: 'Letter generation failed. Please try again.' });
+  }
+}
