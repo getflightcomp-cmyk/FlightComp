@@ -6,6 +6,32 @@ import { getAirlineInfo, getNEB } from '../lib/airlines';
    Success page — shown after Stripe payment completes
 ══════════════════════════════════════════════════════ */
 
+// ── Inline segment parser (shared for on-screen display) ──
+function parseInlineSegments(text) {
+  const patterns = [
+    { re: /(?:€|£)\s*\d[\d,.]*|\d[\d,.]*\s*(?:EUR|GBP|euros?|pounds?)/gi, cls: 'lh-amount' },
+    { re: /(?:EU|UK|EC)\s*(?:Regulation\s*)?261(?:\/2004)?/gi,            cls: 'lh-regulation' },
+    { re: /within\s+14\s+days?|14[\s-]days?/gi,                           cls: 'lh-deadline' },
+  ];
+  const hits = [];
+  for (const { re, cls } of patterns) {
+    re.lastIndex = 0; let m;
+    while ((m = re.exec(text)) !== null)
+      hits.push({ start: m.index, end: m.index + m[0].length, cls });
+  }
+  hits.sort((a, b) => a.start - b.start);
+  const clean = []; let cur = 0;
+  for (const h of hits) { if (h.start >= cur) { clean.push(h); cur = h.end; } }
+  const segs = []; cur = 0;
+  for (const h of clean) {
+    if (h.start > cur) segs.push({ text: text.slice(cur, h.start), cls: null });
+    segs.push({ text: text.slice(h.start, h.end), cls: h.cls });
+    cur = h.end;
+  }
+  if (cur < text.length) segs.push({ text: text.slice(cur), cls: null });
+  return segs;
+}
+
 // ── Formatted letter display ──────────────────────────
 function LetterDisplay({ letter }) {
   const paragraphs = letter.split(/\n{2,}/).map(p => p.trim()).filter(Boolean);
@@ -13,9 +39,14 @@ function LetterDisplay({ letter }) {
     <div className="letter-card">
       {paragraphs.map((para, i) => {
         const isSubject = /^re:/i.test(para);
+        const segs = parseInlineSegments(para);
         return (
           <p key={i} className={`letter-para${isSubject ? ' letter-subject' : ''}`}>
-            {para}
+            {segs.map((seg, j) =>
+              seg.cls
+                ? <span key={j} className={seg.cls}>{seg.text}</span>
+                : seg.text
+            )}
           </p>
         );
       })}
@@ -24,80 +55,230 @@ function LetterDisplay({ letter }) {
 }
 
 // ── Professional PDF builder ──────────────────────────
-async function buildPdf({ letter, claimData }) {
+async function buildPdf({ letter, claimData, details, result }) {
   const { jsPDF } = await import('jspdf');
 
-  const marginL  = 25;   // mm
-  const marginR  = 25;
-  const marginT  = 30;
-  const marginB  = 25;
-  const pageW    = 210;
-  const pageH    = 297;
-  const contentW = pageW - marginL - marginR;  // 160mm
-  const bodySize = 11;
-  const lineH    = 6.5;  // mm per line at 11pt
-  const paraGap  = 5;    // extra mm between paragraphs
+  const PAGE_W = 210, PAGE_H = 297;
+  const ML = 25, MR = 25;
+  const CONTENT_W = PAGE_W - ML - MR; // 160mm
+  const BODY_SIZE = 10.5;
+  const LINE_H    = 5.5;  // mm per line at 10.5pt
+  const PARA_GAP  = 4;
+  const FOOTER_RESERVE = 18; // mm reserved at bottom
 
   const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
-  let y = marginT;
   let pageNum = 1;
+  let y = 0;
 
-  // ── helpers ──
-  function addPageNumber() {
-    doc.setFont('times', 'normal');
-    doc.setFontSize(9);
-    doc.setTextColor(140, 140, 140);
-    doc.text(`— ${pageNum} —`, pageW / 2, pageH - 10, { align: 'center' });
+  // ── Colour helpers ──
+  const h2r = h => [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)];
+  const setTC = h => doc.setTextColor(...h2r(h));
+  const setFC = h => doc.setFillColor(...h2r(h));
+  const setDC = h => doc.setDrawColor(...h2r(h));
+
+  // ── Footer ──
+  function drawFooter() {
+    setDC('#E2E8F0'); doc.setLineWidth(0.3);
+    doc.line(ML, PAGE_H - 13, PAGE_W - MR, PAGE_H - 13);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); setTC('#64748B');
+    doc.text('FlightComp — EU261 Claim Service', ML, PAGE_H - 8);
+    doc.text(`Page ${pageNum}`, PAGE_W / 2, PAGE_H - 8, { align: 'center' });
   }
 
-  function checkPage(linesNeeded = 1) {
-    if (y + linesNeeded * lineH > pageH - marginB) {
-      addPageNumber();
+  // ── Page-break guard (call before each rendered line) ──
+  function checkPage() {
+    if (y > PAGE_H - FOOTER_RESERVE - LINE_H) {
+      drawFooter();
       doc.addPage();
       pageNum++;
-      y = marginT;
-      doc.setTextColor(30, 30, 30);
+      y = 20;
     }
   }
 
-  function writeParagraph(text, { bold = false, size = bodySize, gap = paraGap } = {}) {
-    doc.setFont('times', bold ? 'bold' : 'normal');
-    doc.setFontSize(size);
-    doc.setTextColor(30, 30, 30);
+  // ── Build inline segments for PDF body text ──
+  function getPdfSegs(text) {
+    const DARK = h2r('#1E293B');
+    const RED  = h2r('#DC2626');
+    const pats = [
+      { re: /(?:€|£)\s*\d[\d,.]*|\d[\d,.]*\s*(?:EUR|GBP|euros?|pounds?)/gi, bold:true, color:DARK },
+      { re: /(?:EU|UK|EC)\s*(?:Regulation\s*)?261(?:\/2004)?/gi,             bold:true, color:DARK },
+      { re: /within\s+14\s+days?|14[\s-]days?/gi,                            bold:true, color:RED  },
+    ];
+    const hits = [];
+    for (const { re, bold, color } of pats) {
+      re.lastIndex = 0; let m;
+      while ((m = re.exec(text)) !== null)
+        hits.push({ start:m.index, end:m.index+m[0].length, bold, color });
+    }
+    hits.sort((a,b) => a.start-b.start);
+    const clean = []; let cur = 0;
+    for (const h of hits) { if (h.start>=cur) { clean.push(h); cur=h.end; } }
+    const segs = []; cur = 0;
+    for (const h of clean) {
+      if (h.start>cur) segs.push({ text:text.slice(cur,h.start), bold:false, color:DARK });
+      segs.push({ text:text.slice(h.start,h.end), bold:h.bold, color:h.color });
+      cur = h.end;
+    }
+    if (cur<text.length) segs.push({ text:text.slice(cur), bold:false, color:DARK });
+    return segs;
+  }
 
-    const lines = doc.splitTextToSize(text, contentW);
-    checkPage(lines.length);
+  // ── Render body paragraph with inline bold/colour ──
+  function renderPara(para, { lh=LINE_H, gap=PARA_GAP, size=BODY_SIZE, forceBold=false, forceColor=null }={}) {
+    const segs = getPdfSegs(para);
+    // Tokenise preserving whitespace tokens so we can word-wrap
+    const tokens = [];
+    for (const seg of segs) {
+      for (const part of seg.text.split(/(\s+)/)) {
+        if (part) tokens.push({ text:part, bold: forceBold || seg.bold, color: forceColor || seg.color });
+      }
+    }
+    // Build wrapped lines word-by-word
+    const lines = []; let curLine = { toks:[], w:0 };
+    for (const tok of tokens) {
+      doc.setFont('helvetica', tok.bold ? 'bold' : 'normal'); doc.setFontSize(size);
+      const tw = doc.getTextWidth(tok.text);
+      const ws = /^\s+$/.test(tok.text);
+      if (!ws && curLine.w + tw > CONTENT_W && curLine.toks.length > 0) {
+        lines.push(curLine); curLine = { toks:[], w:0 };
+      }
+      curLine.toks.push(tok); curLine.w += tw;
+    }
+    if (curLine.toks.length > 0) lines.push(curLine);
+
     for (const line of lines) {
-      doc.text(line, marginL, y);
-      y += lineH;
+      checkPage();
+      let lx = ML;
+      const start = line.toks.findIndex(t => !/^\s+$/.test(t.text));
+      if (start === -1) { y += lh; continue; }
+      for (let i = start; i < line.toks.length; i++) {
+        const tok = line.toks[i];
+        doc.setFont('helvetica', tok.bold ? 'bold' : 'normal'); doc.setFontSize(size);
+        doc.setTextColor(...tok.color);
+        doc.text(tok.text, lx, y);
+        lx += doc.getTextWidth(tok.text);
+      }
+      y += lh;
     }
     y += gap;
   }
 
-  // ── Parse letter into paragraphs ──
-  const rawParas = letter.split(/\n{2,}/).map(p => p.trim()).filter(Boolean);
+  // ════════════════════════════════════════════════
+  // PAGE 1 — HEADER
+  // ════════════════════════════════════════════════
 
-  for (const para of rawParas) {
-    const isSubject  = /^re:/i.test(para);
-    const isSignoff  = /^yours (faithfully|sincerely|truly)/i.test(para);
-    const isGreeting = /^dear /i.test(para);
+  // Blue banner (full page width)
+  setFC('#3B82F6');
+  doc.rect(0, 0, PAGE_W, 16, 'F');
 
-    if (isSubject) {
-      writeParagraph(para, { bold: true, size: 11, gap: paraGap });
-    } else if (isSignoff) {
-      // Extra space before sign-off
+  // Brand name left-aligned in banner
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(255, 255, 255);
+  doc.text('FlightComp', ML, 10);
+
+  // Date right-aligned in banner
+  const todayStr = new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+  doc.text(todayStr, PAGE_W - MR, 10, { align: 'right' });
+
+  // Branding tagline below banner
+  y = 21;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); setTC('#64748B');
+  doc.text('Generated by FlightComp — EU261 Claim Service', PAGE_W / 2, y, { align: 'center' });
+
+  // Thin divider
+  y += 4;
+  setDC('#E2E8F0'); doc.setLineWidth(0.3);
+  doc.line(ML, y, PAGE_W - MR, y);
+  y += 7;
+
+  // ── Sender block ──
+  const senderName  = details?.name  || '';
+  const senderEmail = details?.email || '';
+
+  if (senderName) {
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(11); setTC('#1E293B');
+    doc.text(senderName, ML, y); y += 5.5;
+  }
+  if (senderEmail) {
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(10); setTC('#475569');
+    doc.text(senderEmail, ML, y); y += 5;
+  }
+  y += 7;
+
+  // ── Recipient block ──
+  const aInfo = getAirlineInfo(claimData?.flightNumber);
+  const airlineName = aInfo?.name || 'The Airline';
+
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(11); setTC('#1E293B');
+  doc.text(airlineName, ML, y); y += 5.5;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(10); setTC('#475569');
+  doc.text('Customer Relations / Claims Department', ML, y);
+  y += 10;
+
+  // ── Subject line ──
+  const rawParas  = letter.split(/\n{2,}/).map(p => p.trim()).filter(Boolean);
+  const subjPara  = rawParas.find(p => /^re:/i.test(p))
+    || `Re: Claim for Compensation — Flight ${claimData?.flightNumber || ''}`;
+  const bodyParas = rawParas.filter(p => !/^re:/i.test(p));
+
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(12); setTC('#1E293B');
+  const subjLines = doc.splitTextToSize(subjPara, CONTENT_W);
+  for (const sl of subjLines) { doc.text(sl, ML, y); y += 6.5; }
+
+  y += 1;
+  setDC('#CBD5E1'); doc.setLineWidth(0.25);
+  doc.line(ML, y, PAGE_W - MR, y);
+  y += 7;
+
+  // ── Flight details box ──
+  const fNum  = claimData?.flightNumber || '';
+  const fDate = claimData?.flightDate   || '';
+  const fDep  = claimData?.departure    || '';
+  const fArr  = claimData?.arrival      || '';
+  const fDisr = claimData?.disruption === 'cancel'
+    ? 'Cancelled flight'
+    : claimData?.delay ? `Delayed ${claimData.delay}+ hours` : 'Flight disruption';
+  const fComp = result?.compensation?.amount || '';
+
+  const boxLines = [
+    [fNum, fDate, (fDep && fArr) ? `${fDep} → ${fArr}` : ''].filter(Boolean).join('   ·   '),
+    [fDisr, fComp ? `Compensation sought: ${fComp}` : ''].filter(Boolean).join('   ·   '),
+  ].filter(Boolean);
+
+  if (boxLines.length > 0) {
+    const BP = 4.5, BLH = 5;
+    const boxH = BP * 2 + boxLines.length * BLH + 1;
+    setFC('#F8FAFC'); setDC('#E2E8F0'); doc.setLineWidth(0.4);
+    if (doc.roundedRect) doc.roundedRect(ML, y, CONTENT_W, boxH, 2, 2, 'FD');
+    else doc.rect(ML, y, CONTENT_W, boxH, 'FD');
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); setTC('#334155');
+    let by = y + BP + 3.5;
+    for (const bl of boxLines) { doc.text(bl, ML + BP, by); by += BLH; }
+    y += boxH + 8;
+  }
+
+  // ── Letter body ──
+  for (const para of bodyParas) {
+    const isSignoff = /^yours (faithfully|sincerely|truly)/i.test(para);
+    if (isSignoff) {
       y += 4;
-      writeParagraph(para, { bold: false, size: bodySize, gap: lineH * 4 }); // 4 lines gap for wet signature space
-    } else if (isGreeting) {
-      writeParagraph(para, { bold: false, size: bodySize, gap: paraGap });
+      renderPara(para, { gap: 0 });
+      y += 28; // space for wet signature
+      if (senderName) {
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5); setTC('#1E293B');
+        checkPage(); doc.text(senderName, ML, y); y += 5.5;
+      }
+      if (senderEmail) {
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(10); setTC('#475569');
+        checkPage(); doc.text(senderEmail, ML, y); y += 5;
+      }
+      y += PARA_GAP;
     } else {
-      writeParagraph(para, { bold: false, size: bodySize, gap: paraGap });
+      renderPara(para);
     }
   }
 
-  // Final page number
-  addPageNumber();
-
+  drawFooter();
   return doc;
 }
 
@@ -148,7 +329,7 @@ export default function Success() {
     if (!letter) return;
     setPdfLoading(true);
     try {
-      const doc = await buildPdf({ letter, claimData });
+      const doc = await buildPdf({ letter, claimData, details, result });
       const flightNum = claimData?.flightNumber?.replace(/\s/g, '') || 'flight';
       const date = claimData?.flightDate || new Date().toISOString().split('T')[0];
       const fileName = `EU261-claim-${flightNum}-${date}.pdf`;
