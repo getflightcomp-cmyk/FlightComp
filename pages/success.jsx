@@ -4,17 +4,106 @@ import { getAirlineInfo, getNEB } from '../lib/airlines';
 
 /* ══════════════════════════════════════════════════════
    Success page — shown after Stripe payment completes
-   Reads claim data from sessionStorage, calls the
-   /api/generate-letter endpoint, then shows:
-     - The generated claim letter (scrollable)
-     - Download as PDF button
-     - Copy to clipboard button
-     - "What to do next" steps with NEB info
 ══════════════════════════════════════════════════════ */
+
+// ── Formatted letter display ──────────────────────────
+function LetterDisplay({ letter }) {
+  const paragraphs = letter.split(/\n{2,}/).map(p => p.trim()).filter(Boolean);
+  return (
+    <div className="letter-card">
+      {paragraphs.map((para, i) => {
+        const isSubject = /^re:/i.test(para);
+        return (
+          <p key={i} className={`letter-para${isSubject ? ' letter-subject' : ''}`}>
+            {para}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Professional PDF builder ──────────────────────────
+async function buildPdf({ letter, claimData }) {
+  const { jsPDF } = await import('jspdf');
+
+  const marginL  = 25;   // mm
+  const marginR  = 25;
+  const marginT  = 30;
+  const marginB  = 25;
+  const pageW    = 210;
+  const pageH    = 297;
+  const contentW = pageW - marginL - marginR;  // 160mm
+  const bodySize = 11;
+  const lineH    = 6.5;  // mm per line at 11pt
+  const paraGap  = 5;    // extra mm between paragraphs
+
+  const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+  let y = marginT;
+  let pageNum = 1;
+
+  // ── helpers ──
+  function addPageNumber() {
+    doc.setFont('times', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(140, 140, 140);
+    doc.text(`— ${pageNum} —`, pageW / 2, pageH - 10, { align: 'center' });
+  }
+
+  function checkPage(linesNeeded = 1) {
+    if (y + linesNeeded * lineH > pageH - marginB) {
+      addPageNumber();
+      doc.addPage();
+      pageNum++;
+      y = marginT;
+      doc.setTextColor(30, 30, 30);
+    }
+  }
+
+  function writeParagraph(text, { bold = false, size = bodySize, gap = paraGap } = {}) {
+    doc.setFont('times', bold ? 'bold' : 'normal');
+    doc.setFontSize(size);
+    doc.setTextColor(30, 30, 30);
+
+    const lines = doc.splitTextToSize(text, contentW);
+    checkPage(lines.length);
+    for (const line of lines) {
+      doc.text(line, marginL, y);
+      y += lineH;
+    }
+    y += gap;
+  }
+
+  // ── Parse letter into paragraphs ──
+  const rawParas = letter.split(/\n{2,}/).map(p => p.trim()).filter(Boolean);
+
+  for (const para of rawParas) {
+    const isSubject  = /^re:/i.test(para);
+    const isSignoff  = /^yours (faithfully|sincerely|truly)/i.test(para);
+    const isGreeting = /^dear /i.test(para);
+
+    if (isSubject) {
+      writeParagraph(para, { bold: true, size: 11, gap: paraGap });
+    } else if (isSignoff) {
+      // Extra space before sign-off
+      y += 4;
+      writeParagraph(para, { bold: false, size: bodySize, gap: lineH * 4 }); // 4 lines gap for wet signature space
+    } else if (isGreeting) {
+      writeParagraph(para, { bold: false, size: bodySize, gap: paraGap });
+    } else {
+      writeParagraph(para, { bold: false, size: bodySize, gap: paraGap });
+    }
+  }
+
+  // Final page number
+  addPageNumber();
+
+  return doc;
+}
 
 export default function Success() {
   const router = useRouter();
-  const [state, setState] = useState('loading'); // loading | ready | error
+  const [state, setState] = useState('loading');
   const [letter, setLetter] = useState('');
   const [claimData, setClaimData] = useState(null);
   const [details, setDetails] = useState(null);
@@ -28,30 +117,18 @@ export default function Success() {
     hasFetched.current = true;
 
     const raw = sessionStorage.getItem('fc_claim');
-    if (!raw) {
-      setState('error');
-      return;
-    }
+    if (!raw) { setState('error'); return; }
 
     let parsed;
-    try {
-      parsed = JSON.parse(raw);
-    } catch {
-      setState('error');
-      return;
-    }
+    try { parsed = JSON.parse(raw); } catch { setState('error'); return; }
 
     const { answers, result: r, details: d } = parsed;
-    if (!answers || !r || !d) {
-      setState('error');
-      return;
-    }
+    if (!answers || !r || !d) { setState('error'); return; }
 
     setClaimData(answers);
     setResult(r);
     setDetails(d);
 
-    // Generate the letter via API
     fetch('/api/generate-letter', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -62,7 +139,6 @@ export default function Success() {
         const json = await res.json();
         setLetter(json.letter);
         setState('ready');
-        // Clear sessionStorage so a refresh doesn't re-generate
         sessionStorage.removeItem('fc_claim');
       })
       .catch(() => setState('error'));
@@ -72,33 +148,32 @@ export default function Success() {
     if (!letter) return;
     setPdfLoading(true);
     try {
-      // Dynamic import so jsPDF is never bundled server-side
-      const { jsPDF } = await import('jspdf');
-      const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
-
-      const margin = 20;
-      const pageW = doc.internal.pageSize.getWidth();
-      const maxW  = pageW - margin * 2;
-
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(11);
-      doc.setTextColor(30, 30, 30);
-
-      const lines = doc.splitTextToSize(letter, maxW);
-      let y = margin;
-
-      for (const line of lines) {
-        if (y > doc.internal.pageSize.getHeight() - margin) {
-          doc.addPage();
-          y = margin;
-        }
-        doc.text(line, margin, y);
-        y += 6;
-      }
-
+      const doc = await buildPdf({ letter, claimData });
       const flightNum = claimData?.flightNumber?.replace(/\s/g, '') || 'flight';
       const date = claimData?.flightDate || new Date().toISOString().split('T')[0];
-      doc.save(`EU261-claim-${flightNum}-${date}.pdf`);
+      const fileName = `EU261-claim-${flightNum}-${date}.pdf`;
+
+      // Mobile Safari doesn't support the `download` attribute on blob URLs —
+      // open in a new tab so the user can use the share/save sheet instead.
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobile) {
+        const blob = doc.output('blob');
+        const url = URL.createObjectURL(blob);
+        const w = window.open(url, '_blank');
+        // Fallback if popup was blocked
+        if (!w) {
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = fileName;
+          a.click();
+        }
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+      } else {
+        doc.save(fileName);
+      }
+    } catch (err) {
+      console.error('[downloadPdf]', err);
+      alert('Could not generate PDF. Try the "Copy text" button instead.');
     } finally {
       setPdfLoading(false);
     }
@@ -111,7 +186,7 @@ export default function Success() {
     });
   }
 
-  // ── Loading ────────────────────────────────────────
+  // ── Loading ──────────────────────────────────────────
   if (state === 'loading') {
     return (
       <div className="loading-screen">
@@ -125,7 +200,7 @@ export default function Success() {
     );
   }
 
-  // ── Error ──────────────────────────────────────────
+  // ── Error ────────────────────────────────────────────
   if (state === 'error') {
     return (
       <div className="error-screen">
@@ -133,15 +208,15 @@ export default function Success() {
         <div className="error-title">Something went wrong</div>
         <div className="error-sub">
           We couldn't load your claim data. If you've already paid,
-          please email <strong>support@flightclaim.app</strong> with your booking reference
-          and we'll send your letter manually.
+          please email <strong>support@flightclaim.app</strong> with your booking
+          reference and we'll send your letter manually.
         </div>
         <button className="btn-retry" onClick={() => router.push('/')}>← Back to start</button>
       </div>
     );
   }
 
-  // ── What to do next steps ──────────────────────────
+  // ── Ready ────────────────────────────────────────────
   const airlineInfo = getAirlineInfo(claimData?.flightNumber);
   const neb = getNEB(result?.depInfo);
   const regulation = result?.regulation || 'EU261';
@@ -152,31 +227,31 @@ export default function Success() {
       title: 'Send the letter to the airline',
       body: airlineInfo
         ? `Email ${airlineInfo.name} at ${airlineInfo.claimsEmail || 'their official claims address'}.`
-        : 'Find the airline\'s official claims email on their website under "customer relations" or "EU261 claims".',
+        : 'Find the airline\'s claims email on their website — search "EU261 claim" or "customer relations".',
       link: airlineInfo?.claimsUrl,
       linkLabel: airlineInfo ? `${airlineInfo.name} claims page ↗` : null,
     },
     {
       title: 'Keep a copy and note today\'s date',
-      body: 'Under ' + regFull + ' airlines must respond within 14 days. Screenshot or save the email confirmation.',
+      body: `Under ${regFull} airlines must respond within 14 days. Screenshot or save your sent email.`,
     },
     {
       title: 'Chase after 14 days',
-      body: 'If no response or a rejection, send a follow-up email referencing your original claim date and demanding a written decision.',
+      body: 'If no response or a rejection, send a follow-up referencing your original claim date and demanding a written decision.',
     },
     {
       title: neb ? `Escalate to the ${neb.name}` : 'Escalate to the National Enforcement Body (NEB)',
       body: neb
-        ? `If the airline refuses or ignores you after 8 weeks, file a complaint with ${neb.name}. This is free and has legal teeth.`
-        : 'File a complaint with the National Enforcement Body in the departure country. This is free and has legal teeth.',
+        ? `If the airline refuses or ignores you after 8 weeks, file a free complaint with ${neb.name}. This has legal weight.`
+        : 'File a free complaint with the National Enforcement Body in the departure country.',
       link: neb?.url,
       linkLabel: neb ? `${neb.name} ↗` : null,
     },
     {
       title: 'Claim via Alternative Dispute Resolution (ADR)',
       body: regulation === 'UK261'
-        ? 'In the UK, if the NEB doesn\'t resolve it, use an approved ADR scheme — most UK airlines participate. This is free to you.'
-        : 'In the EU, many countries have free ADR schemes. Check the European Commission\'s ODR platform if the airline is based in another EU country.',
+        ? 'In the UK, if the NEB doesn\'t resolve it, use a free CAA-approved ADR scheme — most UK airlines participate.'
+        : 'In the EU, many countries have free ADR schemes. Try the European Commission\'s ODR platform.',
       link: regulation === 'UK261'
         ? 'https://www.caa.co.uk/passengers/resolving-travel-problems/delays-and-cancellations/options/alternative-dispute-resolution/'
         : 'https://ec.europa.eu/consumers/odr',
@@ -184,7 +259,6 @@ export default function Success() {
     },
   ];
 
-  // ── Ready ──────────────────────────────────────────
   return (
     <div className="success-screen">
       <div className="success-header">
@@ -197,10 +271,10 @@ export default function Success() {
         </div>
       </div>
 
-      {/* ── Letter preview ── */}
-      <div className="letter-card">{letter}</div>
+      {/* Formatted letter preview */}
+      <LetterDisplay letter={letter} />
 
-      {/* ── Action buttons ── */}
+      {/* Action buttons */}
       <div className="letter-actions">
         <button className="btn-action primary" onClick={downloadPdf} disabled={pdfLoading}>
           {pdfLoading ? '⏳ Generating…' : '⬇️ Download PDF'}
@@ -210,7 +284,7 @@ export default function Success() {
         </button>
       </div>
 
-      {/* ── What to do next ── */}
+      {/* What to do next */}
       <div className="next-steps">
         <div className="next-steps-title">What to do next</div>
         {nextSteps.map((step, i) => (
@@ -220,12 +294,7 @@ export default function Success() {
               <strong>{step.title}</strong>
               {step.body}
               {step.link && step.linkLabel && (
-                <>
-                  {' '}
-                  <a className="step-link" href={step.link} target="_blank" rel="noopener noreferrer">
-                    {step.linkLabel}
-                  </a>
-                </>
+                <>{' '}<a className="step-link" href={step.link} target="_blank" rel="noopener noreferrer">{step.linkLabel}</a></>
               )}
             </div>
           </div>
@@ -235,7 +304,7 @@ export default function Success() {
       <div style={{ marginTop: 24, textAlign: 'center' }}>
         <button
           onClick={() => router.push('/')}
-          style={{ background: 'none', border: 'none', color: 'var(--dim)', fontSize: 13, cursor: 'pointer' }}
+          style={{ background: 'none', border: 'none', color: 'var(--dim)', fontSize: 13, cursor: 'pointer', padding: '10px 16px', minHeight: 48 }}
         >
           ← Check another flight
         </button>

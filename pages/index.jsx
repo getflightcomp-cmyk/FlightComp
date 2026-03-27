@@ -260,15 +260,26 @@ const DISRUPTION_LABELS = {
 
 function ResultsScreen({ result, answers, onGetLetter, onReset }) {
   const [copied, setCopied] = useState(false);
+  const [notifyEmail, setNotifyEmail] = useState('');
+  const [notified, setNotified] = useState(false);
   const { verdict, regulation, compensation, verdictNote, careRights, deskScript, distanceKm } = result;
   const meta = VERDICT_META[verdict];
   const amountDisplay = compensation?.amount || (verdict !== 'unlikely' ? '€250–€600' : null);
+  const showCtAs = verdict === 'likely' || verdict === 'possibly';
 
   function copyScript() {
     navigator.clipboard.writeText(deskScript).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
+  }
+
+  function handleNotify(e) {
+    e.preventDefault();
+    if (!notifyEmail.trim()) return;
+    // Store for now — Sprint 3 will wire to a real list
+    console.info('[FlightClaim] Notify-me signup:', notifyEmail, { verdict, regulation, compensation: compensation?.amount });
+    setNotified(true);
   }
 
   return (
@@ -290,30 +301,56 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
       </div>
 
       <div className="res-body">
-        {(verdict === 'likely' || verdict === 'possibly') && (
-          <div className="cta-pri">
-            <div className="cta-pri-head">
-              <span className="cta-title">Get your claim letter</span>
-              <span className="cta-price">$19</span>
+
+        {/* ── PRIMARY CTA: managed claim (coming soon) ── */}
+        {showCtAs && (
+          <div className="cta-handle">
+            <div className="cta-handle-top">
+              <span className="cta-handle-title">Let us handle your claim</span>
+              <span className="cta-handle-badge">COMING SOON</span>
             </div>
-            <p className="cta-desc">
-              A professional {regulation} claim letter citing the exact regulation,
-              compensation amount, and a 14-day legal deadline. Download as PDF or copy.
+            <p className="cta-handle-desc">
+              We submit the claim, track responses, and follow up until you get paid.
+              No win, no fee — we only charge <strong style={{ color: 'var(--text)' }}>20% of your compensation</strong> if successful.
             </p>
-            <button className="btn-claim" onClick={onGetLetter}>
-              Get My Claim Letter →
-            </button>
+            {notified ? (
+              <div className="notify-success">✓ You're on the list — we'll email you when this launches.</div>
+            ) : (
+              <form className="notify-row" onSubmit={handleNotify}>
+                <input
+                  className="notify-input"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  placeholder="Your email address"
+                  value={notifyEmail}
+                  onChange={e => setNotifyEmail(e.target.value)}
+                  required
+                />
+                <button className="btn-notify" type="submit" disabled={!notifyEmail.trim()}>
+                  Notify Me
+                </button>
+              </form>
+            )}
           </div>
         )}
 
-        <div className="cta-sec">
-          <span className="cta-sec-ico">⚖️</span>
-          <div className="cta-sec-txt">
-            <div className="cta-sec-title">Want us to handle everything?</div>
-            <div className="cta-sec-sub">No win, no fee · 20% on success only</div>
+        {/* ── SECONDARY CTA: DIY letter ($19) ── */}
+        {showCtAs && (
+          <div className="cta-diy">
+            <div className="cta-diy-head">
+              <span className="cta-diy-title">Generate a claim letter yourself</span>
+              <span className="cta-diy-price">$19</span>
+            </div>
+            <p className="cta-diy-desc">
+              A professional {regulation} letter citing the exact regulation and compensation amount.
+              Download as PDF and send it to the airline yourself.
+            </p>
+            <button className="btn-diy" onClick={onGetLetter}>
+              Get My Claim Letter → $19
+            </button>
           </div>
-          <span className="cta-sec-badge">Coming soon</span>
-        </div>
+        )}
 
         <Expander icon="💬" label="What to say at the desk right now">
           <div className="desk-script">
