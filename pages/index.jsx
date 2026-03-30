@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import Head from 'next/head';
 import { assessClaim } from '../lib/eu261';
 
 /* ══════════════════════════════════════════════════════
@@ -610,33 +611,154 @@ export default function Home() {
   // ── Render ────────────────────────────────────────
   if (screen === 'hook') {
     return (
-      <div className="hook">
-        <div className="hook-badge">✈️ EU261 / UK261</div>
-        <h1 className="hook-h1">
-          Was your flight delayed?<br />
-          <em className="hi">You may be owed up to €600.</em>
-        </h1>
-        <p className="hook-sub">
-          Answer 6 questions. Get your eligibility verdict instantly.
-          Then get a professional claim letter for $19.
-        </p>
-        <div className="hook-ctx">
-          <span className="hook-ctx-ico">⚖️</span>
-          <div className="hook-ctx-txt">
-            <strong>EU Regulation 261/2004</strong> (and UK261) entitles passengers to up to
-            €600 / £520 compensation for delays, cancellations, and denied boarding —
-            if the airline is at fault.
-          </div>
+      <>
+        <Head>
+          <title>Flight Compensation Tool — Check if You&apos;re Owed up to €600 | EU261 &amp; UK261</title>
+          <meta name="description" content="Free tool to check if your cancelled or delayed flight qualifies for EU261 or UK261 compensation. Get your eligibility verdict in 60 seconds and download a professional claim letter." />
+          <meta name="keywords" content="EU261 compensation, flight cancelled compensation, flight delay rights, UK261 claim, airline compensation, flight disruption, EU regulation 261/2004, claim letter generator" />
+          <meta property="og:title" content="Your flight was cancelled. Find out what you're owed." />
+          <meta property="og:description" content="Free EU261/UK261 eligibility checker. Get your verdict in 60 seconds." />
+          <meta property="og:type" content="website" />
+          <meta property="og:url" content="https://flight-comp.vercel.app" />
+          <link rel="canonical" href="https://flight-comp.vercel.app" />
+        </Head>
+
+        <div className="lp">
+
+          {/* ── HERO ── */}
+          <section className="lp-hero">
+            <div className="lp-hero-inner">
+              <div className="lp-badge">✈️ EU261 / UK261</div>
+              <h1 className="lp-h1">
+                Your flight was cancelled.<br />
+                Find out what you&apos;re owed in 60 seconds.
+              </h1>
+              <p className="lp-sub">
+                Airlines legally owe you up to €600 under EU law — but they use friction to avoid paying. We cut through it.
+              </p>
+              <button className="btn-hook lp-cta" onClick={() => setScreen('q1')}>
+                Check My Flight →
+              </button>
+              <div className="lp-hero-trust">
+                <span>Free</span>
+                <span className="lp-dot">·</span>
+                <span>No signup</span>
+                <span className="lp-dot">·</span>
+                <span>Instant result</span>
+              </div>
+            </div>
+          </section>
+
+          {/* ── HOW IT WORKS ── */}
+          <section className="lp-section">
+            <div className="lp-section-inner">
+              <h2 className="lp-section-h">How it works</h2>
+              <div className="lp-steps">
+                <div className="lp-step">
+                  <div className="lp-step-top">
+                    <span className="lp-step-num">1</span>
+                    <span className="lp-step-ico">📋</span>
+                  </div>
+                  <div className="lp-step-title">Answer 6 quick questions</div>
+                  <div className="lp-step-body">Flight number, route, disruption type, delay length, and the reason the airline gave.</div>
+                </div>
+                <div className="lp-step">
+                  <div className="lp-step-top">
+                    <span className="lp-step-num">2</span>
+                    <span className="lp-step-ico">🛡️</span>
+                  </div>
+                  <div className="lp-step-title">Get your eligibility verdict instantly</div>
+                  <div className="lp-step-body">We run the EU261/UK261 rules and tell you if you&apos;re likely, possibly, or unlikely eligible — and how much.</div>
+                </div>
+                <div className="lp-step">
+                  <div className="lp-step-top">
+                    <span className="lp-step-num">3</span>
+                    <span className="lp-step-ico">📄</span>
+                  </div>
+                  <div className="lp-step-title">Download your claim letter or let us handle it</div>
+                  <div className="lp-step-body">Get a professional PDF letter for $19, or sign up for our no-win-no-fee managed service (coming soon).</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* ── TRUST SIGNALS ── */}
+          <section className="lp-section lp-trust-section">
+            <div className="lp-section-inner">
+              <h2 className="lp-section-h">Built on EU Regulation 261/2004</h2>
+              <p className="lp-body">
+                EU law requires airlines to compensate passengers up to €600 for cancellations, long delays, and denied boarding on qualifying flights. You don&apos;t need a lawyer — you have a legal right.
+              </p>
+              <div className="lp-comp-grid">
+                <div className="lp-comp-card">
+                  <span className="lp-comp-amt">€250</span>
+                  <span className="lp-comp-lbl">Flights under 1,500 km</span>
+                </div>
+                <div className="lp-comp-card">
+                  <span className="lp-comp-amt">€400</span>
+                  <span className="lp-comp-lbl">Flights 1,500–3,500 km</span>
+                </div>
+                <div className="lp-comp-card lp-comp-card-hi">
+                  <span className="lp-comp-amt">€600</span>
+                  <span className="lp-comp-lbl">Flights over 3,500 km</span>
+                </div>
+              </div>
+              <div className="lp-uk-note">Also covers UK flights under UK261 — £220 / £350 / £520</div>
+            </div>
+          </section>
+
+          {/* ── COMPARISON ── */}
+          <section className="lp-section">
+            <div className="lp-section-inner">
+              <h2 className="lp-section-h">Why not just use AirHelp?</h2>
+              <div className="lp-compare">
+                <div className="lp-compare-card lp-compare-other">
+                  <div className="lp-compare-name">AirHelp</div>
+                  <ul className="lp-compare-list">
+                    <li><span className="lp-x">✕</span>35–50% commission on your payout</li>
+                    <li><span className="lp-x">✕</span>Slow process — months to resolve</li>
+                    <li><span className="lp-x">✕</span>Eligibility check requires signup</li>
+                  </ul>
+                </div>
+                <div className="lp-compare-card lp-compare-us">
+                  <div className="lp-compare-name">FlightComp</div>
+                  <ul className="lp-compare-list">
+                    <li><span className="lp-chk">✓</span>Free eligibility check — instant</li>
+                    <li><span className="lp-chk">✓</span>Flat $19 for your claim letter</li>
+                    <li><span className="lp-chk">✓</span>20% no-win-no-fee <span className="lp-soon">Coming soon</span></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* ── FINAL CTA ── */}
+          <section className="lp-final-cta">
+            <div className="lp-section-inner lp-final-inner">
+              <h2 className="lp-final-h">Check if your flight qualifies</h2>
+              <button className="btn-hook lp-cta" onClick={() => setScreen('q1')}>
+                Check My Flight →
+              </button>
+              <div className="lp-final-sub">Free · Takes 60 seconds · Works for EU and UK flights</div>
+            </div>
+          </section>
+
+          {/* ── FOOTER ── */}
+          <footer className="lp-footer">
+            <div className="lp-footer-inner">
+              <div className="lp-footer-brand">FlightComp — EU261/UK261 Flight Compensation Tool</div>
+              <div className="lp-footer-links">
+                <a href="#">About</a>
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Contact</a>
+              </div>
+              <div className="lp-footer-copy">© 2026 FlightComp</div>
+            </div>
+          </footer>
+
         </div>
-        <button className="btn-hook" onClick={() => setScreen('q1')}>
-          Check My Flight →
-        </button>
-        <div className="hook-trust">
-          <span className="trust-item">🕐 60 seconds</span>
-          <span className="trust-item">🔒 Private</span>
-          <span className="trust-item">✈️ Free check</span>
-        </div>
-      </div>
+      </>
     );
   }
 
