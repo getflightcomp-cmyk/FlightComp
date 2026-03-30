@@ -5,7 +5,13 @@ export default function App({ Component, pageProps }) {
   return (
     <>
       <Head>
-        <script defer data-domain="flight-comp.vercel.app" src="https://plausible.io/js/script.js" />
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-PWSLL9E5K5" />
+        <script dangerouslySetInnerHTML={{__html: `
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-PWSLL9E5K5');
+`}} />
       </Head>
       <Component {...pageProps} />
     </>

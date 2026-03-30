@@ -619,8 +619,8 @@ export default function Home() {
           <meta property="og:title" content="Your flight was cancelled. Find out what you're owed." />
           <meta property="og:description" content="Free EU261/UK261 eligibility checker. Get your verdict in 60 seconds." />
           <meta property="og:type" content="website" />
-          <meta property="og:url" content="https://flight-comp.vercel.app" />
-          <link rel="canonical" href="https://flight-comp.vercel.app" />
+          <meta property="og:url" content="https://getflightcomp.com" />
+          <link rel="canonical" href="https://getflightcomp.com" />
         </Head>
 
         <div className="lp">
