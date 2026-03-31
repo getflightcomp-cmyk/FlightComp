@@ -363,40 +363,6 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
           </div>
         )}
 
-        {/* ── EMAIL CAPTURE ── */}
-        {showCtAs && (
-          <div className="email-capture">
-            <div className="email-capture-head">Want us to track this claim for you?</div>
-            <p className="email-capture-sub">Leave your email and we&apos;ll notify you when our managed claims service launches.</p>
-            {captureStatus === 'done' ? (
-              <div className="email-capture-success">✓ You&apos;re on the list. We&apos;ll be in touch.</div>
-            ) : (
-              <form className="email-capture-row" onSubmit={handleCapture}>
-                <input
-                  className="notify-input"
-                  type="email"
-                  inputMode="email"
-                  autoComplete="email"
-                  placeholder="your@email.com"
-                  value={captureEmail}
-                  onChange={e => setCaptureEmail(e.target.value)}
-                  required
-                />
-                <button
-                  className="btn-notify"
-                  type="submit"
-                  disabled={captureStatus === 'submitting' || !captureEmail.includes('@') || !captureEmail.includes('.')}
-                >
-                  {captureStatus === 'submitting' ? '…' : 'Notify Me'}
-                </button>
-              </form>
-            )}
-            {captureStatus === 'error' && (
-              <p className="email-capture-err">Something went wrong — please try again.</p>
-            )}
-          </div>
-        )}
-
         {/* ── SECONDARY CTA: DIY letter ($19) ── */}
         {showCtAs && (
           <div className="cta-diy">
