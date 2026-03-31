@@ -881,6 +881,157 @@ input, textarea, select { font-family: inherit; }
   .lp-final-cta { padding: 56px 0; }
 }
 
+/* ══════════════════════════════════════════════════════
+   Legal pages (Terms / Privacy)
+══════════════════════════════════════════════════════ */
+
+.legal-pg {
+  min-height: 100dvh;
+  background: var(--bg);
+  padding: 48px 0 80px;
+}
+
+.legal-inner {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.legal-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  margin-bottom: 36px;
+  transition: color .15s;
+}
+.legal-back:hover { color: var(--text); }
+
+.legal-h1 {
+  font-size: clamp(28px, 5vw, 40px);
+  font-weight: 800;
+  letter-spacing: -.8px;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.legal-date {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--dim);
+  letter-spacing: .3px;
+  margin-bottom: 40px;
+}
+
+.legal-section {
+  margin-bottom: 32px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--border);
+}
+.legal-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.legal-section h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 10px;
+  letter-spacing: -.2px;
+}
+
+.legal-section p {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.75;
+  margin-bottom: 10px;
+}
+.legal-section p:last-child { margin-bottom: 0; }
+
+.legal-section em {
+  font-style: italic;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.legal-section strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.legal-section ul {
+  list-style: disc;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 10px 0;
+}
+
+.legal-section li {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.legal-section a {
+  color: var(--blue);
+  text-decoration: none;
+}
+.legal-section a:hover { text-decoration: underline; }
+
+/* ── Email capture card ── */
+.email-capture {
+  background: rgba(59,130,246,.06);
+  border: 1.5px solid rgba(59,130,246,.2);
+  border-radius: var(--rc);
+  padding: 18px 20px;
+}
+
+.email-capture-head {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.email-capture-sub {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.55;
+  margin-bottom: 14px;
+}
+
+.email-capture-row {
+  display: flex;
+  gap: 8px;
+}
+
+.email-capture-success {
+  font-size: 13px;
+  color: var(--green);
+  font-weight: 500;
+}
+
+.email-capture-err {
+  font-size: 12px;
+  color: var(--red);
+  margin-top: 6px;
+}
+
+/* ── Results disclaimer ── */
+.res-disclaimer {
+  border-top: 1px solid #1E293B;
+  padding-top: 16px;
+  font-size: 12px;
+  color: #9CA3AF;
+  line-height: 1.6;
+}
+
 /* ── Mobile overrides (≤ 390px) ── */
 @media (max-width: 390px) {
   .screen, .details-screen { padding-left: 16px; padding-right: 16px; }
@@ -900,8 +1051,8 @@ input, textarea, select { font-family: inherit; }
   .letter-card { padding: 20px 16px; }
   .letter-para { font-size: 13px; }
 
-  /* Notify row: stack vertically if very narrow */
-  .notify-row { flex-direction: column; }
+  /* Notify / email capture rows: stack vertically if very narrow */
+  .notify-row, .email-capture-row { flex-direction: column; }
   .btn-notify { width: 100%; }
 
   /* Option cards */

@@ -263,6 +263,8 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
   const [copied, setCopied] = useState(false);
   const [notifyEmail, setNotifyEmail] = useState('');
   const [notified, setNotified] = useState(false);
+  const [captureEmail, setCaptureEmail] = useState('');
+  const [captureStatus, setCaptureStatus] = useState('idle'); // idle | submitting | done | error
   const { verdict, regulation, compensation, verdictNote, careRights, deskScript, distanceKm } = result;
   const meta = VERDICT_META[verdict];
   const amountDisplay = compensation?.amount || (verdict !== 'unlikely' ? '€250–€600' : null);
@@ -281,6 +283,31 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
     // Store for now — Sprint 3 will wire to a real list
     console.info('[FlightClaim] Notify-me signup:', notifyEmail, { verdict, regulation, compensation: compensation?.amount });
     setNotified(true);
+  }
+
+  async function handleCapture(e) {
+    e.preventDefault();
+    const email = captureEmail.trim();
+    if (!email.includes('@') || !email.includes('.')) return;
+    setCaptureStatus('submitting');
+    try {
+      const res = await fetch('/api/email-capture', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          airline:            answers.flightNumber || '',
+          route:              `${answers.from} → ${answers.to}`,
+          compensationAmount: compensation?.amount || '',
+          verdict,
+          timestamp:          new Date().toISOString(),
+        }),
+      });
+      if (!res.ok) throw new Error('server error');
+      setCaptureStatus('done');
+    } catch {
+      setCaptureStatus('error');
+    }
   }
 
   return (
@@ -332,6 +359,40 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
                   Notify Me
                 </button>
               </form>
+            )}
+          </div>
+        )}
+
+        {/* ── EMAIL CAPTURE ── */}
+        {showCtAs && (
+          <div className="email-capture">
+            <div className="email-capture-head">Want us to track this claim for you?</div>
+            <p className="email-capture-sub">Leave your email and we&apos;ll notify you when our managed claims service launches.</p>
+            {captureStatus === 'done' ? (
+              <div className="email-capture-success">✓ You&apos;re on the list. We&apos;ll be in touch.</div>
+            ) : (
+              <form className="email-capture-row" onSubmit={handleCapture}>
+                <input
+                  className="notify-input"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  placeholder="your@email.com"
+                  value={captureEmail}
+                  onChange={e => setCaptureEmail(e.target.value)}
+                  required
+                />
+                <button
+                  className="btn-notify"
+                  type="submit"
+                  disabled={captureStatus === 'submitting' || !captureEmail.includes('@') || !captureEmail.includes('.')}
+                >
+                  {captureStatus === 'submitting' ? '…' : 'Notify Me'}
+                </button>
+              </form>
+            )}
+            {captureStatus === 'error' && (
+              <p className="email-capture-err">Something went wrong — please try again.</p>
             )}
           </div>
         )}
@@ -395,6 +456,10 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
               <div className="sum-value">{value}</div>
             </div>
           ))}
+        </div>
+
+        <div className="res-disclaimer">
+          Disclaimer: FlightComp is not a law firm and does not provide legal advice. We provide information about your rights under EU261/UK261 and tools to help you pursue your claim. For legal advice, consult a qualified attorney.
         </div>
 
         <div className="reset-link">
@@ -749,9 +814,9 @@ export default function Home() {
               <div className="lp-footer-brand">FlightComp — EU261/UK261 Flight Compensation Tool</div>
               <div className="lp-footer-links">
                 <a href="#">About</a>
-                <a href="#">Privacy Policy</a>
-                <a href="#">Terms of Service</a>
-                <a href="#">Contact</a>
+                <a href="/privacy">Privacy Policy</a>
+                <a href="/terms">Terms of Service</a>
+                <a href="mailto:support@getflightcomp.com">Contact</a>
               </div>
               <div className="lp-footer-copy">© 2026 FlightComp</div>
             </div>
