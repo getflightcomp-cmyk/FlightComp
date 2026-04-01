@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import Head from 'next/head';
-import { assessClaim, assessClaimAPPR, detectRegulation } from '../lib/eu261';
+import { assessClaim, assessClaimAPPR, assessClaimSHY, detectRegulation } from '../lib/eu261';
 
 /* ══════════════════════════════════════════════════════
    Screen components — inline for zero-import overhead
@@ -232,6 +232,115 @@ function Q6Reason({ value, onChange, onBack }) {
   );
 }
 
+// ── Q5 SHY: Delay length ─────────────────────────────
+function Q5SHYDelay({ value, onChange, onBack }) {
+  const opts = [
+    { value: 'under2', title: 'Under 2 hours' },
+    { value: '2to3',   title: '2 – 3 hours' },
+    { value: '3to4',   title: '3 – 4 hours' },
+    { value: '4plus',  title: '5+ hours' },
+  ];
+  return (
+    <div className="screen">
+      <ProgressBar step={5} total={6} onBack={onBack} />
+      <div className="q-body">
+        <div className="q-label">Question 5 of 6</div>
+        <h2 className="q-head">How long was the delay at arrival?</h2>
+        <div className="opts">
+          {opts.map(o => (
+            <button
+              key={o.value}
+              className={`opt${value === o.value ? ' sel' : ''}`}
+              onClick={() => onChange(o.value)}
+            >
+              <span className="opt-txt">
+                <span className="opt-title">{o.title}</span>
+              </span>
+              <span className="opt-check">{value === o.value ? '✓' : ''}</span>
+            </button>
+          ))}
+        </div>
+        <p className="q-helper">
+          Note: under Turkey SHY, <strong>delays do not qualify for financial compensation</strong> — only care rights (meals, accommodation).
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ── Q SHY Reason ──────────────────────────────────────
+function QSHYReason({ value, onChange, onBack, step, total }) {
+  const opts = [
+    { value: 'airline',      icon: '🔧', title: 'Airline\'s fault',    sub: 'Technical issue, crew shortage, overbooking, operational problem' },
+    { value: 'forcemajeure', icon: '🌩️', title: 'Force majeure',       sub: 'Severe weather, political instability, natural disaster, airport strike, security risk' },
+    { value: 'unknown',      icon: '❓', title: 'No reason given',      sub: 'Airline didn\'t explain' },
+  ];
+  return (
+    <div className="screen">
+      <ProgressBar step={step} total={total} onBack={onBack} />
+      <div className="q-body">
+        <div className="q-label">Question {step} of {total}</div>
+        <h2 className="q-head">What caused the disruption?</h2>
+        <div className="opts">
+          {opts.map(o => (
+            <button
+              key={o.value}
+              className={`opt${value === o.value ? ' sel' : ''}`}
+              onClick={() => onChange(o.value)}
+            >
+              <span className="opt-icon">{o.icon}</span>
+              <span className="opt-txt">
+                <span className="opt-title">{o.title}</span>
+                <span className="opt-sub">{o.sub}</span>
+              </span>
+              <span className="opt-check">{value === o.value ? '✓' : ''}</span>
+            </button>
+          ))}
+        </div>
+        <p className="q-helper">
+          Technical/mechanical faults and crew shortages are <strong>not</strong> force majeure under SHY — they are the airline&apos;s responsibility.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ── Q SHY Notified (cancellations) ───────────────────
+function QSHYNotified({ value, onChange, onBack, step, total }) {
+  const opts = [
+    { value: 'yes', icon: '✓', title: 'Yes, 14+ days in advance', sub: 'I received notice at least 14 days before departure' },
+    { value: 'no',  icon: '✕', title: 'No — less than 14 days',   sub: 'I was notified fewer than 14 days before, or at the airport' },
+  ];
+  return (
+    <div className="screen">
+      <ProgressBar step={step} total={total} onBack={onBack} />
+      <div className="q-body">
+        <div className="q-label">Question {step} of {total}</div>
+        <h2 className="q-head">Were you notified of the cancellation in advance?</h2>
+        <div className="opts">
+          {opts.map(o => (
+            <button
+              key={o.value}
+              className={`opt${value === o.value ? ' sel' : ''}`}
+              onClick={() => onChange(o.value)}
+            >
+              <span className="opt-icon">{o.icon}</span>
+              <span className="opt-txt">
+                <span className="opt-title">{o.title}</span>
+                <span className="opt-sub">{o.sub}</span>
+              </span>
+              <span className="opt-check">{value === o.value ? '✓' : ''}</span>
+            </button>
+          ))}
+        </div>
+        <p className="q-helper">
+          SHY requires airlines to compensate for cancellations only when notice is given <strong>less than 14 days</strong> before departure.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 // ── Q5 APPR: Delay tier ───────────────────────────────
 function Q5APPR({ value, onChange, onBack }) {
   const opts = [
@@ -373,10 +482,12 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
   const [notified, setNotified] = useState(false);
   const [captureEmail, setCaptureEmail] = useState('');
   const [captureStatus, setCaptureStatus] = useState('idle'); // idle | submitting | done | error
-  const { verdict, regulation, compensation, verdictNote, careRights, deskScript, distanceKm } = result;
+  const { verdict, regulation, compensation, verdictNote, careRights, deskScript, distanceKm, shyMeta, alsoCoveredByEU261 } = result;
   const meta = VERDICT_META[verdict];
   const amountDisplay = compensation?.amount || (verdict !== 'unlikely' ? '€250–€600' : null);
-  const showCtAs = verdict === 'likely' || verdict === 'possibly';
+  const isSHYDelay = regulation === 'SHY' && answers.disruption === 'delayed';
+  const showPrimaryCTA = verdict === 'likely' || verdict === 'possibly' || isSHYDelay;
+  const showSecondaryCTA = (verdict === 'likely' || verdict === 'possibly') && !isSHYDelay;
 
   function copyScript() {
     navigator.clipboard.writeText(deskScript).then(() => {
@@ -426,7 +537,7 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
         {amountDisplay ? (
           <>
             <div className="vamount">{amountDisplay}</div>
-            <div className="vreg">under {regulation === 'UK261' ? 'UK261/2004' : regulation === 'APPR' ? 'Canada APPR (SOR/2019-150)' : 'EU Regulation 261/2004'}</div>
+            <div className="vreg">under {regulation === 'UK261' ? 'UK261/2004' : regulation === 'APPR' ? 'Canada APPR (SOR/2019-150)' : regulation === 'SHY' ? 'Turkey SHY (Sivil Havacılık Yönetmeliği)' : 'EU Regulation 261/2004'}</div>
           </>
         ) : (
           <div className="vreg" style={{ fontSize: 14, marginTop: 8, lineHeight: 1.5 }}>
@@ -434,12 +545,18 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
           </div>
         )}
         {verdictNote && <p className="vnote">{verdictNote}</p>}
+        {shyMeta && (
+          <div className="vnote" style={{ marginTop: 8, fontSize: 12, opacity: 0.8 }}>
+            <strong>Deadline:</strong> {shyMeta.deadline}<br />
+            <strong>Escalation:</strong> {shyMeta.escalation}
+          </div>
+        )}
       </div>
 
       <div className="res-body">
 
         {/* ── PRIMARY CTA: managed claim (coming soon) ── */}
-        {showCtAs && (
+        {showPrimaryCTA && (
           <div className="cta-handle">
             <div className="cta-handle-top">
               <span className="cta-handle-title">Let us handle your claim</span>
@@ -472,7 +589,7 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
         )}
 
         {/* ── SECONDARY CTA: DIY letter ($19) ── */}
-        {showCtAs && (
+        {showSecondaryCTA && (
           <div className="cta-diy">
             <div className="cta-diy-head">
               <span className="cta-diy-title">Generate a claim letter yourself</span>
@@ -664,6 +781,9 @@ const INITIAL_ANSWERS = {
   apprDelayTier: '',
   airlineSize: '',
   apprReason: '',
+  // SHY-specific
+  shyReason: '',
+  shyNotified14: '',
   detectedRegulation: '',
 };
 
@@ -723,10 +843,14 @@ export default function Home() {
     setAnswers(prev => {
       const reg = detectRegulation(prev.from, prev.to);
       const updated = { ...prev, detectedRegulation: reg };
-      const nextScreen = reg === 'APPR'
-        ? (prev.disruption === 'delayed' ? 'q5_appr' : 'q_airline_size')
-        : (prev.disruption === 'delayed' ? 'q5' : 'q6');
-      // Schedule screen change after state update
+      let nextScreen;
+      if (reg === 'APPR') {
+        nextScreen = prev.disruption === 'delayed' ? 'q5_appr' : 'q_airline_size';
+      } else if (reg === 'SHY') {
+        nextScreen = prev.disruption === 'delayed' ? 'q5_shy' : 'q_shy_reason';
+      } else {
+        nextScreen = prev.disruption === 'delayed' ? 'q5' : 'q6';
+      }
       setTimeout(() => setScreen(nextScreen), 0);
       return updated;
     });
@@ -749,11 +873,36 @@ export default function Home() {
     setScreen('results');
   }
 
+  // ── SHY handlers ───────────────────────────────────
+  function handleQ5SHY(val) {
+    update('delayLength', val);
+    setScreen('q_shy_reason');
+  }
+
+  function handleQSHYReason(val) {
+    const updated = { ...answers, shyReason: val };
+    setAnswers(a => ({ ...a, shyReason: val }));
+    if (answers.disruption === 'cancelled') {
+      setScreen('q_shy_notified');
+    } else {
+      setResult(assessClaimSHY(updated));
+      setScreen('results');
+    }
+  }
+
+  function handleQSHYNotified(val) {
+    const r = assessClaimSHY({ ...answers, shyNotified14: val });
+    update('shyNotified14', val);
+    setResult(r);
+    setScreen('results');
+  }
+
   function goToResults() {
     if (!result) {
-      const r = answers.detectedRegulation === 'APPR'
-        ? assessClaimAPPR(answers)
-        : assessClaim(answers);
+      let r;
+      if (answers.detectedRegulation === 'APPR') r = assessClaimAPPR(answers);
+      else if (answers.detectedRegulation === 'SHY') r = assessClaimSHY(answers);
+      else r = assessClaim(answers);
       setResult(r);
     }
     setScreen('results');
@@ -804,13 +953,13 @@ export default function Home() {
           {/* ── HERO ── */}
           <section className="lp-hero">
             <div className="lp-hero-inner">
-              <div className="lp-badge">✈️ EU261 / UK261 / Canada APPR</div>
+              <div className="lp-badge">✈️ EU261 / UK261 / Canada APPR / Turkey SHY</div>
               <h1 className="lp-h1">
                 Your flight was cancelled.<br />
                 Find out what you&apos;re owed in 60 seconds.
               </h1>
               <p className="lp-sub">
-                Airlines legally owe you up to €600 (EU/UK) or CA$1,000 (Canada) — but they use friction to avoid paying. We cut through it.
+                Airlines legally owe you up to €600 (EU/UK), CA$1,000 (Canada), or €600 (Turkey) — but they use friction to avoid paying. We cut through it.
               </p>
               <button className="btn-hook lp-cta" onClick={() => setScreen('q1')}>
                 Check My Flight →
@@ -879,7 +1028,7 @@ export default function Home() {
                   <span className="lp-comp-lbl">Flights over 3,500 km</span>
                 </div>
               </div>
-              <div className="lp-uk-note">Also covers UK flights (UK261 — £220/£350/£520) and Canadian flights (APPR — CA$400/CA$700/CA$1,000)</div>
+              <div className="lp-uk-note">Also covers UK flights (UK261 — £220/£350/£520), Canadian flights (APPR — CA$400/CA$700/CA$1,000), and Turkish flights (SHY — €100 domestic / €250–€600 international for cancellations &amp; denied boarding; delays receive care only).</div>
             </div>
           </section>
 
@@ -915,7 +1064,7 @@ export default function Home() {
               <button className="btn-hook lp-cta" onClick={() => setScreen('q1')}>
                 Check My Flight →
               </button>
-              <div className="lp-final-sub">Free · Takes 60 seconds · Works for EU, UK, and Canadian flights</div>
+              <div className="lp-final-sub">Free · Takes 60 seconds · Covers EU, UK, Canadian &amp; Turkish flights</div>
             </div>
           </section>
 
@@ -1035,6 +1184,44 @@ export default function Home() {
         onBack={() => setScreen('q_airline_size')}
         step={step}
         total={total}
+      />
+    );
+  }
+
+  // ── SHY screens ──────────────────────────────────
+  if (screen === 'q5_shy') {
+    return (
+      <Q5SHYDelay
+        value={answers.delayLength}
+        onChange={handleQ5SHY}
+        onBack={() => setScreen('q4')}
+      />
+    );
+  }
+
+  if (screen === 'q_shy_reason') {
+    const isDelayed = answers.disruption === 'delayed';
+    const step = isDelayed ? 6 : 5;
+    const total = answers.disruption === 'cancelled' ? (isDelayed ? 7 : 6) : (isDelayed ? 6 : 5);
+    return (
+      <QSHYReason
+        value={answers.shyReason}
+        onChange={handleQSHYReason}
+        onBack={() => setScreen(isDelayed ? 'q5_shy' : 'q4')}
+        step={step}
+        total={total}
+      />
+    );
+  }
+
+  if (screen === 'q_shy_notified') {
+    return (
+      <QSHYNotified
+        value={answers.shyNotified14}
+        onChange={handleQSHYNotified}
+        onBack={() => setScreen('q_shy_reason')}
+        step={6}
+        total={6}
       />
     );
   }

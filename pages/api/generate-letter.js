@@ -45,6 +45,84 @@ const AIRLINE_SIZE_LABELS = {
   unknown: 'carrier (size unconfirmed)',
 };
 
+const SHY_REASON_LABELS = {
+  airline:      'airline-controlled reason (technical issue, crew shortage, overbooking, or operational problem)',
+  forcemajeure: 'force majeure (severe weather, political instability, natural disaster, airport strike, security risk)',
+  unknown:      'no reason given by the airline',
+};
+
+// ── SHY (Turkey) prompt ───────────────────────────────
+function buildSHYPrompt({ answers, result, details }) {
+  const {
+    flightNumber, flightDate, from, to, disruption, delayLength, shyReason, shyNotified14,
+  } = answers;
+
+  const {
+    verdict, compensation, verdictNote, distanceKm, depInfo, arrInfo, isDomestic,
+  } = result;
+
+  const { name, email, address, bookingRef, bankDetails } = details;
+
+  const compAmt    = compensation?.amount || 'the applicable statutory amount';
+  const distStr    = distanceKm ? `${distanceKm.toLocaleString()} km` : 'unknown distance';
+  const depCity    = depInfo ? `${depInfo.city} (${from.toUpperCase()})` : from;
+  const arrCity    = arrInfo ? `${arrInfo.city} (${to.toUpperCase()})` : to;
+  const disruptionLabel = DISRUPTION_LABELS[disruption] || disruption;
+  const delayLabel = disruption === 'delayed' ? ` of ${DELAY_LABELS[delayLength] || delayLength}` : '';
+  const reasonLabel = SHY_REASON_LABELS[shyReason] || shyReason;
+  const routeType  = isDomestic ? 'domestic (Turkey internal)' : 'international';
+
+  const today = new Date().toLocaleDateString('en-GB', {
+    day: 'numeric', month: 'long', year: 'numeric',
+  });
+  const deadline = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-GB', {
+    day: 'numeric', month: 'long', year: 'numeric',
+  });
+
+  return `You are a specialist aviation law letter writer familiar with Turkish passenger rights. Write a formal, professional claim letter on behalf of the passenger under Turkey's SHY Passenger Regulation (Sivil Havacılık Yönetmeliği), established under Turkish Civil Aviation Law No. 2920, Article 143.
+
+PASSENGER DETAILS:
+- Full name: ${name}
+- Address: ${address}
+- Email: ${email}
+${bookingRef ? `- Booking reference: ${bookingRef}` : ''}
+${bankDetails ? `- Payment details: ${bankDetails}` : ''}
+
+FLIGHT DETAILS:
+- Flight number: ${flightNumber || 'Unknown'}
+- Flight date: ${flightDate || 'Unknown'}
+- Departure: ${depCity}
+- Destination: ${arrCity}
+- Route distance: ${distStr}
+- Route type: ${routeType}
+- Disruption type: ${disruptionLabel}${delayLabel}
+- Reason given by airline: ${reasonLabel}
+${shyNotified14 === 'yes' ? '- Passenger was notified 14+ days in advance (noted for context)' : ''}
+- Applicable regulation: SHY Passenger Regulation (Sivil Havacılık Yönetmeliği), Turkish Civil Aviation Law No. 2920, Article 143
+- Compensation amount: ${compAmt}
+
+ELIGIBILITY VERDICT: ${verdict.toUpperCase()}
+${verdictNote ? `Note: ${verdictNote}` : ''}
+
+LETTER REQUIREMENTS:
+1. Date the letter ${today}
+2. Address it formally to: Customer Relations Department, [Airline Name]
+3. Use the flight number as the subject reference
+4. Open with a clear statement of the claim under the SHY Passenger Regulation (Sivil Havacılık Yönetmeliği)
+5. Cite Turkish Civil Aviation Law No. 2920, Article 143 as the legal basis
+6. State the compensation amount: ${compAmt} — note that it is denominated in EUR but payable in Turkish Lira at the Central Bank of the Republic of Turkey (TCMB) exchange rate on the date of ticket purchase
+7. Reference the booking reference and flight date
+8. Set a 30-day response deadline: ${deadline}
+9. State that failure to respond will result in escalation to the Turkish Directorate General of Civil Aviation (Sivil Havacılık Genel Müdürlüğü — SHGM) at https://web.shgm.gov.tr
+10. Close with a formal sign-off
+11. Keep the tone firm but professional — not aggressive
+12. Write the full letter only, no commentary or preamble
+13. Format it as a real business letter with proper spacing between sections
+${bankDetails ? '14. Include a polite request that compensation be paid to the bank details provided' : ''}
+
+Write the complete letter now:`;
+}
+
 // ── APPR prompt ───────────────────────────────────────
 function buildAPPRPrompt({ answers, result, details }) {
   const {
@@ -211,9 +289,14 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Name and email are required' });
   }
 
-  const prompt = result.regulation === 'APPR'
-    ? buildAPPRPrompt({ answers, result, details })
-    : buildPrompt({ answers, result, details });
+  let prompt;
+  if (result.regulation === 'APPR') {
+    prompt = buildAPPRPrompt({ answers, result, details });
+  } else if (result.regulation === 'SHY') {
+    prompt = buildSHYPrompt({ answers, result, details });
+  } else {
+    prompt = buildPrompt({ answers, result, details });
+  }
 
   try {
     const message = await client.messages.create({
