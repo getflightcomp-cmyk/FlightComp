@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import Head from 'next/head';
 import { assessClaim, assessClaimAPPR, assessClaimSHY, detectRegulation } from '../lib/eu261';
+import { resolveAirline, getCarrierRegion, isLargeCanadianCarrier } from '../lib/carriers';
 
 /* ══════════════════════════════════════════════════════
    Screen components — inline for zero-import overhead
@@ -154,6 +155,34 @@ function Q4Route({ from, to, onFromChange, onToChange, onNext, onBack }) {
         <button className="btn-cont" onClick={onNext} disabled={!from.trim() || !to.trim()}>
           Continue →
         </button>
+      </div>
+    </div>
+  );
+}
+
+// ── QAirline: Airline name ────────────────────────────
+function QAirline({ value, onChange, onNext, onBack }) {
+  return (
+    <div className="screen">
+      <ProgressBar step={5} total={7} onBack={onBack} />
+      <div className="q-body">
+        <div className="q-label">Question 5 of 7</div>
+        <h2 className="q-head">What airline operated your flight?</h2>
+        <input
+          className="inp inp-mono"
+          type="text"
+          placeholder="e.g. Lufthansa or LH"
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          autoFocus
+          autoComplete="off"
+          spellCheck={false}
+        />
+        <p className="q-helper">
+          Enter the airline name or IATA code (e.g. BA, LH, AF).{' '}
+          <strong>Leave blank if unknown.</strong>
+        </p>
+        <button className="btn-cont" onClick={onNext}>Continue →</button>
       </div>
     </div>
   );
@@ -775,6 +804,10 @@ const INITIAL_ANSWERS = {
   flightDate: '',
   from: '',
   to: '',
+  airlineName: '',
+  airlineCode: '',
+  carrierRegion: '',
+  airlineSizeAutoDetected: false,
   delayLength: '',
   reason: '',
   // APPR-specific
@@ -838,14 +871,39 @@ export default function Home() {
     setScreen('results');
   }
 
-  // After Q4: detect regulation and branch
-  function goFromQ4() {
+  // After QAirline: resolve carrier, detect regulation, and branch
+  function goFromAirline() {
     setAnswers(prev => {
-      const reg = detectRegulation(prev.from, prev.to);
-      const updated = { ...prev, detectedRegulation: reg };
+      const code = resolveAirline(prev.airlineName) || '';
+      const carrierReg = code ? (getCarrierRegion(code) || '') : '';
+      const reg = detectRegulation(prev.from, prev.to, carrierReg || null);
+
+      const isCACarrier = carrierReg === 'CA';
+      let autoSize = '';
+      let autoDetected = false;
+      if (reg === 'APPR' && code && isCACarrier) {
+        autoSize = isLargeCanadianCarrier(code) ? 'large' : 'small';
+        autoDetected = true;
+      }
+
+      const updated = {
+        ...prev,
+        airlineCode: code,
+        carrierRegion: carrierReg,
+        detectedRegulation: reg || '',
+        ...(autoSize ? { airlineSize: autoSize, airlineSizeAutoDetected: autoDetected } : {}),
+      };
+
       let nextScreen;
-      if (reg === 'APPR') {
-        nextScreen = prev.disruption === 'delayed' ? 'q5_appr' : 'q_airline_size';
+      if (!reg) {
+        nextScreen = 'not_covered';
+      } else if (reg === 'APPR') {
+        if (prev.disruption === 'delayed') {
+          nextScreen = 'q5_appr';
+        } else {
+          // Skip airline size question if auto-detected
+          nextScreen = autoSize ? 'q_appr_reason' : 'q_airline_size';
+        }
       } else if (reg === 'SHY') {
         nextScreen = prev.disruption === 'delayed' ? 'q5_shy' : 'q_shy_reason';
       } else {
@@ -971,6 +1029,10 @@ export default function Home() {
                 <span className="lp-dot">·</span>
                 <span>Instant result</span>
               </div>
+              <p style={{ color: 'var(--muted)', fontSize: 13, marginTop: 10 }}>
+                Covers flights in, to, or from the EU, UK, Canada, and Turkey.
+                US domestic flights are not covered.
+              </p>
             </div>
           </section>
 
@@ -1120,9 +1182,44 @@ export default function Home() {
         to={answers.to}
         onFromChange={v => update('from', v)}
         onToChange={v => update('to', v)}
-        onNext={() => goFromQ4()}
+        onNext={() => setScreen('q_airline')}
         onBack={() => setScreen('q3')}
       />
+    );
+  }
+
+  if (screen === 'q_airline') {
+    return (
+      <QAirline
+        value={answers.airlineName}
+        onChange={v => update('airlineName', v)}
+        onNext={goFromAirline}
+        onBack={() => setScreen('q4')}
+      />
+    );
+  }
+
+  if (screen === 'not_covered') {
+    return (
+      <div className="screen">
+        <div className="q-body" style={{ textAlign: 'center', paddingTop: 40 }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>✈️</div>
+          <h2 className="q-head" style={{ color: 'var(--text)' }}>Not Currently Covered</h2>
+          <p style={{ color: 'var(--muted)', fontSize: 15, lineHeight: 1.7, marginBottom: 28 }}>
+            Based on your route and airline, this flight isn&apos;t covered by EU261, UK261,
+            Canada APPR, or Turkey SHY. US domestic flights and routes outside these
+            regulations are not supported at this time.
+          </p>
+          <button className="btn-cont" onClick={() => {
+            setAnswers(INITIAL_ANSWERS);
+            setDetails(INITIAL_DETAILS);
+            setResult(null);
+            setScreen('hook');
+          }}>
+            Check Another Flight
+          </button>
+        </div>
+      </div>
     );
   }
 
@@ -1132,7 +1229,7 @@ export default function Home() {
         value={answers.delayLength}
         disruption={answers.disruption}
         onChange={handleQ5}
-        onBack={() => setScreen('q4')}
+        onBack={() => setScreen('q_airline')}
       />
     );
   }
@@ -1142,7 +1239,7 @@ export default function Home() {
       <Q6Reason
         value={answers.reason}
         onChange={handleQ6}
-        onBack={() => setScreen(answers.disruption === 'delayed' ? 'q5' : 'q4')}
+        onBack={() => setScreen(answers.disruption === 'delayed' ? 'q5' : 'q_airline')}
       />
     );
   }
@@ -1153,7 +1250,7 @@ export default function Home() {
       <Q5APPR
         value={answers.apprDelayTier}
         onChange={handleQ5APPR}
-        onBack={() => setScreen('q4')}
+        onBack={() => setScreen('q_airline')}
       />
     );
   }
@@ -1166,7 +1263,7 @@ export default function Home() {
       <QAirlineSize
         value={answers.airlineSize}
         onChange={handleQAirlineSize}
-        onBack={() => setScreen(isDelayedAPPR ? 'q5_appr' : 'q4')}
+        onBack={() => setScreen(isDelayedAPPR ? 'q5_appr' : 'q_airline')}
         step={step}
         total={total}
       />
@@ -1194,7 +1291,7 @@ export default function Home() {
       <Q5SHYDelay
         value={answers.delayLength}
         onChange={handleQ5SHY}
-        onBack={() => setScreen('q4')}
+        onBack={() => setScreen('q_airline')}
       />
     );
   }
@@ -1207,7 +1304,7 @@ export default function Home() {
       <QSHYReason
         value={answers.shyReason}
         onChange={handleQSHYReason}
-        onBack={() => setScreen(isDelayed ? 'q5_shy' : 'q4')}
+        onBack={() => setScreen(isDelayed ? 'q5_shy' : 'q_airline')}
         step={step}
         total={total}
       />
