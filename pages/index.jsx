@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import Head from 'next/head';
-import { assessClaim } from '../lib/eu261';
+import { assessClaim, assessClaimAPPR, detectRegulation } from '../lib/eu261';
 
 /* ══════════════════════════════════════════════════════
    Screen components — inline for zero-import overhead
@@ -102,7 +102,7 @@ function Q3Date({ value, onChange, onNext, onBack }) {
           autoFocus
         />
         <p className="q-helper">
-          EU261 claims have a <strong>3-year limit</strong> (6 years under UK261).
+          EU261 claims: <strong>3-year limit</strong> (6 years UK261, 1 year APPR).
           Older flights may still be worth checking.
         </p>
         <button className="btn-cont" onClick={onNext} disabled={!value}>Continue →</button>
@@ -148,8 +148,8 @@ function Q4Route({ from, to, onFromChange, onToChange, onNext, onBack }) {
           </div>
         </div>
         <p className="q-helper">
-          Coverage applies to flights <strong>departing from EU/EEA/UK airports</strong>,
-          or operated by EU/UK airlines from any airport.
+          Covers flights from <strong>EU/EEA/UK airports</strong> (EU261/UK261) and
+          flights <strong>to or from Canadian airports</strong> (APPR).
         </p>
         <button className="btn-cont" onClick={onNext} disabled={!from.trim() || !to.trim()}>
           Continue →
@@ -211,6 +211,114 @@ function Q6Reason({ value, onChange, onBack }) {
       <div className="q-body">
         <div className="q-label">Question 6 of 6</div>
         <h2 className="q-head">What reason did the airline give?</h2>
+        <div className="opts">
+          {opts.map(o => (
+            <button
+              key={o.value}
+              className={`opt${value === o.value ? ' sel' : ''}`}
+              onClick={() => onChange(o.value)}
+            >
+              <span className="opt-icon">{o.icon}</span>
+              <span className="opt-txt">
+                <span className="opt-title">{o.title}</span>
+                <span className="opt-sub">{o.sub}</span>
+              </span>
+              <span className="opt-check">{value === o.value ? '✓' : ''}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Q5 APPR: Delay tier ───────────────────────────────
+function Q5APPR({ value, onChange, onBack }) {
+  const opts = [
+    { value: 'under3', title: 'Under 3 hours' },
+    { value: '3to6',   title: '3 – 6 hours' },
+    { value: '6to9',   title: '6 – 9 hours' },
+    { value: '9plus',  title: '9+ hours' },
+  ];
+  return (
+    <div className="screen">
+      <ProgressBar step={5} total={7} onBack={onBack} />
+      <div className="q-body">
+        <div className="q-label">Question 5 of 7</div>
+        <h2 className="q-head">How long was the delay at arrival?</h2>
+        <div className="opts">
+          {opts.map(o => (
+            <button
+              key={o.value}
+              className={`opt${value === o.value ? ' sel' : ''}`}
+              onClick={() => onChange(o.value)}
+            >
+              <span className="opt-txt">
+                <span className="opt-title">{o.title}</span>
+              </span>
+              <span className="opt-check">{value === o.value ? '✓' : ''}</span>
+            </button>
+          ))}
+        </div>
+        <p className="q-helper">
+          APPR compensation starts at <strong>3+ hours at your final destination</strong>.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ── Q Airline Size (APPR) ─────────────────────────────
+function QAirlineSize({ value, onChange, onBack, step, total }) {
+  const opts = [
+    { value: 'large',   icon: '✈️', title: 'Large airline', sub: 'Air Canada, WestJet, Porter, Sunwing, Swoop, Flair, Air Transat' },
+    { value: 'small',   icon: '🛩️', title: 'Small airline', sub: 'Regional or charter carrier not listed above' },
+    { value: 'unknown', icon: '❓', title: 'Not sure',       sub: 'We\'ll use the large airline rates' },
+  ];
+  return (
+    <div className="screen">
+      <ProgressBar step={step} total={total} onBack={onBack} />
+      <div className="q-body">
+        <div className="q-label">Question {step} of {total}</div>
+        <h2 className="q-head">How large is the airline?</h2>
+        <div className="opts">
+          {opts.map(o => (
+            <button
+              key={o.value}
+              className={`opt${value === o.value ? ' sel' : ''}`}
+              onClick={() => onChange(o.value)}
+            >
+              <span className="opt-icon">{o.icon}</span>
+              <span className="opt-txt">
+                <span className="opt-title">{o.title}</span>
+                <span className="opt-sub">{o.sub}</span>
+              </span>
+              <span className="opt-check">{value === o.value ? '✓' : ''}</span>
+            </button>
+          ))}
+        </div>
+        <p className="q-helper">
+          APPR compensation amounts differ for large vs small airlines.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ── Q APPR Reason ─────────────────────────────────────
+function QAPPRReason({ value, onChange, onBack, step, total }) {
+  const opts = [
+    { value: 'controlled',   icon: '🔧', title: 'Airline-controlled',  sub: 'Technical issue, crew shortage, scheduling, overbooking' },
+    { value: 'safety',       icon: '⚠️', title: 'Safety-related',      sub: 'Aircraft safety issue requiring grounding' },
+    { value: 'uncontrolled', icon: '🌩️', title: 'Outside airline control', sub: 'Severe weather, ATC, airport security, bird strike' },
+    { value: 'unknown',      icon: '❓', title: 'No reason given',       sub: 'Airline didn\'t explain' },
+  ];
+  return (
+    <div className="screen">
+      <ProgressBar step={step} total={total} onBack={onBack} />
+      <div className="q-body">
+        <div className="q-label">Question {step} of {total}</div>
+        <h2 className="q-head">What caused the disruption?</h2>
         <div className="opts">
           {opts.map(o => (
             <button
@@ -318,7 +426,7 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
         {amountDisplay ? (
           <>
             <div className="vamount">{amountDisplay}</div>
-            <div className="vreg">under {regulation === 'UK261' ? 'UK261/2004' : 'EU Regulation 261/2004'}</div>
+            <div className="vreg">under {regulation === 'UK261' ? 'UK261/2004' : regulation === 'APPR' ? 'Canada APPR (SOR/2019-150)' : 'EU Regulation 261/2004'}</div>
           </>
         ) : (
           <div className="vreg" style={{ fontSize: 14, marginTop: 8, lineHeight: 1.5 }}>
@@ -425,7 +533,7 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
         </div>
 
         <div className="res-disclaimer">
-          Disclaimer: FlightComp is not a law firm and does not provide legal advice. We provide information about your rights under EU261/UK261 and tools to help you pursue your claim. For legal advice, consult a qualified attorney.
+          Disclaimer: FlightComp is not a law firm and does not provide legal advice. We provide information about your rights under EU261/UK261/APPR and tools to help you pursue your claim. For legal advice, consult a qualified attorney.
         </div>
 
         <div className="reset-link">
@@ -552,6 +660,11 @@ const INITIAL_ANSWERS = {
   to: '',
   delayLength: '',
   reason: '',
+  // APPR-specific
+  apprDelayTier: '',
+  airlineSize: '',
+  apprReason: '',
+  detectedRegulation: '',
 };
 
 const INITIAL_DETAILS = {
@@ -600,15 +713,47 @@ export default function Home() {
 
   function handleQ6(val) {
     update('reason', val);
-    // Assess immediately
     const r = assessClaim({ ...answers, reason: val });
+    setResult(r);
+    setScreen('results');
+  }
+
+  // After Q4: detect regulation and branch
+  function goFromQ4() {
+    setAnswers(prev => {
+      const reg = detectRegulation(prev.from, prev.to);
+      const updated = { ...prev, detectedRegulation: reg };
+      const nextScreen = reg === 'APPR'
+        ? (prev.disruption === 'delayed' ? 'q5_appr' : 'q_airline_size')
+        : (prev.disruption === 'delayed' ? 'q5' : 'q6');
+      // Schedule screen change after state update
+      setTimeout(() => setScreen(nextScreen), 0);
+      return updated;
+    });
+  }
+
+  function handleQ5APPR(val) {
+    update('apprDelayTier', val);
+    setScreen('q_airline_size');
+  }
+
+  function handleQAirlineSize(val) {
+    update('airlineSize', val);
+    setScreen('q_appr_reason');
+  }
+
+  function handleQAPPRReason(val) {
+    const r = assessClaimAPPR({ ...answers, apprReason: val });
+    update('apprReason', val);
     setResult(r);
     setScreen('results');
   }
 
   function goToResults() {
     if (!result) {
-      const r = assessClaim(answers);
+      const r = answers.detectedRegulation === 'APPR'
+        ? assessClaimAPPR(answers)
+        : assessClaim(answers);
       setResult(r);
     }
     setScreen('results');
@@ -659,13 +804,13 @@ export default function Home() {
           {/* ── HERO ── */}
           <section className="lp-hero">
             <div className="lp-hero-inner">
-              <div className="lp-badge">✈️ EU261 / UK261</div>
+              <div className="lp-badge">✈️ EU261 / UK261 / Canada APPR</div>
               <h1 className="lp-h1">
                 Your flight was cancelled.<br />
                 Find out what you&apos;re owed in 60 seconds.
               </h1>
               <p className="lp-sub">
-                Airlines legally owe you up to €600 under EU law — but they use friction to avoid paying. We cut through it.
+                Airlines legally owe you up to €600 (EU/UK) or CA$1,000 (Canada) — but they use friction to avoid paying. We cut through it.
               </p>
               <button className="btn-hook lp-cta" onClick={() => setScreen('q1')}>
                 Check My Flight →
@@ -734,7 +879,7 @@ export default function Home() {
                   <span className="lp-comp-lbl">Flights over 3,500 km</span>
                 </div>
               </div>
-              <div className="lp-uk-note">Also covers UK flights under UK261 — £220 / £350 / £520</div>
+              <div className="lp-uk-note">Also covers UK flights (UK261 — £220/£350/£520) and Canadian flights (APPR — CA$400/CA$700/CA$1,000)</div>
             </div>
           </section>
 
@@ -770,7 +915,7 @@ export default function Home() {
               <button className="btn-hook lp-cta" onClick={() => setScreen('q1')}>
                 Check My Flight →
               </button>
-              <div className="lp-final-sub">Free · Takes 60 seconds · Works for EU and UK flights</div>
+              <div className="lp-final-sub">Free · Takes 60 seconds · Works for EU, UK, and Canadian flights</div>
             </div>
           </section>
 
@@ -826,7 +971,7 @@ export default function Home() {
         to={answers.to}
         onFromChange={v => update('from', v)}
         onToChange={v => update('to', v)}
-        onNext={() => setScreen(answers.disruption === 'delayed' ? 'q5' : 'q6')}
+        onNext={() => goFromQ4()}
         onBack={() => setScreen('q3')}
       />
     );
@@ -849,6 +994,47 @@ export default function Home() {
         value={answers.reason}
         onChange={handleQ6}
         onBack={() => setScreen(answers.disruption === 'delayed' ? 'q5' : 'q4')}
+      />
+    );
+  }
+
+  // ── APPR screens ──────────────────────────────────
+  if (screen === 'q5_appr') {
+    return (
+      <Q5APPR
+        value={answers.apprDelayTier}
+        onChange={handleQ5APPR}
+        onBack={() => setScreen('q4')}
+      />
+    );
+  }
+
+  if (screen === 'q_airline_size') {
+    const isDelayedAPPR = answers.disruption === 'delayed';
+    const step = isDelayedAPPR ? 6 : 5;
+    const total = isDelayedAPPR ? 7 : 6;
+    return (
+      <QAirlineSize
+        value={answers.airlineSize}
+        onChange={handleQAirlineSize}
+        onBack={() => setScreen(isDelayedAPPR ? 'q5_appr' : 'q4')}
+        step={step}
+        total={total}
+      />
+    );
+  }
+
+  if (screen === 'q_appr_reason') {
+    const isDelayedAPPR = answers.disruption === 'delayed';
+    const step = isDelayedAPPR ? 7 : 6;
+    const total = isDelayedAPPR ? 7 : 6;
+    return (
+      <QAPPRReason
+        value={answers.apprReason}
+        onChange={handleQAPPRReason}
+        onBack={() => setScreen('q_airline_size')}
+        step={step}
+        total={total}
       />
     );
   }

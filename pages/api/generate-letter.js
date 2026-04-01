@@ -25,7 +25,103 @@ const REASON_LABELS = {
   other: 'other (not specified)',
 };
 
-// ── Build the generation prompt ───────────────────────
+const APPR_DELAY_LABELS = {
+  under3: 'under 3 hours',
+  '3to6': '3–6 hours',
+  '6to9': '6–9 hours',
+  '9plus': '9+ hours',
+};
+
+const APPR_REASON_LABELS = {
+  controlled:   'airline-controlled reason (technical issue, crew shortage, overbooking, or scheduling)',
+  safety:       'safety-related reason',
+  uncontrolled: 'reason outside airline control (weather, ATC, security incident)',
+  unknown:      'no reason given by the airline',
+};
+
+const AIRLINE_SIZE_LABELS = {
+  large:   'large carrier',
+  small:   'small carrier',
+  unknown: 'carrier (size unconfirmed)',
+};
+
+// ── APPR prompt ───────────────────────────────────────
+function buildAPPRPrompt({ answers, result, details }) {
+  const {
+    flightNumber, flightDate, from, to, disruption,
+    apprDelayTier, airlineSize, apprReason,
+  } = answers;
+
+  const {
+    verdict, compensation, verdictNote, distanceKm, depInfo, arrInfo,
+  } = result;
+
+  const { name, email, address, bookingRef, bankDetails } = details;
+
+  const compAmt    = compensation?.amount || 'the applicable statutory amount';
+  const distStr    = distanceKm ? `${distanceKm.toLocaleString()} km` : 'unknown distance';
+  const depCity    = depInfo ? `${depInfo.city} (${from.toUpperCase()})` : from;
+  const arrCity    = arrInfo ? `${arrInfo.city} (${to.toUpperCase()})` : to;
+  const disruptionLabel = DISRUPTION_LABELS[disruption] || disruption;
+  const delayLabel = disruption === 'delayed' ? ` of ${APPR_DELAY_LABELS[apprDelayTier] || apprDelayTier}` : '';
+  const reasonLabel = APPR_REASON_LABELS[apprReason] || apprReason;
+  const sizeLabel  = AIRLINE_SIZE_LABELS[airlineSize] || 'carrier';
+
+  const today = new Date().toLocaleDateString('en-CA', {
+    day: 'numeric', month: 'long', year: 'numeric',
+  });
+  const deadline = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-CA', {
+    day: 'numeric', month: 'long', year: 'numeric',
+  });
+
+  return `You are a specialist aviation law letter writer familiar with Canadian passenger rights. Write a formal, professional claim letter on behalf of the passenger under Canada's Air Passenger Protection Regulations (APPR), SOR/2019-150.
+
+PASSENGER DETAILS:
+- Full name: ${name}
+- Address: ${address}
+- Email: ${email}
+${bookingRef ? `- Booking reference: ${bookingRef}` : ''}
+${bankDetails ? `- Payment details: ${bankDetails}` : ''}
+
+FLIGHT DETAILS:
+- Flight number: ${flightNumber || 'Unknown'}
+- Flight date: ${flightDate || 'Unknown'}
+- Departure: ${depCity}
+- Destination: ${arrCity}
+- Route distance: ${distStr}
+- Disruption type: ${disruptionLabel}${delayLabel}
+- Reason given by airline: ${reasonLabel}
+- Airline type: ${sizeLabel}
+- Applicable regulation: Air Passenger Protection Regulations (SOR/2019-150)
+- Compensation amount: ${compAmt} per passenger
+
+ELIGIBILITY VERDICT: ${verdict.toUpperCase()}
+${verdictNote ? `Note: ${verdictNote}` : ''}
+
+LETTER REQUIREMENTS:
+1. Date the letter ${today}
+2. Address it formally to: Customer Relations Department, [Airline Name]
+3. Use the flight number as the subject reference
+4. Open with a clear statement of the claim under the Air Passenger Protection Regulations (SOR/2019-150)
+5. Cite the specific regulatory sections:
+   - Section 19 (compensation for flight delays and cancellations within airline's control)
+   - Section 10 (standards for treatment of passengers)
+   - Section 17 (denied boarding compensation)
+   (cite only the sections relevant to the disruption type)
+6. State the specific compensation amount: ${compAmt} per passenger
+7. Reference the booking reference and flight date
+8. Set a 30-day response deadline: ${deadline}
+9. State that failure to respond will result in escalation to the Canadian Transportation Agency (CTA) at https://otc-cta.gc.ca/eng/air-travel-complaints
+10. Close with a formal sign-off
+11. Keep the tone firm but professional — not aggressive
+12. Write the full letter only, no commentary or preamble
+13. Format it as a real business letter with proper spacing between sections
+${bankDetails ? '14. Include a polite request that compensation be paid to the bank details provided' : ''}
+
+Write the complete letter now:`;
+}
+
+// ── EU261/UK261 prompt ────────────────────────────────
 function buildPrompt({ answers, result, details }) {
   const {
     flightNumber, flightDate, from, to, disruption, delayLength, reason,
@@ -115,7 +211,9 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Name and email are required' });
   }
 
-  const prompt = buildPrompt({ answers, result, details });
+  const prompt = result.regulation === 'APPR'
+    ? buildAPPRPrompt({ answers, result, details })
+    : buildPrompt({ answers, result, details });
 
   try {
     const message = await client.messages.create({
