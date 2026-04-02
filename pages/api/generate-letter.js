@@ -2,11 +2,11 @@ import Anthropic from '@anthropic-ai/sdk';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-// ── Disruption label helpers ──────────────────────────
+// ── Label helpers ──────────────────────────────────────
 const DISRUPTION_LABELS = {
-  cancelled: 'cancellation',
-  delayed: 'delay',
-  denied: 'denied boarding',
+  cancelled:  'cancellation',
+  delayed:    'delay',
+  denied:     'denied boarding',
   downgraded: 'downgrade',
 };
 
@@ -19,10 +19,10 @@ const DELAY_LABELS = {
 
 const REASON_LABELS = {
   technical: 'technical/mechanical fault',
-  crew: 'crew/staffing issue',
-  weather: 'severe weather (extraordinary circumstances)',
-  none: 'no reason given by the airline',
-  other: 'other (not specified)',
+  crew:      'crew/staffing issue',
+  weather:   'severe weather (extraordinary circumstances)',
+  none:      'no reason given by the airline',
+  other:     'other (not specified)',
 };
 
 const APPR_DELAY_LABELS = {
@@ -51,80 +51,123 @@ const SHY_REASON_LABELS = {
   unknown:      'no reason given by the airline',
 };
 
-// ── SHY (Turkey) prompt ───────────────────────────────
-function buildSHYPrompt({ answers, result, details }) {
+// ── Delay duration calculator ──────────────────────────
+function calcDelay(scheduledTime, actualTime) {
+  if (!scheduledTime || !actualTime) return null;
+  const [sh, sm] = scheduledTime.split(':').map(Number);
+  const [ah, am] = actualTime.split(':').map(Number);
+  let mins = (ah * 60 + am) - (sh * 60 + sm);
+  if (mins < 0) mins += 24 * 60; // spans midnight
+  if (mins <= 0) return null;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  const label = h > 0
+    ? (m > 0 ? `${h} hours and ${m} minutes` : `${h} hour${h !== 1 ? 's' : ''}`)
+    : `${m} minutes`;
+  return { mins, label };
+}
+
+// ── Shared timing section for prompts ─────────────────
+function buildTimingBlock(flightDetails = {}, disruption, arrCity, flightNumber, flightDate) {
+  const { scheduledTime, actualTime, incidentDescription } = flightDetails;
+  const delay = calcDelay(scheduledTime, actualTime);
+  const lines = [];
+
+  if (scheduledTime && actualTime && delay && disruption === 'delayed') {
+    lines.push(`EXACT FLIGHT TIMING:`);
+    lines.push(`- Scheduled arrival at ${arrCity}: ${scheduledTime}`);
+    lines.push(`- Actual arrival: ${actualTime}`);
+    lines.push(`- Calculated delay: ${delay.label}`);
+    lines.push('');
+    lines.push(`IMPORTANT — include this exact sentence in the letter body:`);
+    lines.push(`"Flight ${flightNumber || '[flight number]'} was scheduled to arrive at ${flightDate ? `${arrCity} on ${flightDate}` : arrCity} at ${scheduledTime}. It arrived at ${actualTime}, a delay of ${delay.label}."`);
+  } else if (scheduledTime && actualTime) {
+    lines.push(`TIMING:`);
+    lines.push(`- Scheduled arrival: ${scheduledTime}`);
+    lines.push(`- Actual/disruption time: ${actualTime}`);
+  }
+
+  if (incidentDescription) {
+    lines.push(`PASSENGER'S ACCOUNT (incorporate naturally):`);
+    lines.push(`"${incidentDescription}"`);
+  }
+
+  return lines.length ? lines.join('\n') : '';
+}
+
+// ── EU261 / UK261 prompt ──────────────────────────────
+function buildPrompt({ answers, result, details, flightDetails }) {
   const {
-    flightNumber, flightDate, from, to, disruption, delayLength, shyReason, shyNotified14,
+    flightNumber, flightDate, from, to, disruption, delayLength, reason,
   } = answers;
 
   const {
-    verdict, compensation, verdictNote, distanceKm, depInfo, arrInfo, isDomestic,
+    verdict, regulation, compensation, verdictNote, distanceKm, depInfo, arrInfo,
   } = result;
 
   const { name, email, address, bookingRef, bankDetails } = details;
 
-  const compAmt    = compensation?.amount || 'the applicable statutory amount';
-  const distStr    = distanceKm ? `${distanceKm.toLocaleString()} km` : 'unknown distance';
-  const depCity    = depInfo ? `${depInfo.city} (${from.toUpperCase()})` : from;
-  const arrCity    = arrInfo ? `${arrInfo.city} (${to.toUpperCase()})` : to;
+  const regFull  = regulation === 'UK261'
+    ? 'UK Statutory Instrument 2019 No. 278 (UK261/2004)'
+    : 'EU Regulation 261/2004 of the European Parliament and of the Council';
+  const compAmt  = compensation?.amount || 'the applicable statutory amount';
+  const distStr  = distanceKm ? `${distanceKm.toLocaleString()} km` : 'unknown distance';
+  const depCity  = depInfo  ? `${depInfo.city} (${from.toUpperCase()})` : from;
+  const arrCity  = arrInfo  ? `${arrInfo.city} (${to.toUpperCase()})` : to;
   const disruptionLabel = DISRUPTION_LABELS[disruption] || disruption;
-  const delayLabel = disruption === 'delayed' ? ` of ${DELAY_LABELS[delayLength] || delayLength}` : '';
-  const reasonLabel = SHY_REASON_LABELS[shyReason] || shyReason;
-  const routeType  = isDomestic ? 'domestic (Turkey internal)' : 'international';
+  const delayLabel      = disruption === 'delayed' ? ` of ${DELAY_LABELS[delayLength] || delayLength}` : '';
+  const reasonLabel     = REASON_LABELS[reason] || reason;
 
-  const today = new Date().toLocaleDateString('en-GB', {
-    day: 'numeric', month: 'long', year: 'numeric',
-  });
-  const deadline = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-GB', {
-    day: 'numeric', month: 'long', year: 'numeric',
-  });
+  const today    = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  const deadline = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
-  return `You are a specialist aviation law letter writer familiar with Turkish passenger rights. Write a formal, professional claim letter on behalf of the passenger under Turkey's SHY Passenger Regulation (Sivil Havacılık Yönetmeliği), established under Turkish Civil Aviation Law No. 2920, Article 143.
+  const timingBlock = buildTimingBlock(flightDetails, disruption, arrCity, flightNumber, flightDate);
+
+  return `Write a formal compensation claim letter on behalf of a passenger. The letter should read as if the passenger wrote it personally — do not reference any claim tool, service, or third party.
 
 PASSENGER DETAILS:
 - Full name: ${name}
 - Address: ${address}
 - Email: ${email}
 ${bookingRef ? `- Booking reference: ${bookingRef}` : ''}
-${bankDetails ? `- Payment details: ${bankDetails}` : ''}
+${bankDetails ? `- Bank/payment details: ${bankDetails}` : ''}
 
 FLIGHT DETAILS:
 - Flight number: ${flightNumber || 'Unknown'}
-- Flight date: ${flightDate || 'Unknown'}
+- Date of travel: ${flightDate || 'Unknown'}
 - Departure: ${depCity}
 - Destination: ${arrCity}
 - Route distance: ${distStr}
-- Route type: ${routeType}
-- Disruption type: ${disruptionLabel}${delayLabel}
-- Reason given by airline: ${reasonLabel}
-${shyNotified14 === 'yes' ? '- Passenger was notified 14+ days in advance (noted for context)' : ''}
-- Applicable regulation: SHY Passenger Regulation (Sivil Havacılık Yönetmeliği), Turkish Civil Aviation Law No. 2920, Article 143
-- Compensation amount: ${compAmt}
+- Disruption: ${disruptionLabel}${delayLabel}
+- Reason given: ${reasonLabel}
+- Regulation: ${regFull}
+- Compensation claimed: ${compAmt}
 
-ELIGIBILITY VERDICT: ${verdict.toUpperCase()}
-${verdictNote ? `Note: ${verdictNote}` : ''}
+${timingBlock}
+
+VERDICT: ${verdict.toUpperCase()}${verdictNote ? `\nContext: ${verdictNote}` : ''}
 
 LETTER REQUIREMENTS:
-1. Date the letter ${today}
-2. Address it formally to: Customer Relations Department, [Airline Name]
-3. Use the flight number as the subject reference
-4. Open with a clear statement of the claim under the SHY Passenger Regulation (Sivil Havacılık Yönetmeliği)
-5. Cite Turkish Civil Aviation Law No. 2920, Article 143 as the legal basis
-6. State the compensation amount: ${compAmt} — note that it is denominated in EUR but payable in Turkish Lira at the Central Bank of the Republic of Turkey (TCMB) exchange rate on the date of ticket purchase
-7. Reference the booking reference and flight date
-8. Set a 30-day response deadline: ${deadline}
-9. State that failure to respond will result in escalation to the Turkish Directorate General of Civil Aviation (Sivil Havacılık Genel Müdürlüğü — SHGM) at https://web.shgm.gov.tr
-10. Close with a formal sign-off
-11. Keep the tone firm but professional — not aggressive
-12. Write the full letter only, no commentary or preamble
-13. Format it as a real business letter with proper spacing between sections
-${bankDetails ? '14. Include a polite request that compensation be paid to the bank details provided' : ''}
+1. Date: ${today}
+2. Address to: Customer Relations Department, [Airline Name]
+3. Subject: Flight ${flightNumber || '[number]'} — Formal Compensation Claim under ${regulation === 'UK261' ? 'UK261' : 'EU Regulation 261/2004'}
+4. Open with a factual statement of the disruption including exact times if provided above
+5. In one consolidated paragraph, cite the legal basis: ${regulation === 'UK261' ? 'UK Statutory Instrument 2019 No. 278' : 'EU Regulation 261/2004'} — specifically Article 5 (cancellations), Article 6 (delay), or Article 7 (compensation amounts) as relevant to this case
+6. State the exact compensation amount: ${compAmt} per passenger
+7. Include booking reference if provided
+8. Set a firm 14-day response deadline: ${deadline}
+9. State that failure to respond will result in escalation to the ${regulation === 'UK261' ? 'Civil Aviation Authority (CAA)' : 'relevant National Enforcement Body (NEB)'}
+10. Close formally: "Yours faithfully," followed by the passenger's full name
+11. Write the complete letter only — no preamble, commentary, or instructions
+12. Professional and direct tone — firm but not aggressive
+13. The letter must read as if the passenger wrote it directly
+${bankDetails ? '14. Include payment instructions using the bank/payment details above' : ''}
 
-Write the complete letter now:`;
+Write the letter now:`;
 }
 
-// ── APPR prompt ───────────────────────────────────────
-function buildAPPRPrompt({ answers, result, details }) {
+// ── APPR prompt ────────────────────────────────────────
+function buildAPPRPrompt({ answers, result, details, flightDetails }) {
   const {
     flightNumber, flightDate, from, to, disruption,
     apprDelayTier, airlineSize, apprReason,
@@ -145,141 +188,133 @@ function buildAPPRPrompt({ answers, result, details }) {
   const reasonLabel = APPR_REASON_LABELS[apprReason] || apprReason;
   const sizeLabel  = AIRLINE_SIZE_LABELS[airlineSize] || 'carrier';
 
-  const today = new Date().toLocaleDateString('en-CA', {
-    day: 'numeric', month: 'long', year: 'numeric',
-  });
-  const deadline = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-CA', {
-    day: 'numeric', month: 'long', year: 'numeric',
-  });
+  const today    = new Date().toLocaleDateString('en-CA', { day: 'numeric', month: 'long', year: 'numeric' });
+  const deadline = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-CA', { day: 'numeric', month: 'long', year: 'numeric' });
 
-  return `You are a specialist aviation law letter writer familiar with Canadian passenger rights. Write a formal, professional claim letter on behalf of the passenger under Canada's Air Passenger Protection Regulations (APPR), SOR/2019-150.
+  const timingBlock = buildTimingBlock(flightDetails, disruption, arrCity, flightNumber, flightDate);
+
+  return `Write a formal compensation claim letter on behalf of a passenger under Canada's Air Passenger Protection Regulations. The letter should read as if the passenger wrote it personally — do not reference any claim tool, service, or third party.
 
 PASSENGER DETAILS:
 - Full name: ${name}
 - Address: ${address}
 - Email: ${email}
 ${bookingRef ? `- Booking reference: ${bookingRef}` : ''}
-${bankDetails ? `- Payment details: ${bankDetails}` : ''}
+${bankDetails ? `- Bank/payment details: ${bankDetails}` : ''}
 
 FLIGHT DETAILS:
 - Flight number: ${flightNumber || 'Unknown'}
-- Flight date: ${flightDate || 'Unknown'}
+- Date of travel: ${flightDate || 'Unknown'}
 - Departure: ${depCity}
 - Destination: ${arrCity}
 - Route distance: ${distStr}
-- Disruption type: ${disruptionLabel}${delayLabel}
-- Reason given by airline: ${reasonLabel}
-- Airline type: ${sizeLabel}
-- Applicable regulation: Air Passenger Protection Regulations (SOR/2019-150)
-- Compensation amount: ${compAmt} per passenger
+- Disruption: ${disruptionLabel}${delayLabel}
+- Reason given: ${reasonLabel}
+- Airline size: ${sizeLabel}
+- Regulation: Air Passenger Protection Regulations (SOR/2019-150)
+- Compensation claimed: ${compAmt} per passenger
 
-ELIGIBILITY VERDICT: ${verdict.toUpperCase()}
-${verdictNote ? `Note: ${verdictNote}` : ''}
+${timingBlock}
+
+VERDICT: ${verdict.toUpperCase()}${verdictNote ? `\nContext: ${verdictNote}` : ''}
 
 LETTER REQUIREMENTS:
-1. Date the letter ${today}
-2. Address it formally to: Customer Relations Department, [Airline Name]
-3. Use the flight number as the subject reference
-4. Open with a clear statement of the claim under the Air Passenger Protection Regulations (SOR/2019-150)
-5. Cite the specific regulatory sections:
-   - Section 19 (compensation for flight delays and cancellations within airline's control)
-   - Section 10 (standards for treatment of passengers)
-   - Section 17 (denied boarding compensation)
-   (cite only the sections relevant to the disruption type)
-6. State the specific compensation amount: ${compAmt} per passenger
-7. Reference the booking reference and flight date
+1. Date: ${today}
+2. Address to: Customer Relations Department, [Airline Name]
+3. Subject: Flight ${flightNumber || '[number]'} — Compensation Claim under Canada APPR (SOR/2019-150)
+4. Open with a factual statement of the disruption including exact times if provided above
+5. In one consolidated paragraph, cite the legal basis: Air Passenger Protection Regulations (SOR/2019-150) — specifically Section 19 (compensation for delays/cancellations within airline control), Section 10 (treatment standards), or Section 17 (denied boarding) as relevant to this case
+6. State the exact compensation amount: ${compAmt} per passenger
+7. Include booking reference if provided
 8. Set a 30-day response deadline: ${deadline}
 9. State that failure to respond will result in escalation to the Canadian Transportation Agency (CTA) at https://otc-cta.gc.ca/eng/air-travel-complaints
-10. Close with a formal sign-off
-11. Keep the tone firm but professional — not aggressive
-12. Write the full letter only, no commentary or preamble
-13. Format it as a real business letter with proper spacing between sections
-${bankDetails ? '14. Include a polite request that compensation be paid to the bank details provided' : ''}
+10. Close formally: "Yours faithfully," followed by the passenger's full name
+11. Write the complete letter only — no preamble, commentary, or instructions
+12. Professional and direct tone — firm but not aggressive
+13. The letter must read as if the passenger wrote it directly
+${bankDetails ? '14. Include payment instructions using the bank/payment details above' : ''}
 
-Write the complete letter now:`;
+Write the letter now:`;
 }
 
-// ── EU261/UK261 prompt ────────────────────────────────
-function buildPrompt({ answers, result, details }) {
+// ── SHY (Turkey) prompt ────────────────────────────────
+function buildSHYPrompt({ answers, result, details, flightDetails }) {
   const {
-    flightNumber, flightDate, from, to, disruption, delayLength, reason,
+    flightNumber, flightDate, from, to, disruption, delayLength, shyReason, shyNotified14,
   } = answers;
 
   const {
-    verdict, regulation, compensation, verdictNote, distanceKm, depInfo, arrInfo,
+    verdict, compensation, verdictNote, distanceKm, depInfo, arrInfo, isDomestic,
   } = result;
 
-  const {
-    name, email, address, bookingRef, bankDetails,
-  } = details;
+  const { name, email, address, bookingRef, bankDetails } = details;
 
-  const regFull  = regulation === 'UK261'
-    ? 'UK Statutory Instrument 2019 No. 278 (UK261/2004)'
-    : 'EU Regulation 261/2004 of the European Parliament and of the Council';
-  const compAmt  = compensation?.amount || 'the applicable statutory amount';
-  const distStr  = distanceKm ? `${distanceKm.toLocaleString()} km` : 'unknown distance';
-  const depCity  = depInfo  ? `${depInfo.city}  (${from.toUpperCase()})` : from;
-  const arrCity  = arrInfo  ? `${arrInfo.city} (${to.toUpperCase()})` : to;
+  const compAmt    = compensation?.amount || 'the applicable statutory amount';
+  const distStr    = distanceKm ? `${distanceKm.toLocaleString()} km` : 'unknown distance';
+  const depCity    = depInfo ? `${depInfo.city} (${from.toUpperCase()})` : from;
+  const arrCity    = arrInfo ? `${arrInfo.city} (${to.toUpperCase()})` : to;
   const disruptionLabel = DISRUPTION_LABELS[disruption] || disruption;
-  const delayLabel      = disruption === 'delayed' ? ` of ${DELAY_LABELS[delayLength] || delayLength}` : '';
-  const reasonLabel     = REASON_LABELS[reason] || reason;
+  const delayLabel = disruption === 'delayed' ? ` of ${DELAY_LABELS[delayLength] || delayLength}` : '';
+  const reasonLabel = SHY_REASON_LABELS[shyReason] || shyReason;
+  const routeType  = isDomestic ? 'domestic (Turkey internal)' : 'international';
 
-  const today = new Date().toLocaleDateString('en-GB', {
-    day: 'numeric', month: 'long', year: 'numeric',
-  });
-  const deadline = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toLocaleDateString('en-GB', {
-    day: 'numeric', month: 'long', year: 'numeric',
-  });
+  const today    = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  const deadline = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
-  return `You are a specialist aviation law letter writer. Write a formal, professional claim letter on behalf of the passenger.
+  const timingBlock = buildTimingBlock(flightDetails, disruption, arrCity, flightNumber, flightDate);
+
+  return `Write a formal compensation claim letter on behalf of a passenger under Turkey's SHY Passenger Regulation. The letter should read as if the passenger wrote it personally — do not reference any claim tool, service, or third party.
 
 PASSENGER DETAILS:
 - Full name: ${name}
 - Address: ${address}
 - Email: ${email}
 ${bookingRef ? `- Booking reference: ${bookingRef}` : ''}
-${bankDetails ? `- Payment details: ${bankDetails}` : ''}
+${bankDetails ? `- Bank/payment details: ${bankDetails}` : ''}
 
 FLIGHT DETAILS:
 - Flight number: ${flightNumber || 'Unknown'}
-- Flight date: ${flightDate || 'Unknown'}
+- Date of travel: ${flightDate || 'Unknown'}
 - Departure: ${depCity}
 - Destination: ${arrCity}
 - Route distance: ${distStr}
-- Disruption type: ${disruptionLabel}${delayLabel}
-- Reason given by airline: ${reasonLabel}
-- Applicable regulation: ${regFull}
-- Compensation tier: ${compAmt} per passenger
+- Route type: ${routeType}
+- Disruption: ${disruptionLabel}${delayLabel}
+- Reason given: ${reasonLabel}
+${shyNotified14 === 'yes' ? '- Note: passenger was notified 14+ days in advance' : ''}
+- Regulation: SHY Passenger Regulation (Sivil Havacılık Yönetmeliği), Turkish Civil Aviation Law No. 2920, Article 143
+- Compensation claimed: ${compAmt} (denominated in EUR, payable in Turkish Lira at TCMB exchange rate)
 
-ELIGIBILITY VERDICT: ${verdict.toUpperCase()}
-${verdictNote ? `Note: ${verdictNote}` : ''}
+${timingBlock}
+
+VERDICT: ${verdict.toUpperCase()}${verdictNote ? `\nContext: ${verdictNote}` : ''}
 
 LETTER REQUIREMENTS:
-1. Date the letter ${today}
-2. Address it formally to: Customer Relations Department, [Airline Name]
-3. Use the flight number as the subject reference
-4. Open with a clear statement of the claim under ${regulation === 'UK261' ? 'UK261' : 'EU261'}
-5. Cite the specific article numbers: Article 5 (cancellations), Article 6 (delay), Article 7 (compensation), Article 8 (reimbursement/re-routing), Article 9 (care)
-6. State the specific compensation amount: ${compAmt}
-7. Reference the booking reference and flight date
-8. Set a 14-day response deadline: ${deadline}
-9. State that failure to respond will result in escalation to the relevant National Enforcement Body
-10. Close with a formal sign-off
-11. Keep the tone firm but professional — not aggressive
-12. Write the full letter only, no commentary or preamble
-13. Format it as a real business letter with proper spacing between sections
-${bankDetails ? '14. Include a polite request that compensation be paid to the bank details provided' : ''}
+1. Date: ${today}
+2. Address to: Customer Relations Department, [Airline Name]
+3. Subject: Flight ${flightNumber || '[number]'} — Compensation Claim under SHY Passenger Regulation
+4. Open with a factual statement of the disruption including exact times if provided above
+5. In one consolidated paragraph, cite the legal basis: Turkish Civil Aviation Law No. 2920, Article 143 and the SHY Passenger Regulation (Sivil Havacılık Yönetmeliği); state that compensation is denominated in EUR but payable in Turkish Lira at the Central Bank of Turkey (TCMB) exchange rate on the date of ticket purchase
+6. State the exact compensation: ${compAmt}
+7. Include booking reference if provided
+8. Set a 30-day response deadline: ${deadline}
+9. State that failure to respond will result in escalation to the Turkish Directorate General of Civil Aviation (SHGM — Sivil Havacılık Genel Müdürlüğü) at https://web.shgm.gov.tr
+10. Close formally: "Yours faithfully," followed by the passenger's full name
+11. Write the complete letter only — no preamble, commentary, or instructions
+12. Professional and direct tone — firm but not aggressive
+13. The letter must read as if the passenger wrote it directly
+${bankDetails ? '14. Include payment instructions using the bank/payment details above' : ''}
 
-Write the complete letter now:`;
+Write the letter now:`;
 }
 
-// ── Handler ───────────────────────────────────────────
+// ── Handler ────────────────────────────────────────────
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { answers, result, details } = req.body;
+  const { answers, result, details, flightDetails } = req.body;
 
   if (!answers || !result || !details) {
     return res.status(400).json({ error: 'Missing required fields' });
@@ -291,30 +326,22 @@ export default async function handler(req, res) {
 
   let prompt;
   if (result.regulation === 'APPR') {
-    prompt = buildAPPRPrompt({ answers, result, details });
+    prompt = buildAPPRPrompt({ answers, result, details, flightDetails: flightDetails || {} });
   } else if (result.regulation === 'SHY') {
-    prompt = buildSHYPrompt({ answers, result, details });
+    prompt = buildSHYPrompt({ answers, result, details, flightDetails: flightDetails || {} });
   } else {
-    prompt = buildPrompt({ answers, result, details });
+    prompt = buildPrompt({ answers, result, details, flightDetails: flightDetails || {} });
   }
 
   try {
     const message = await client.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 2000,
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
+      messages: [{ role: 'user', content: prompt }],
     });
 
     const letter = message.content[0]?.text || '';
-
-    if (!letter) {
-      throw new Error('Empty response from Claude');
-    }
+    if (!letter) throw new Error('Empty response from Claude');
 
     return res.status(200).json({ letter });
   } catch (err) {

@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
-import { getAirlineInfo, getNEB } from '../lib/airlines';
+import { getAirlineContact, getEscalationAuthority, getResponseDeadlineDays } from '../lib/airline-contacts';
 
 /* ══════════════════════════════════════════════════════
    Success page — shown after Stripe payment completes
+   Flow: loading → collect (extra details) → generating → ready
 ══════════════════════════════════════════════════════ */
 
-// ── Inline segment parser (shared for on-screen display) ──
+// ── Inline segment parser (on-screen preview) ─────────
 function parseInlineSegments(text) {
   const patterns = [
     { re: /(?:€|£)\s*\d[\d,.]*|\d[\d,.]*\s*(?:EUR|GBP|euros?|pounds?)/gi, cls: 'lh-amount' },
@@ -54,18 +55,109 @@ function LetterDisplay({ letter }) {
   );
 }
 
-// ── Professional PDF builder ──────────────────────────
-async function buildPdf({ letter, claimData, details, result }) {
+// ── Post-payment extra details form ───────────────────
+function FlightDetailsForm({ claimData, result, onSubmit }) {
+  const [scheduledTime, setScheduledTime] = useState('');
+  const [actualTime, setActualTime] = useState('');
+  const [incidentDescription, setIncidentDescription] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const isDelay = claimData?.disruption === 'delayed';
+
+  async function handleSubmit() {
+    setLoading(true);
+    await onSubmit({ scheduledTime, actualTime, incidentDescription });
+  }
+
+  return (
+    <div className="details-screen">
+      <div className="details-body">
+        <div>
+          <div className="q-label">One more step</div>
+          <h2 className="q-head" style={{ fontSize: 22 }}>Add flight timing details</h2>
+          <p style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 24, lineHeight: 1.6 }}>
+            These details help us write a more specific letter that&apos;s harder for airlines to dismiss.
+            All fields are optional.
+          </p>
+        </div>
+
+        {isDelay && (
+          <>
+            <div className="field-group">
+              <label className="field-label">Scheduled arrival time</label>
+              <input
+                className="field-input"
+                type="time"
+                value={scheduledTime}
+                onChange={e => setScheduledTime(e.target.value)}
+              />
+              <span className="field-hint">The time your flight was supposed to arrive.</span>
+            </div>
+
+            <div className="field-group">
+              <label className="field-label">Actual arrival time</label>
+              <input
+                className="field-input"
+                type="time"
+                value={actualTime}
+                onChange={e => setActualTime(e.target.value)}
+              />
+              <span className="field-hint">The time your flight actually landed or docked at the gate.</span>
+            </div>
+          </>
+        )}
+
+        <div className="field-group">
+          <label className="field-label">Brief description of what happened</label>
+          <textarea
+            className="field-textarea"
+            placeholder="e.g., Flight was delayed on the tarmac for 2 hours due to mechanical issue. No communication from crew for first 45 minutes."
+            value={incidentDescription}
+            onChange={e => setIncidentDescription(e.target.value)}
+            rows={3}
+            maxLength={500}
+          />
+          <span className="field-hint">2–3 sentences. Used in your letter for specific, factual language.</span>
+        </div>
+
+        <button
+          className="btn-pay"
+          onClick={handleSubmit}
+          disabled={loading}
+        >
+          {loading ? 'Generating…' : 'Generate My Claim Kit →'}
+        </button>
+        <div className="secure-note">Takes about 15 seconds · All 6 documents included</div>
+      </div>
+    </div>
+  );
+}
+
+// ── Delay duration formatter ───────────────────────────
+function calcDelay(scheduled, actual) {
+  if (!scheduled || !actual) return null;
+  const [sh, sm] = scheduled.split(':').map(Number);
+  const [ah, am] = actual.split(':').map(Number);
+  let mins = (ah * 60 + am) - (sh * 60 + sm);
+  if (mins < 0) mins += 24 * 60;
+  if (mins <= 0) return null;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return { mins, h, m, label: h > 0 ? (m > 0 ? `${h}h ${m}m` : `${h}h`) : `${m}m` };
+}
+
+// ── PDF Claim Kit builder ─────────────────────────────
+async function buildPdf({ letter, claimData, details, result, flightDetails }) {
   const { jsPDF } = await import('jspdf');
 
   // ── Layout constants ──
   const PAGE_W = 210, PAGE_H = 297;
   const ML = 25, MR = 25;
-  const CONTENT_W = PAGE_W - ML - MR; // 160mm
-  const HEADER_H  = 18;   // blue banner height
-  const SUBHD_H   = 8;    // light-blue subheader height
-  const CONTENT_Y = HEADER_H + SUBHD_H + 6; // first usable y after headers
-  const FOOTER_Y  = 280;  // footer rule position
+  const CONTENT_W = PAGE_W - ML - MR;
+  const HEADER_H  = 18;
+  const SUBHD_H   = 8;
+  const CONTENT_Y = HEADER_H + SUBHD_H + 6;
+  const FOOTER_Y  = 280;
   const BODY_SIZE = 10;
   const LINE_H    = 5.5;
   const PARA_GAP  = 5;
@@ -83,8 +175,11 @@ async function buildPdf({ letter, claimData, details, result }) {
     TEXT_BODY:    [51, 51, 51],
     TEXT_LABEL:   [100, 116, 139],
     TEXT_MUTED:   [148, 163, 184],
+    GREEN:        [22, 163, 74],
+    GREEN_BG:     [220, 252, 231],
     RED:          [220, 38, 38],
     RED_DARK:     [163, 45, 45],
+    ORANGE:       [234, 88, 12],
     WHITE:        [255, 255, 255],
   };
 
@@ -92,6 +187,8 @@ async function buildPdf({ letter, claimData, details, result }) {
   const TOTAL_ALIAS = '{totalPages}';
   let pageNum = 1;
   let y = 0;
+  let sectionLabel = 'CLAIM KIT';
+  let sectionSubtitle = 'Complete Compensation Claim Package';
 
   const setTC = c => doc.setTextColor(...c);
   const setFC = c => doc.setFillColor(...c);
@@ -99,51 +196,43 @@ async function buildPdf({ letter, claimData, details, result }) {
   const rnd = (x, yy, w, h) =>
     (doc.roundedRect ? doc.roundedRect(x, yy, w, h, 3, 3, 'FD') : doc.rect(x, yy, w, h, 'FD'));
 
-  // ── Page header (blue banner + light-blue subheader) ──
+  // ── Page header ──
   function drawPageHeader() {
-    // Blue banner
     setFC(C.BRAND_BLUE);
     doc.rect(0, 0, PAGE_W, HEADER_H, 'F');
-
-    // "FlightComp" bold 20pt
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(20); setTC(C.WHITE);
-    doc.text('FlightComp', ML, 12);
-
-    // Subtitle 9pt, white at ~70% opacity on blue → light blue-white
-    const subtitle = (result?.regulation === 'UK261')
-      ? 'UK Civil Aviation Act 2006 · Official compensation claim'
-      : 'EU Regulation 261/2004 · Official compensation claim';
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(14); setTC(C.WHITE);
+    doc.text('FlightComp Claim Kit', ML, 11.5);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
     doc.setTextColor(195, 219, 248);
-    doc.text(subtitle, ML, HEADER_H - 3);
+    doc.text(sectionSubtitle, ML, HEADER_H - 3);
 
-    // Light-blue subheader bar
     setFC(C.LT_BLUE_BG);
     doc.rect(0, HEADER_H, PAGE_W, SUBHD_H, 'F');
-
-    // "FORMAL CLAIM" left, date right
     doc.setFont('helvetica', 'bold'); doc.setFontSize(8); setTC(C.DARK_BLUE);
-    doc.text('FORMAL CLAIM', ML, HEADER_H + 5.5);
-
-    const todayStr = new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+    doc.text(sectionLabel, ML, HEADER_H + 5.5);
+    const todayStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
     doc.setFont('helvetica', 'normal'); setTC(C.ACCENT_BLUE);
     doc.text(todayStr, PAGE_W - MR, HEADER_H + 5.5, { align: 'right' });
   }
 
   // ── Page footer ──
-  function drawFooter() {
+  function drawFooter(branded = false) {
     setDC(C.GRAY_BD); doc.setLineWidth(0.3);
     doc.line(ML, FOOTER_Y, PAGE_W - MR, FOOTER_Y);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(7); setTC(C.TEXT_MUTED);
-    doc.text('Generated by FlightComp · getflightcomp.com · EU261 Claim Document', ML, FOOTER_Y + 5);
+    if (branded) {
+      doc.text('Prepared with FlightComp — getflightcomp.com', ML, FOOTER_Y + 5);
+    }
     doc.text(`Page ${pageNum} of ${TOTAL_ALIAS}`, PAGE_W - MR, FOOTER_Y + 5, { align: 'right' });
   }
 
   // ── New page ──
-  function newPage() {
-    drawFooter();
+  function newPage(label, subtitle) {
+    drawFooter(false);
     doc.addPage();
     pageNum++;
+    if (label) sectionLabel = label;
+    if (subtitle) sectionSubtitle = subtitle;
     drawPageHeader();
     y = CONTENT_Y;
   }
@@ -153,58 +242,59 @@ async function buildPdf({ letter, claimData, details, result }) {
     if (y + needed > FOOTER_Y - 5) newPage();
   }
 
-  // ── Section header with coloured underline ──
-  function drawSection(title, red = false) {
+  // ── Section header ──
+  function drawSection(title, accent = C.DARK_BLUE, lineColor = C.BRAND_BLUE) {
     checkPage(14);
     doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
-    setTC(red ? C.RED_DARK : C.DARK_BLUE);
+    setTC(accent);
     doc.text(title, ML, y); y += 3.5;
-    setDC(red ? C.RED : C.BRAND_BLUE); doc.setLineWidth(0.7);
+    setDC(lineColor); doc.setLineWidth(0.7);
     doc.line(ML, y, PAGE_W - MR, y); y += 5;
   }
 
-  // ── Inline segment parser ──
+  // ── Inline segment builder ──
   function buildSegs(text, extraPats = []) {
     const pats = [
-      { re: /(?:€|£)\s*\d[\d,.]*|\d[\d,.]*\s*(?:EUR|GBP|euros?|pounds?)/gi, bold:true, color:C.TEXT_BODY },
-      { re: /(?:EU|UK|EC)\s*(?:Regulation\s*)?261(?:\/2004)?/gi,             bold:true, color:C.TEXT_BODY },
-      { re: /within\s+14\s+days?|14[\s-]days?/gi,                            bold:true, color:C.RED       },
+      { re: /(?:€|£|CA\$)\s*[\d,]+/gi,                                      bold: true,  color: C.TEXT_BODY },
+      { re: /(?:EU|UK|EC)\s*(?:Regulation\s*)?261(?:\/2004)?/gi,             bold: true,  color: C.TEXT_BODY },
+      { re: /within\s+14\s+days?|14[\s-]days?/gi,                            bold: true,  color: C.RED       },
+      { re: /within\s+30\s+days?|30[\s-]days?/gi,                            bold: true,  color: C.ORANGE    },
       ...extraPats,
     ];
     const hits = [];
     for (const { re, bold, color } of pats) {
       re.lastIndex = 0; let m;
       while ((m = re.exec(text)) !== null)
-        hits.push({ start:m.index, end:m.index+m[0].length, bold, color });
+        hits.push({ start: m.index, end: m.index + m[0].length, bold, color });
     }
-    hits.sort((a,b) => a.start-b.start);
+    hits.sort((a, b) => a.start - b.start);
     const clean = []; let cur = 0;
-    for (const h of hits) { if (h.start>=cur) { clean.push(h); cur=h.end; } }
+    for (const h of hits) { if (h.start >= cur) { clean.push(h); cur = h.end; } }
     const segs = []; cur = 0;
     for (const h of clean) {
-      if (h.start>cur) segs.push({ text:text.slice(cur,h.start), bold:false, color:C.TEXT_BODY });
-      segs.push({ text:text.slice(h.start,h.end), bold:h.bold, color:h.color });
+      if (h.start > cur) segs.push({ text: text.slice(cur, h.start), bold: false, color: C.TEXT_BODY });
+      segs.push({ text: text.slice(h.start, h.end), bold: h.bold, color: h.color });
       cur = h.end;
     }
-    if (cur<text.length) segs.push({ text:text.slice(cur), bold:false, color:C.TEXT_BODY });
+    if (cur < text.length) segs.push({ text: text.slice(cur), bold: false, color: C.TEXT_BODY });
     return segs;
   }
 
-  // ── Word-wrapped inline paragraph renderer ──
-  function renderSegs(segs, { lh=LINE_H, gap=PARA_GAP, size=BODY_SIZE }={}) {
+  // ── Word-wrapped paragraph renderer ──
+  function renderSegs(segs, { lh = LINE_H, gap = PARA_GAP, size = BODY_SIZE } = {}) {
     const tokens = [];
     for (const seg of segs) {
       for (const part of seg.text.split(/(\s+)/)) {
-        if (part) tokens.push({ text:part, bold:seg.bold, color:seg.color });
+        if (part) tokens.push({ text: part, bold: seg.bold, color: seg.color });
       }
     }
-    const lines = []; let curLine = { toks:[], w:0 };
+    const lines = []; let curLine = { toks: [], w: 0 };
     for (const tok of tokens) {
       doc.setFont('helvetica', tok.bold ? 'bold' : 'normal'); doc.setFontSize(size);
       const tw = doc.getTextWidth(tok.text);
       const ws = /^\s+$/.test(tok.text);
       if (!ws && curLine.w + tw > CONTENT_W && curLine.toks.length > 0) {
-        lines.push(curLine); curLine = { toks:[], w:0 };
+        lines.push(curLine); curLine = { toks: [], w: 0 };
       }
       curLine.toks.push(tok); curLine.w += tw;
     }
@@ -217,7 +307,7 @@ async function buildPdf({ letter, claimData, details, result }) {
       for (let i = start; i < line.toks.length; i++) {
         const tok = line.toks[i];
         doc.setFont('helvetica', tok.bold ? 'bold' : 'normal'); doc.setFontSize(size);
-        doc.setTextColor(...tok.color);
+        setTC(tok.color);
         doc.text(tok.text, lx, y);
         lx += doc.getTextWidth(tok.text);
       }
@@ -227,6 +317,10 @@ async function buildPdf({ letter, claimData, details, result }) {
   }
 
   const renderPara = (text, opts) => renderSegs(buildSegs(text), opts);
+
+  function renderBold(text, opts) {
+    renderSegs([{ text, bold: true, color: C.TEXT_PRI }], opts);
+  }
 
   // ── Two-column table box ──
   function drawTableBox(rows) {
@@ -248,38 +342,215 @@ async function buildPdf({ letter, claimData, details, result }) {
     y += boxH + 6;
   }
 
-  // ═══════════════════════════════════════════════
-  // PARSE LETTER
-  // ═══════════════════════════════════════════════
-  const rawParas = letter.split(/\n{2,}/).map(p => p.trim()).filter(Boolean);
-  const rawSubj  = rawParas.find(p => /^re:/i.test(p));
-  const nonSubj  = rawParas.filter(p => !/^re:/i.test(p));
-  const signoffI = nonSubj.findIndex(p => /^(sincerely|yours (faithfully|sincerely|truly))/i.test(p));
-  const bodyParas = signoffI >= 0 ? nonSubj.slice(0, signoffI) : nonSubj;
-  const signoffPara = signoffI >= 0 ? nonSubj[signoffI] : 'Sincerely,';
+  // ── Contact info box ──
+  function drawContactBox(contact) {
+    const lines = [];
+    if (contact.claimsEmail) lines.push(['Email', contact.claimsEmail]);
+    if (contact.claimsFormUrl) lines.push(['Online form', contact.claimsFormUrl]);
+    if (contact.mailingAddress) lines.push(['Post', contact.mailingAddress]);
+    if (!lines.length) return;
+    const ROW_H = 7, PAD = 4;
+    const boxH = PAD * 2 + lines.length * ROW_H + 2;
+    checkPage(boxH + 4);
+    setFC(C.LT_BLUE_BG); setDC(C.LT_BLUE_BD); doc.setLineWidth(0.5);
+    rnd(ML, y, CONTENT_W, boxH);
+    let ry = y + PAD + 4;
+    for (const [label, value] of lines) {
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(8); setTC(C.DARK_BLUE);
+      doc.text(label + ':', ML + PAD, ry);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(8); setTC(C.TEXT_BODY);
+      const labelW = doc.getTextWidth(label + ': ') + 2;
+      const valLines = doc.splitTextToSize(value, CONTENT_W - labelW - PAD * 2);
+      doc.text(valLines[0], ML + PAD + labelW, ry);
+      ry += ROW_H;
+    }
+    y += boxH + 6;
+  }
 
-  const aInfo      = getAirlineInfo(claimData?.flightNumber);
-  const airlineName = aInfo?.name || 'The Airline';
-  const regulation  = result?.regulation || 'EU261';
-  const compAmount  = result?.compensation?.amount || '';
-  const senderName  = details?.name  || '';
-  const senderEmail = details?.email || '';
+  // ── Numbered step ──
+  function drawStep(num, text, size = BODY_SIZE) {
+    checkPage(12);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(size); setTC(C.DARK_BLUE);
+    doc.text(`${num}.`, ML, y);
+    doc.setFont('helvetica', 'normal'); setTC(C.TEXT_BODY);
+    const wrapped = doc.splitTextToSize(text, CONTENT_W - 8);
+    doc.text(wrapped, ML + 8, y);
+    y += wrapped.length * (size * 0.4) + 4;
+  }
+
+  // ── Template letter box ──
+  function drawTemplateLetter(paragraphs) {
+    const PAD = 5;
+    // First measure height
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+    let totalH = PAD * 2;
+    for (const para of paragraphs) {
+      const lines = doc.splitTextToSize(para, CONTENT_W - PAD * 2 - 4);
+      totalH += lines.length * 4.5 + 3;
+    }
+    checkPage(Math.min(totalH, 60));
+    setFC(C.GRAY_BG); setDC(C.GRAY_BD); doc.setLineWidth(0.5);
+    // Draw box (approximate — content may overflow to new page)
+    doc.rect(ML, y, CONTENT_W, Math.min(totalH, FOOTER_Y - y - 10), 'FD');
+    y += PAD;
+    for (const para of paragraphs) {
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(9); setTC(C.TEXT_BODY);
+      const lines = doc.splitTextToSize(para, CONTENT_W - PAD * 2 - 4);
+      for (const line of lines) {
+        checkPage(4.5);
+        doc.text(line, ML + PAD, y);
+        y += 4.5;
+      }
+      y += 3;
+    }
+    y += PAD;
+  }
+
+  // ── Callout box (tinted) ──
+  function drawCallout(text, color = C.LT_BLUE_BG, borderColor = C.LT_BLUE_BD) {
+    const PAD = 4;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+    const lines = doc.splitTextToSize(text, CONTENT_W - PAD * 2 - 4);
+    const boxH = PAD * 2 + lines.length * 4.5;
+    checkPage(boxH + 4);
+    setFC(color); setDC(borderColor); doc.setLineWidth(0.5);
+    rnd(ML, y, CONTENT_W, boxH);
+    let ty = y + PAD + 3.5;
+    setTC(C.TEXT_BODY);
+    for (const line of lines) {
+      doc.text(line, ML + PAD + 2, ty);
+      ty += 4.5;
+    }
+    y += boxH + 5;
+  }
 
   // ═══════════════════════════════════════════════
-  // PAGE 1
+  // PARSE & COMMON DATA
   // ═══════════════════════════════════════════════
+  const rawParas    = letter.split(/\n{2,}/).map(p => p.trim()).filter(Boolean);
+  const rawSubj     = rawParas.find(p => /^re:/i.test(p));
+  const nonSubj     = rawParas.filter(p => !/^re:/i.test(p));
+  const signoffI    = nonSubj.findIndex(p => /^(sincerely|yours (faithfully|sincerely|truly))/i.test(p));
+  const bodyParas   = signoffI >= 0 ? nonSubj.slice(0, signoffI) : nonSubj;
+
+  const regulation   = result?.regulation || 'EU261';
+  const compAmount   = result?.compensation?.amount || '';
+  const senderName   = details?.name  || '';
+  const senderEmail  = details?.email || '';
+  const flightNum    = claimData?.flightNumber || '';
+  const flightDate   = claimData?.flightDate   || '';
+  const fromCode     = claimData?.from || '';
+  const toCode       = claimData?.to   || '';
+
+  // Airline contact lookup — prefer airlineCode, fall back to flight number prefix
+  const airlineIATA   = claimData?.airlineCode || flightNum.trim().toUpperCase().replace(/\s/g, '').slice(0, 2);
+  const airlineContact = getAirlineContact(airlineIATA);
+  const airlineName   = airlineContact?.name || 'The Airline';
+  const escalation    = getEscalationAuthority(regulation, result?.depInfo);
+  const deadlineDays  = getResponseDeadlineDays(regulation);
+
+  const todayStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  const deadlineDate = new Date();
+  deadlineDate.setDate(deadlineDate.getDate() + deadlineDays);
+  const deadlineDateStr = deadlineDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  const followUpDate = new Date();
+  followUpDate.setDate(followUpDate.getDate() + 14);
+  const followUpDateStr = followUpDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  const escalationDate = new Date();
+  escalationDate.setDate(escalationDate.getDate() + 30);
+  const escalationDateStr = escalationDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  const regFull =
+    regulation === 'UK261' ? 'UK261/2004'
+    : regulation === 'APPR' ? 'Canada APPR (SOR/2019-150)'
+    : regulation === 'SHY'  ? 'Turkey SHY'
+    : 'EU Regulation 261/2004';
+
+  const delayInfo = calcDelay(flightDetails?.scheduledTime, flightDetails?.actualTime);
+
+  // ═══════════════════════════════════════════════
+  // PAGE 1 — COVER
+  // ═══════════════════════════════════════════════
+  sectionLabel    = 'CLAIM KIT';
+  sectionSubtitle = 'Complete Compensation Claim Package';
   drawPageHeader();
   y = CONTENT_Y;
 
-  // ── Recipient address ──
+  // Title block
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(20); setTC(C.TEXT_PRI);
+  doc.text('Your Claim Kit', ML, y); y += 9;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(11); setTC(C.TEXT_LABEL);
+  doc.text('Everything you need to claim your compensation — prepared and ready to use.', ML, y); y += 10;
+
+  // Claim summary box
+  const SUMBOX_H = 36;
+  setFC(C.LT_BLUE_BG); setDC(C.LT_BLUE_BD); doc.setLineWidth(1);
+  if (doc.roundedRect) doc.roundedRect(ML, y, CONTENT_W, SUMBOX_H, 4, 4, 'FD');
+  else doc.rect(ML, y, CONTENT_W, SUMBOX_H, 'FD');
+
+  const col1 = ML + 5, col2 = ML + CONTENT_W / 2;
+  let bly = y + 8;
+  const drawSumRow = (label, value, cx) => {
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); setTC(C.ACCENT_BLUE);
+    doc.text(label.toUpperCase(), cx, bly);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10); setTC(C.DARK_BLUE);
+    doc.text(value || '—', cx, bly + 5);
+  };
+  drawSumRow('Regulation', regFull, col1);
+  drawSumRow('Compensation', compAmount || 'See letter', col2);
+  bly += 16;
+  drawSumRow('Flight', flightNum || '—', col1);
+  drawSumRow('Date', flightDate || '—', col2);
+  y += SUMBOX_H + 8;
+
+  // "This kit contains" list
+  drawSection('THIS KIT CONTAINS');
+  const kitItems = [
+    ['1', 'Formal Compensation Claim Letter — personalised, ready to send'],
+    ['2', 'How to Submit Your Claim — airline contact details and step-by-step instructions'],
+    ['3', '14-Day Follow-Up Template — if the airline hasn\'t responded after 2 weeks'],
+    ['4', '30-Day Escalation Template — if the airline rejects or ignores your claim'],
+    ['5', 'What to Expect Guide — common airline responses and how to handle them'],
+  ];
+  for (const [num, desc] of kitItems) {
+    checkPage(8);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10); setTC(C.BRAND_BLUE);
+    doc.text(num, ML + 1, y);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(10); setTC(C.TEXT_BODY);
+    doc.text(desc, ML + 8, y);
+    y += 7;
+  }
+  y += 4;
+
+  // Quick-start callout
+  checkPage(24);
+  setFC([237, 253, 245]); setDC([134, 239, 172]); doc.setLineWidth(0.7);
+  if (doc.roundedRect) doc.roundedRect(ML, y, CONTENT_W, 22, 3, 3, 'FD');
+  else doc.rect(ML, y, CONTENT_W, 22, 'FD');
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(9); setTC(C.GREEN);
+  doc.text('QUICK START', ML + 5, y + 7);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); setTC(C.TEXT_BODY);
+  const qs = `Send page 2 to ${airlineName} today. See page 3 for the exact email address and online form link.`;
+  const qsLines = doc.splitTextToSize(qs, CONTENT_W - 10);
+  doc.text(qsLines, ML + 5, y + 13);
+  y += 26;
+
+  // ═══════════════════════════════════════════════
+  // PAGES 2+ — CLAIM LETTER
+  // ═══════════════════════════════════════════════
+  newPage('CLAIM LETTER', 'Formal Compensation Claim Letter');
+
+  // Recipient address
   doc.setFont('helvetica', 'normal'); doc.setFontSize(10); setTC(C.TEXT_BODY);
   doc.text('Customer Relations / Claims Department', ML, y); y += 5;
   doc.text(airlineName, ML, y); y += 8;
 
-  // ── Subject line ──
+  // Subject line
   const subjCore = rawSubj
     ? rawSubj.replace(/^re:\s*/i, '')
-    : `Flight ${claimData?.flightNumber || ''} — Formal ${regulation} compensation claim`;
+    : `Flight ${flightNum} — Formal ${regFull} Compensation Claim`;
   doc.setFont('helvetica', 'bold'); doc.setFontSize(12); setTC(C.TEXT_PRI);
   const subjLines = doc.splitTextToSize(`Re: ${subjCore}`, CONTENT_W);
   for (const sl of subjLines) { doc.text(sl, ML, y); y += 6.5; }
@@ -288,44 +559,44 @@ async function buildPdf({ letter, claimData, details, result }) {
   doc.line(ML, y, PAGE_W - MR, y);
   y += 7;
 
-  // ── Opening paragraph ──
+  // Opening paragraph
   if (bodyParas.length > 0) renderPara(bodyParas[0]);
 
-  // ── FLIGHT DETAILS section ──
+  // Flight details table
   drawSection('FLIGHT DETAILS');
   const flightRows = [
-    claimData?.flightNumber            && ['Flight number',    claimData.flightNumber],
-    claimData?.flightDate              && ['Date of travel',   claimData.flightDate],
-    (claimData?.from && claimData?.to) && ['Route', `${claimData.from} → ${claimData.to}`],
-    result?.distanceKm                 && ['Distance',         `${result.distanceKm.toLocaleString()} km`],
-    senderName                         && ['Passenger name',   senderName],
+    flightNum                               && ['Flight number',    flightNum],
+    flightDate                              && ['Date of travel',   flightDate],
+    (fromCode && toCode)                    && ['Route',            `${fromCode} → ${toCode}`],
+    result?.distanceKm                      && ['Distance',         `${result.distanceKm.toLocaleString()} km`],
+    senderName                              && ['Passenger name',   senderName],
+    flightDetails?.scheduledTime            && ['Scheduled arrival', flightDetails.scheduledTime],
+    flightDetails?.actualTime               && ['Actual arrival',   flightDetails.actualTime],
+    delayInfo                               && ['Delay duration',   delayInfo.label],
   ].filter(Boolean);
   drawTableBox(flightRows);
 
-  // ── LEGAL BASIS section + remaining letter body ──
+  // Legal basis + rest of letter body
   if (bodyParas.length > 1) {
-    drawSection('LEGAL BASIS');
+    drawSection('LEGAL BASIS & CLAIM');
     for (const para of bodyParas.slice(1)) renderPara(para);
   }
 
-  // ── AMOUNT DUE section ──
+  // Compensation amount box
   if (compAmount) {
     const articleLabel = result?.compensation?.article
       ? `AMOUNT DUE — ${result.compensation.article.toUpperCase()}`
-      : 'AMOUNT DUE — ARTICLE 7';
+      : 'AMOUNT DUE';
     drawSection(articleLabel);
     const ABOX_H = 20;
     checkPage(ABOX_H + 6);
     setFC(C.LT_BLUE_BG); setDC(C.LT_BLUE_BD); doc.setLineWidth(1);
     if (doc.roundedRect) doc.roundedRect(ML, y, CONTENT_W, ABOX_H, 4, 4, 'FD');
     else doc.rect(ML, y, CONTENT_W, ABOX_H, 'FD');
-    // Large amount
     doc.setFont('helvetica', 'bold'); doc.setFontSize(24); setTC(C.DARK_BLUE);
     doc.text(compAmount, ML + 5, y + 13);
-    // Label below
     doc.setFont('helvetica', 'normal'); doc.setFontSize(8); setTC(C.ACCENT_BLUE);
-    doc.text('Compensation claimed', ML + 5, y + 18.5);
-    // Badge right
+    doc.text('Compensation claimed per passenger', ML + 5, y + 18.5);
     const BW = 40, BH = 7, BX = PAGE_W - MR - BW - 2, BY = y + (ABOX_H - BH) / 2;
     setFC(C.DARK_BLUE);
     if (doc.roundedRect) doc.roundedRect(BX, BY, BW, BH, 2, 2, 'F');
@@ -335,46 +606,37 @@ async function buildPdf({ letter, claimData, details, result }) {
     y += ABOX_H + 6;
   }
 
-  // ═══════════════════════════════════════════════
-  // PAGE 2
-  // ═══════════════════════════════════════════════
-  if (pageNum === 1) newPage(); // ensure formal sections always on page 2+
+  // Force new page for formal sections
+  newPage('CLAIM LETTER', 'Formal Compensation Claim Letter');
 
-  // ── FORMAL REQUEST section ──
-  drawSection('FORMAL REQUEST & PAYMENT DETAILS');
-  const reqText = `I formally request that ${airlineName} process this claim and remit the applicable compensation to the passenger at the contact details below within the statutory timeframe.`;
-  renderPara(reqText);
+  // Formal request
+  drawSection('FORMAL REQUEST');
+  renderPara(`I formally request that ${airlineName} process this claim and remit the applicable compensation within the statutory timeframe.`);
+  drawTableBox([
+    senderName  && ['Passenger name',  senderName],
+    senderEmail && ['Email address',   senderEmail],
+    details?.address && ['Address', details.address],
+    details?.bookingRef && ['Booking reference', details.bookingRef],
+  ].filter(Boolean));
 
-  const passengerRows = [
-    senderName  && ['Passenger name', senderName],
-    senderEmail && ['Email address',  senderEmail],
-  ].filter(Boolean);
-  drawTableBox(passengerRows);
-
-  // ── RESPONSE DEADLINE section (RED) ──
+  // Response deadline (red)
   y += 4;
-  drawSection('RESPONSE DEADLINE', true);
-
-  const deadlineDate = new Date();
-  deadlineDate.setDate(deadlineDate.getDate() + 14);
-  const deadlineDateStr = deadlineDate.toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
-  const regFull = regulation === 'UK261'
-    ? 'the UK Civil Aviation Act 2006'
+  drawSection('RESPONSE DEADLINE', C.RED_DARK, C.RED);
+  const regFormal = regulation === 'UK261' ? 'the UK Civil Aviation Act 2006'
+    : regulation === 'APPR' ? 'the Air Passenger Protection Regulations (SOR/2019-150)'
+    : regulation === 'SHY'  ? 'the SHY Passenger Regulation (Turkish Civil Aviation Law No. 2920, Article 143)'
     : 'EU Regulation 261/2004';
-  const deadlineText = `Under ${regFull}, you are required to respond to this formal claim within 14 days of receipt. I require your written response no later than ${deadlineDateStr}. Failure to respond or an unsatisfactory response may result in escalation to the relevant National Enforcement Body and, if necessary, legal proceedings.`;
-
-  const escDeadline = deadlineDateStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const deadlineText = `Under ${regFormal}, I require a written response to this formal claim within ${deadlineDays} days of receipt, no later than ${deadlineDateStr}. Failure to respond or an unsatisfactory response will result in escalation to the ${escalation.name} and, if necessary, legal proceedings.`;
+  const escDate = deadlineDateStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   renderSegs(buildSegs(deadlineText, [
-    { re: new RegExp(escDeadline, 'g'), bold:true, color:C.RED },
+    { re: new RegExp(escDate, 'g'), bold: true, color: C.RED },
   ]));
 
-  // ── Closing & sign-off ──
+  // Closing
   y += 2;
   renderPara('I trust you will handle this claim promptly and in accordance with your statutory obligations.');
-
   doc.setFont('helvetica', 'normal'); doc.setFontSize(BODY_SIZE); setTC(C.TEXT_BODY);
-  checkPage(); doc.text('Sincerely,', ML, y); y += 15;
-
+  checkPage(); doc.text('Yours faithfully,', ML, y); y += 14;
   if (senderName) {
     doc.setFont('helvetica', 'bold'); doc.setFontSize(BODY_SIZE); setTC(C.TEXT_PRI);
     checkPage(); doc.text(senderName, ML, y); y += LINE_H;
@@ -383,27 +645,214 @@ async function buildPdf({ letter, claimData, details, result }) {
     doc.setFont('helvetica', 'normal'); doc.setFontSize(9); setTC(C.TEXT_LABEL);
     checkPage(); doc.text(senderEmail, ML, y); y += LINE_H;
   }
-  const signDate = new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
   doc.setFont('helvetica', 'normal'); doc.setFontSize(9); setTC(C.TEXT_LABEL);
-  checkPage(); doc.text(signDate, ML, y);
+  checkPage(); doc.text(todayStr, ML, y);
 
-  // ── Finalise ──
-  drawFooter();
+  // ═══════════════════════════════════════════════
+  // SUBMISSION PAGE
+  // ═══════════════════════════════════════════════
+  newPage('SUBMISSION GUIDE', 'How to Submit Your Claim');
+
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(16); setTC(C.TEXT_PRI);
+  doc.text('How to Submit Your Claim', ML, y); y += 8;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(10); setTC(C.TEXT_LABEL);
+  doc.text(`Airline: ${airlineName}  ·  Regulation: ${regFull}`, ML, y); y += 10;
+
+  // Contact block
+  drawSection('AIRLINE CONTACT DETAILS');
+  if (airlineContact) {
+    drawContactBox(airlineContact);
+  } else {
+    renderPara(`We don't have specific contact details for ${airlineName} on file. Search "[airline name] EU261 claim" or "[airline name] customer relations" to find the correct contact.`);
+  }
+
+  // Step-by-step
+  drawSection('STEP-BY-STEP INSTRUCTIONS');
+  const subSteps = [
+    `Send the claim letter (page 2 of this kit) to ${airlineName} using the contact details above. Email is fastest; post requires proof of delivery.`,
+    'Keep a copy of everything you send and note today\'s date as your submission date.',
+    `The airline has ${deadlineDays} days to respond under ${regFull}. Mark your calendar for ${deadlineDateStr}.`,
+    `If you don't receive a response by ${followUpDateStr}, send the 14-day follow-up template (page 4 of this kit).`,
+    `If the airline rejects your claim or you receive no satisfactory response by ${escalationDateStr}, send the 30-day escalation template (page 5) and file a complaint with ${escalation.name}.`,
+  ];
+  subSteps.forEach((step, i) => drawStep(i + 1, step));
+
+  y += 4;
+  drawSection('ESCALATION AUTHORITY');
+  renderPara(`If the airline does not resolve your claim, file a free complaint with:`);
+  drawTableBox([
+    [escalation.name, escalation.url],
+  ]);
+  if (escalation.note) {
+    doc.setFont('helvetica', 'italic'); doc.setFontSize(9); setTC(C.TEXT_LABEL);
+    const noteLines = doc.splitTextToSize(escalation.note, CONTENT_W);
+    for (const nl of noteLines) { checkPage(); doc.text(nl, ML, y); y += 4.5; }
+    y += 3;
+  }
+
+  // ═══════════════════════════════════════════════
+  // 14-DAY FOLLOW-UP PAGE
+  // ═══════════════════════════════════════════════
+  newPage('14-DAY FOLLOW-UP', '14-Day Follow-Up Template');
+
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(16); setTC(C.TEXT_PRI);
+  doc.text('14-Day Follow-Up Template', ML, y); y += 8;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(10); setTC(C.TEXT_LABEL);
+  doc.text('Use this if the airline has not responded within 14 days of your original claim.', ML, y); y += 10;
+
+  drawCallout(
+    `Send this letter if you have not received a response by ${followUpDateStr} (14 days from today's claim submission).`,
+    C.LT_BLUE_BG, C.LT_BLUE_BD
+  );
+
+  drawSection('FOLLOW-UP LETTER');
+  drawTemplateLetter([
+    todayStr,
+    '',
+    'Customer Relations Department',
+    airlineName,
+    '',
+    `Re: Follow-Up — Compensation Claim for Flight ${flightNum} on ${flightDate}`,
+    '',
+    `Dear Sir or Madam,`,
+    '',
+    `I am writing to follow up on a formal compensation claim I submitted on ${todayStr} regarding flight ${flightNum} on ${flightDate} from ${fromCode} to ${toCode}.`,
+    '',
+    `I have not yet received a response or acknowledgement of my claim. Under ${regFull}, airlines are required to respond to passenger compensation claims within a reasonable timeframe. I submitted my original claim ${deadlineDays} days ago and have still not received a substantive reply.`,
+    '',
+    `I kindly request that you acknowledge receipt of my original claim and provide a written update on its status within 7 days of this letter.`,
+    '',
+    `If I do not receive a response, I will escalate this matter to the ${escalation.name}.`,
+    '',
+    'Yours faithfully,',
+    senderName || '[Your full name]',
+    senderEmail || '[Your email]',
+  ].filter(s => s !== null));
+
+  y += 4;
+  doc.setFont('helvetica', 'italic'); doc.setFontSize(8); setTC(C.TEXT_MUTED);
+  doc.text('Note: Update the submission date if you are sending this at a different time.', ML, y); y += 8;
+
+  // ═══════════════════════════════════════════════
+  // 30-DAY ESCALATION PAGE
+  // ═══════════════════════════════════════════════
+  newPage('30-DAY ESCALATION', '30-Day Escalation Template');
+
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(16); setTC(C.TEXT_PRI);
+  doc.text('30-Day Escalation Template', ML, y); y += 8;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(10); setTC(C.TEXT_LABEL);
+  doc.text('Use this after 30 days with no satisfactory response. This letter is firm and references escalation.', ML, y); y += 10;
+
+  drawCallout(
+    `Send this letter if you have not received a satisfactory response by ${escalationDateStr} (30 days from today's claim submission).`,
+    [255, 247, 237], [254, 215, 170]
+  );
+
+  drawSection('ESCALATION LETTER');
+  drawTemplateLetter([
+    todayStr,
+    '',
+    'Customer Relations Department',
+    airlineName,
+    '',
+    `Re: Escalation Notice — Unanswered Compensation Claim for Flight ${flightNum} on ${flightDate}`,
+    '',
+    'Dear Sir or Madam,',
+    '',
+    `I am writing to formally escalate my compensation claim regarding flight ${flightNum} on ${flightDate} from ${fromCode} to ${toCode}.`,
+    '',
+    `I submitted a formal claim on ${todayStr} under ${regFull}. As of the date of this letter, I have not received a substantive response or resolution.`,
+    '',
+    compAmount
+      ? `Under ${regFull}, I am legally entitled to compensation of ${compAmount} per passenger. This amount remains outstanding.`
+      : `Under ${regFull}, I am legally entitled to compensation for the disruption experienced. This remains outstanding.`,
+    '',
+    `I require a full written response within 14 days of this letter. If I do not receive a satisfactory resolution, I will immediately file a formal complaint with the ${escalation.name}${escalation.url ? ` (${escalation.url})` : ''} and reserve all rights to pursue further legal remedies, including proceedings in the relevant small claims court.`,
+    '',
+    'Yours faithfully,',
+    senderName || '[Your full name]',
+    senderEmail || '[Your email]',
+  ].filter(s => s !== null));
+
+  y += 4;
+  doc.setFont('helvetica', 'italic'); doc.setFontSize(8); setTC(C.TEXT_MUTED);
+  doc.text('Note: Update the original claim submission date before sending.', ML, y); y += 8;
+
+  // ═══════════════════════════════════════════════
+  // WHAT TO EXPECT PAGE
+  // ═══════════════════════════════════════════════
+  newPage('PASSENGER GUIDE', 'What to Expect After Submitting');
+
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(16); setTC(C.TEXT_PRI);
+  doc.text('What to Expect After Submitting Your Claim', ML, y); y += 10;
+
+  drawSection('TYPICAL TIMELINE');
+  const timeline = [
+    '1–3 days: Acknowledge receipt (most airlines, if you email).',
+    '14–30 days: Initial response — may be an offer, a rejection, or a request for more information.',
+    '30–60 days: Full resolution for straightforward claims.',
+    '60–90 days: More complex cases, or airlines that are slow to respond.',
+    '90+ days: Escalate to the relevant authority — do not wait longer than this.',
+  ];
+  for (const t of timeline) renderPara(t, { gap: 3 });
+  y += 3;
+
+  drawSection('COMMON AIRLINE RESPONSES');
+  const responses = [
+    ['"Extraordinary circumstances" or "force majeure"',
+     'Airlines frequently use this defense. If the actual cause was mechanical, crew-related, or operational, this defense does not apply. Respond in writing citing the specific cause and stating it does not meet the legal definition of extraordinary circumstances.'],
+    ['"We need more information"',
+     'Respond promptly with any documents requested — booking confirmation, boarding passes, correspondence. Keep copies of everything you send.'],
+    ['"Your claim is rejected"',
+     'Do not accept a rejection without a written explanation citing specific legal grounds. Use the 30-day escalation template (page 5) and file with the relevant authority.'],
+    ['No response after 14 days',
+     'Send the 14-day follow-up template (page 4). If still no response after 30 days total, send the escalation template and file with the authority below.'],
+    ['"We offer you a voucher instead"',
+     'You are not obliged to accept a voucher. Under EU261/UK261/APPR, you are entitled to cash compensation. Reply in writing that you do not accept the voucher and require cash payment.'],
+  ];
+  for (const [heading, detail] of responses) {
+    checkPage(20);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9); setTC(C.DARK_BLUE);
+    const headLines = doc.splitTextToSize(heading, CONTENT_W);
+    doc.text(headLines, ML, y); y += headLines.length * 4.5 + 1;
+    renderPara(detail, { gap: 6 });
+  }
+
+  drawSection('YOUR ESCALATION PATH');
+  drawStep(1, `Send your formal claim letter today (page 2).`);
+  drawStep(2, `If no response in 14 days, send the follow-up template (page 4).`);
+  drawStep(3, `If no resolution in 30 days, send the escalation template (page 5) and file with ${escalation.name}${escalation.url ? ` at ${escalation.url}` : ''}.`);
+  drawStep(4, `If the authority doesn't resolve it within 8 weeks, consider Alternative Dispute Resolution (ADR) or small claims court.`);
+
+  y += 3;
+  drawCallout(
+    'Small claims court is a viable option in most jurisdictions for claims of this size and does not require a solicitor. Filing fees are typically £30–£100 (UK), €25–€75 (EU), or CA$75–$200 (Canada).',
+    C.GRAY_BG, C.GRAY_BD
+  );
+
+  // ── Final branded footer on last page ──
+  drawFooter(true);
   doc.putTotalPages(TOTAL_ALIAS);
   return doc;
 }
 
+// ═══════════════════════════════════════════════
+// Main page component
+// ═══════════════════════════════════════════════
 export default function Success() {
   const router = useRouter();
+  // 'loading' | 'collect' | 'generating' | 'ready' | 'error'
   const [state, setState] = useState('loading');
   const [letter, setLetter] = useState('');
   const [claimData, setClaimData] = useState(null);
   const [details, setDetails] = useState(null);
   const [result, setResult] = useState(null);
+  const [flightDetails, setFlightDetails] = useState({ scheduledTime: '', actualTime: '', incidentDescription: '' });
   const [copied, setCopied] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
   const hasFetched = useRef(false);
 
+  // Load claim data from sessionStorage, then prompt for extra details
   useEffect(() => {
     if (hasFetched.current) return;
     hasFetched.current = true;
@@ -420,44 +869,50 @@ export default function Success() {
     setClaimData(answers);
     setResult(r);
     setDetails(d);
-
-    fetch('/api/generate-letter', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ answers, result: r, details: d }),
-    })
-      .then(async res => {
-        if (!res.ok) throw new Error('API error');
-        const json = await res.json();
-        setLetter(json.letter);
-        setState('ready');
-        sessionStorage.removeItem('fc_claim');
-      })
-      .catch(() => setState('error'));
+    setState('collect');
   }, []);
+
+  // Called when user submits extra details form
+  async function handleGenerate(extraDetails) {
+    setFlightDetails(extraDetails);
+    setState('generating');
+    try {
+      const res = await fetch('/api/generate-letter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          answers: claimData,
+          result,
+          details,
+          flightDetails: extraDetails,
+        }),
+      });
+      if (!res.ok) throw new Error('API error');
+      const json = await res.json();
+      setLetter(json.letter);
+      setState('ready');
+      sessionStorage.removeItem('fc_claim');
+    } catch {
+      setState('error');
+    }
+  }
 
   async function downloadPdf() {
     if (!letter) return;
     setPdfLoading(true);
     try {
-      const doc = await buildPdf({ letter, claimData, details, result });
+      const doc = await buildPdf({ letter, claimData, details, result, flightDetails });
       const flightNum = claimData?.flightNumber?.replace(/\s/g, '') || 'flight';
       const date = claimData?.flightDate || new Date().toISOString().split('T')[0];
-      const fileName = `EU261-claim-${flightNum}-${date}.pdf`;
-
-      // Mobile Safari doesn't support the `download` attribute on blob URLs —
-      // open in a new tab so the user can use the share/save sheet instead.
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const fileName = `FlightComp-ClaimKit-${flightNum}-${date}.pdf`;
       if (isMobile) {
         const blob = doc.output('blob');
         const url = URL.createObjectURL(blob);
         const w = window.open(url, '_blank');
-        // Fallback if popup was blocked
         if (!w) {
           const a = document.createElement('a');
-          a.href = url;
-          a.download = fileName;
-          a.click();
+          a.href = url; a.download = fileName; a.click();
         }
         setTimeout(() => URL.revokeObjectURL(url), 10000);
       } else {
@@ -478,119 +933,89 @@ export default function Success() {
     });
   }
 
-  // ── Loading ──────────────────────────────────────────
+  // ── Loading (reading sessionStorage) ──
   if (state === 'loading') {
     return (
       <div className="loading-screen">
         <div className="loading-spinner" />
-        <div className="loading-title">Drafting your claim letter…</div>
-        <div className="loading-sub">
-          Claude is reviewing your flight details and writing a
-          personalised {result?.regulation || 'EU261'} letter. This takes about 15 seconds.
-        </div>
+        <div className="loading-title">Loading your claim data…</div>
       </div>
     );
   }
 
-  // ── Error ────────────────────────────────────────────
+  // ── Error ──
   if (state === 'error') {
     return (
       <div className="error-screen">
         <div className="error-icon">⚠️</div>
         <div className="error-title">Something went wrong</div>
         <div className="error-sub">
-          We couldn't load your claim data. If you've already paid,
-          please email <strong>support@flightclaim.app</strong> with your booking
-          reference and we'll send your letter manually.
+          We couldn&apos;t load your claim data. If you&apos;ve already paid,
+          please email <strong>support@getflightcomp.com</strong> with your booking
+          reference and we&apos;ll send your letter manually.
         </div>
         <button className="btn-retry" onClick={() => router.push('/')}>← Back to start</button>
       </div>
     );
   }
 
-  // ── Ready ────────────────────────────────────────────
-  const airlineInfo = getAirlineInfo(claimData?.flightNumber);
-  const neb = getNEB(result?.depInfo);
-  const regulation = result?.regulation || 'EU261';
-  const regFull = regulation === 'UK261' ? 'UK261/2004' : 'EU Regulation 261/2004';
+  // ── Collect extra details ──
+  if (state === 'collect') {
+    return (
+      <FlightDetailsForm
+        claimData={claimData}
+        result={result}
+        onSubmit={handleGenerate}
+      />
+    );
+  }
 
-  const nextSteps = [
-    {
-      title: 'Send the letter to the airline',
-      body: airlineInfo
-        ? `Email ${airlineInfo.name} at ${airlineInfo.claimsEmail || 'their official claims address'}.`
-        : 'Find the airline\'s claims email on their website — search "EU261 claim" or "customer relations".',
-      link: airlineInfo?.claimsUrl,
-      linkLabel: airlineInfo ? `${airlineInfo.name} claims page ↗` : null,
-    },
-    {
-      title: 'Keep a copy and note today\'s date',
-      body: `Under ${regFull} airlines must respond within 14 days. Screenshot or save your sent email.`,
-    },
-    {
-      title: 'Chase after 14 days',
-      body: 'If no response or a rejection, send a follow-up referencing your original claim date and demanding a written decision.',
-    },
-    {
-      title: neb ? `Escalate to the ${neb.name}` : 'Escalate to the National Enforcement Body (NEB)',
-      body: neb
-        ? `If the airline refuses or ignores you after 8 weeks, file a free complaint with ${neb.name}. This has legal weight.`
-        : 'File a free complaint with the National Enforcement Body in the departure country.',
-      link: neb?.url,
-      linkLabel: neb ? `${neb.name} ↗` : null,
-    },
-    {
-      title: 'Claim via Alternative Dispute Resolution (ADR)',
-      body: regulation === 'UK261'
-        ? 'In the UK, if the NEB doesn\'t resolve it, use a free CAA-approved ADR scheme — most UK airlines participate.'
-        : 'In the EU, many countries have free ADR schemes. Try the European Commission\'s ODR platform.',
-      link: regulation === 'UK261'
-        ? 'https://www.caa.co.uk/passengers/resolving-travel-problems/delays-and-cancellations/options/alternative-dispute-resolution/'
-        : 'https://ec.europa.eu/consumers/odr',
-      linkLabel: regulation === 'UK261' ? 'CAA ADR schemes ↗' : 'EU ODR Platform ↗',
-    },
-  ];
+  // ── Generating ──
+  if (state === 'generating') {
+    return (
+      <div className="loading-screen">
+        <div className="loading-spinner" />
+        <div className="loading-title">Building your claim kit…</div>
+        <div className="loading-sub">
+          Writing your personalised claim letter and preparing all 5 documents.
+          This takes about 15 seconds.
+        </div>
+      </div>
+    );
+  }
+
+  // ── Ready ──
+  const regulation = result?.regulation || 'EU261';
 
   return (
     <div className="success-screen">
       <div className="success-header">
         <div className="success-icon">✅</div>
-        <div className="success-title">Your claim letter is ready</div>
+        <div className="success-title">Your claim kit is ready</div>
         <div className="success-sub">
-          Personalised for {details?.name || 'you'} ·{' '}
-          {regulation} ·{' '}
-          {result?.compensation?.amount ? `Up to ${result.compensation.amount}` : 'Compensation pending'}
+          {details?.name || 'Your'} · {regulation} ·{' '}
+          {result?.compensation?.amount ? `Up to ${result.compensation.amount}` : 'Compensation pending'} ·{' '}
+          6-page PDF kit
         </div>
       </div>
 
-      {/* Formatted letter preview */}
+      {/* Letter preview */}
       <LetterDisplay letter={letter} />
 
-      {/* Action buttons */}
+      {/* Download */}
       <div className="letter-actions">
         <button className="btn-action primary" onClick={downloadPdf} disabled={pdfLoading}>
-          {pdfLoading ? '⏳ Generating…' : '⬇️ Download PDF'}
+          {pdfLoading ? '⏳ Generating PDF…' : '⬇️ Download Claim Kit (PDF)'}
         </button>
         <button className="btn-action" onClick={copyLetter}>
-          {copied ? '✓ Copied!' : '📋 Copy text'}
+          {copied ? '✓ Copied!' : '📋 Copy letter text'}
         </button>
       </div>
 
-      {/* What to do next */}
-      <div className="next-steps">
-        <div className="next-steps-title">What to do next</div>
-        {nextSteps.map((step, i) => (
-          <div key={i} className="next-step-item">
-            <span className="step-num">{i + 1}</span>
-            <div className="step-txt">
-              <strong>{step.title}</strong>
-              {step.body}
-              {step.link && step.linkLabel && (
-                <>{' '}<a className="step-link" href={step.link} target="_blank" rel="noopener noreferrer">{step.linkLabel}</a></>
-              )}
-            </div>
-          </div>
-        ))}
+      <div style={{ textAlign: 'center', marginTop: 12, marginBottom: 4 }}>
+        <span style={{ fontSize: 13, color: 'var(--muted)' }}>
+          PDF includes: claim letter · submission guide · follow-up templates · what to expect
+        </span>
       </div>
 
       <div style={{ marginTop: 24, textAlign: 'center' }}>
