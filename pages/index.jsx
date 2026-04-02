@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import Head from 'next/head';
-import { assessClaim, assessClaimAPPR, assessClaimSHY, detectRegulation } from '../lib/eu261';
+import { assessClaim, assessClaimAPPR, assessClaimSHY, detectRegulation, tryResolveAirport } from '../lib/eu261';
 import { resolveAirline, getCarrierRegion, isLargeCanadianCarrier } from '../lib/carriers';
 
 /* ══════════════════════════════════════════════════════
@@ -114,6 +114,10 @@ function Q3Date({ value, onChange, onNext, onBack }) {
 
 // ── Q4: Route ─────────────────────────────────────────
 function Q4Route({ from, to, onFromChange, onToChange, onNext, onBack }) {
+  const fromResolved = from.trim().length > 2 ? tryResolveAirport(from) : true;
+  const toResolved   = to.trim().length > 2   ? tryResolveAirport(to)   : true;
+  const fromWarn = from.trim().length > 2 && !fromResolved;
+  const toWarn   = to.trim().length > 2   && !toResolved;
   return (
     <div className="screen">
       <ProgressBar step={4} total={6} onBack={onBack} />
@@ -133,6 +137,11 @@ function Q4Route({ from, to, onFromChange, onToChange, onNext, onBack }) {
               autoComplete="off"
               spellCheck={false}
             />
+            {fromWarn && (
+              <span style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4, display: 'block' }}>
+                We didn&apos;t recognize that airport. Try the 3-letter code (e.g. IST, LHR, CDG).
+              </span>
+            )}
           </div>
           <div className="route-arrow">↓</div>
           <div className="route-wrap">
@@ -146,6 +155,11 @@ function Q4Route({ from, to, onFromChange, onToChange, onNext, onBack }) {
               autoComplete="off"
               spellCheck={false}
             />
+            {toWarn && (
+              <span style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4, display: 'block' }}>
+                We didn&apos;t recognize that airport. Try the 3-letter code (e.g. IST, LHR, CDG).
+              </span>
+            )}
           </div>
         </div>
         <p className="q-helper">
@@ -162,6 +176,8 @@ function Q4Route({ from, to, onFromChange, onToChange, onNext, onBack }) {
 
 // ── QAirline: Airline name ────────────────────────────
 function QAirline({ value, onChange, onNext, onBack }) {
+  const resolved = value.trim().length > 1 ? resolveAirline(value) : true;
+  const showWarn = value.trim().length > 2 && !resolved;
   return (
     <div className="screen">
       <ProgressBar step={5} total={7} onBack={onBack} />
@@ -178,6 +194,11 @@ function QAirline({ value, onChange, onNext, onBack }) {
           autoComplete="off"
           spellCheck={false}
         />
+        {showWarn && (
+          <span style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4, display: 'block' }}>
+            We didn&apos;t recognize that airline. Try the 2-letter IATA code (e.g. LH, BA, TK) or leave blank.
+          </span>
+        )}
         <p className="q-helper">
           Enter the airline name or IATA code (e.g. BA, LH, AF).{' '}
           <strong>Leave blank if unknown.</strong>
@@ -617,19 +638,19 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
           </div>
         )}
 
-        {/* ── SECONDARY CTA: DIY letter ($19) ── */}
+        {/* ── SECONDARY CTA: Claims Kit ($19) ── */}
         {showSecondaryCTA && (
           <div className="cta-diy">
             <div className="cta-diy-head">
-              <span className="cta-diy-title">Generate a claim letter yourself</span>
+              <span className="cta-diy-title">Get Your Claims Kit</span>
               <span className="cta-diy-price">$19</span>
             </div>
             <p className="cta-diy-desc">
-              A professional {regulation} letter citing the exact regulation and compensation amount.
-              Download as PDF and send it to the airline yourself.
+              A complete {regulation} claims kit: personalised claim letter, airline submission guide,
+              follow-up and escalation templates. Download as PDF and send it yourself.
             </p>
             <button className="btn-diy" onClick={onGetLetter}>
-              Get My Claim Letter → $19
+              Get Your Claims Kit — $19
             </button>
           </div>
         )}
@@ -1062,8 +1083,8 @@ export default function Home() {
                     <span className="lp-step-num">3</span>
                     <span className="lp-step-ico">📄</span>
                   </div>
-                  <div className="lp-step-title">Download your claim letter or let us handle it</div>
-                  <div className="lp-step-body">Get a professional PDF letter for $19, or sign up for our no-win-no-fee managed service (coming soon).</div>
+                  <div className="lp-step-title">Download your Claims Kit or let us handle it</div>
+                  <div className="lp-step-body">Get a complete Claims Kit (letter + submission guide + templates) for $19, or sign up for our no-win-no-fee managed service (coming soon).</div>
                 </div>
               </div>
             </div>
@@ -1111,7 +1132,7 @@ export default function Home() {
                   <div className="lp-compare-name">FlightComp</div>
                   <ul className="lp-compare-list">
                     <li><span className="lp-chk">✓</span>Free eligibility check — instant</li>
-                    <li><span className="lp-chk">✓</span>Flat $19 for your claim letter</li>
+                    <li><span className="lp-chk">✓</span>Flat $19 for your Claims Kit</li>
                     <li><span className="lp-chk">✓</span>20% no-win-no-fee <span className="lp-soon">Coming soon</span></li>
                   </ul>
                 </div>

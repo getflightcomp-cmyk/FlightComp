@@ -110,7 +110,10 @@ function buildPrompt({ answers, result, details, flightDetails }) {
   const regFull  = regulation === 'UK261'
     ? 'UK Statutory Instrument 2019 No. 278 (UK261/2004)'
     : 'EU Regulation 261/2004 of the European Parliament and of the Council';
-  const compAmt  = compensation?.amount || 'the applicable statutory amount';
+  const compAmt  = compensation?.amount || null;
+  const compLine = compAmt
+    ? `EXACT COMPENSATION AMOUNT: ${compAmt} — use this exact figure. Do NOT write a range (e.g. do not write "€250–€600"). State "${compAmt}" specifically.`
+    : 'COMPENSATION AMOUNT: the applicable statutory amount (distance not determinable — do not invent a figure)';
   const distStr  = distanceKm ? `${distanceKm.toLocaleString()} km` : 'unknown distance';
   const depCity  = depInfo  ? `${depInfo.city} (${from.toUpperCase()})` : from;
   const arrCity  = arrInfo  ? `${arrInfo.city} (${to.toUpperCase()})` : to;
@@ -141,7 +144,8 @@ FLIGHT DETAILS:
 - Disruption: ${disruptionLabel}${delayLabel}
 - Reason given: ${reasonLabel}
 - Regulation: ${regFull}
-- Compensation claimed: ${compAmt}
+
+${compLine}
 
 ${timingBlock}
 
@@ -153,7 +157,7 @@ LETTER REQUIREMENTS:
 3. Subject: Flight ${flightNumber || '[number]'} — Formal Compensation Claim under ${regulation === 'UK261' ? 'UK261' : 'EU Regulation 261/2004'}
 4. Open with a factual statement of the disruption including exact times if provided above
 5. In one consolidated paragraph, cite the legal basis: ${regulation === 'UK261' ? 'UK Statutory Instrument 2019 No. 278' : 'EU Regulation 261/2004'} — specifically Article 5 (cancellations), Article 6 (delay), or Article 7 (compensation amounts) as relevant to this case
-6. State the exact compensation amount: ${compAmt} per passenger
+6. ${compLine}
 7. Include booking reference if provided
 8. Set a firm 14-day response deadline: ${deadline}
 9. State that failure to respond will result in escalation to the ${regulation === 'UK261' ? 'Civil Aviation Authority (CAA)' : 'relevant National Enforcement Body (NEB)'}
@@ -179,7 +183,10 @@ function buildAPPRPrompt({ answers, result, details, flightDetails }) {
 
   const { name, email, address, bookingRef, bankDetails } = details;
 
-  const compAmt    = compensation?.amount || 'the applicable statutory amount';
+  const compAmt    = compensation?.amount || null;
+  const compLineAPPR = compAmt
+    ? `EXACT COMPENSATION AMOUNT: ${compAmt} per passenger — use this exact figure. Do NOT write a range.`
+    : 'COMPENSATION AMOUNT: the applicable statutory amount (do not invent a figure)';
   const distStr    = distanceKm ? `${distanceKm.toLocaleString()} km` : 'unknown distance';
   const depCity    = depInfo ? `${depInfo.city} (${from.toUpperCase()})` : from;
   const arrCity    = arrInfo ? `${arrInfo.city} (${to.toUpperCase()})` : to;
@@ -212,7 +219,8 @@ FLIGHT DETAILS:
 - Reason given: ${reasonLabel}
 - Airline size: ${sizeLabel}
 - Regulation: Air Passenger Protection Regulations (SOR/2019-150)
-- Compensation claimed: ${compAmt} per passenger
+
+${compLineAPPR}
 
 ${timingBlock}
 
@@ -224,7 +232,7 @@ LETTER REQUIREMENTS:
 3. Subject: Flight ${flightNumber || '[number]'} — Compensation Claim under Canada APPR (SOR/2019-150)
 4. Open with a factual statement of the disruption including exact times if provided above
 5. In one consolidated paragraph, cite the legal basis: Air Passenger Protection Regulations (SOR/2019-150) — specifically Section 19 (compensation for delays/cancellations within airline control), Section 10 (treatment standards), or Section 17 (denied boarding) as relevant to this case
-6. State the exact compensation amount: ${compAmt} per passenger
+6. ${compLineAPPR}
 7. Include booking reference if provided
 8. Set a 30-day response deadline: ${deadline}
 9. State that failure to respond will result in escalation to the Canadian Transportation Agency (CTA) at https://otc-cta.gc.ca/eng/air-travel-complaints
@@ -249,7 +257,10 @@ function buildSHYPrompt({ answers, result, details, flightDetails }) {
 
   const { name, email, address, bookingRef, bankDetails } = details;
 
-  const compAmt    = compensation?.amount || 'the applicable statutory amount';
+  const compAmt    = compensation?.amount || null;
+  const compLineSHY = compAmt
+    ? `EXACT COMPENSATION AMOUNT: ${compAmt} (denominated in EUR, payable in Turkish Lira at TCMB rate on ticket purchase date) — use this exact figure. Do NOT write a range.`
+    : 'COMPENSATION AMOUNT: the applicable statutory amount (do not invent a figure)';
   const distStr    = distanceKm ? `${distanceKm.toLocaleString()} km` : 'unknown distance';
   const depCity    = depInfo ? `${depInfo.city} (${from.toUpperCase()})` : from;
   const arrCity    = arrInfo ? `${arrInfo.city} (${to.toUpperCase()})` : to;
@@ -282,8 +293,9 @@ FLIGHT DETAILS:
 - Disruption: ${disruptionLabel}${delayLabel}
 - Reason given: ${reasonLabel}
 ${shyNotified14 === 'yes' ? '- Note: passenger was notified 14+ days in advance' : ''}
-- Regulation: SHY Passenger Regulation (Sivil Havacılık Yönetmeliği), Turkish Civil Aviation Law No. 2920, Article 143
-- Compensation claimed: ${compAmt} (denominated in EUR, payable in Turkish Lira at TCMB exchange rate)
+- Regulation: SHY Passenger Regulation (Sivil Havacilık Yonetmeligi), Turkish Civil Aviation Law No. 2920, Article 143
+
+${compLineSHY}
 
 ${timingBlock}
 
@@ -294,8 +306,8 @@ LETTER REQUIREMENTS:
 2. Address to: Customer Relations Department, [Airline Name]
 3. Subject: Flight ${flightNumber || '[number]'} — Compensation Claim under SHY Passenger Regulation
 4. Open with a factual statement of the disruption including exact times if provided above
-5. In one consolidated paragraph, cite the legal basis: Turkish Civil Aviation Law No. 2920, Article 143 and the SHY Passenger Regulation (Sivil Havacılık Yönetmeliği); state that compensation is denominated in EUR but payable in Turkish Lira at the Central Bank of Turkey (TCMB) exchange rate on the date of ticket purchase
-6. State the exact compensation: ${compAmt}
+5. In one consolidated paragraph, cite the legal basis: Turkish Civil Aviation Law No. 2920, Article 143 and the SHY Passenger Regulation; state that compensation is denominated in EUR but payable in Turkish Lira at the Central Bank of Turkey (TCMB) exchange rate on the date of ticket purchase
+6. ${compLineSHY}
 7. Include booking reference if provided
 8. Set a 30-day response deadline: ${deadline}
 9. State that failure to respond will result in escalation to the Turkish Directorate General of Civil Aviation (SHGM — Sivil Havacılık Genel Müdürlüğü) at https://web.shgm.gov.tr

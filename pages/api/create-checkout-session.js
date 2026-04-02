@@ -25,10 +25,10 @@ export default async function handler(req, res) {
             currency: 'usd',
             unit_amount: 1900, // $19.00
             product_data: {
-              name: 'EU261 Flight Claim Letter',
+              name: 'FlightComp Claims Kit',
               description:
-                'Professional AI-drafted claim letter citing the exact regulation, ' +
-                'compensation amount, and 14-day legal deadline. Download as PDF.',
+                'Complete 6-document claims kit: personalised claim letter, airline submission guide, ' +
+                '14-day follow-up template, 30-day escalation template, and What to Expect guide. Download as PDF.',
             },
           },
           quantity: 1,
@@ -39,7 +39,7 @@ export default async function handler(req, res) {
       cancel_url: cancelUrl,
       // Allow the checkout session to show a "back" button to cancel
       payment_intent_data: {
-        description: 'FlightClaim — EU261 Claim Letter',
+        description: 'FlightComp — Claims Kit',
       },
     });
 

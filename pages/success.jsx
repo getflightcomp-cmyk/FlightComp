@@ -133,6 +133,26 @@ function FlightDetailsForm({ claimData, result, onSubmit }) {
   );
 }
 
+// ── PDF text sanitizer ────────────────────────────────
+// jsPDF uses Windows-1252 encoding; sanitize chars outside that range.
+function sanitizePdf(str) {
+  if (!str || typeof str !== 'string') return str;
+  return str
+    // Arrow characters (not in Windows-1252)
+    .replace(/→/g, ' to ')
+    .replace(/←/g, ' from ')
+    // Turkish non-Latin-1 characters
+    .replace(/ı/g, 'i').replace(/İ/g, 'I')
+    .replace(/ğ/g, 'g').replace(/Ğ/g, 'G')
+    .replace(/ş/g, 's').replace(/Ş/g, 'S')
+    // Curly quotes → straight quotes
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    // En/em dashes
+    .replace(/\u2013/g, '-')
+    .replace(/\u2014/g, '--');
+}
+
 // ── Delay duration formatter ───────────────────────────
 function calcDelay(scheduled, actual) {
   if (!scheduled || !actual) return null;
@@ -184,6 +204,19 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
   };
 
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
+  // Patch doc.text and doc.splitTextToSize to auto-sanitize non-Latin-1 characters
+  // (handles →, Turkish ı/ğ/ş, curly quotes, etc.)
+  const _origText  = doc.text.bind(doc);
+  const _origSplit = doc.splitTextToSize.bind(doc);
+  doc.text = (text, ...args) => {
+    if (typeof text === 'string') text = sanitizePdf(text);
+    else if (Array.isArray(text)) text = text.map(t => typeof t === 'string' ? sanitizePdf(t) : t);
+    return _origText(text, ...args);
+  };
+  doc.splitTextToSize = (text, maxWidth, opts) =>
+    _origSplit(typeof text === 'string' ? sanitizePdf(text) : text, maxWidth, opts);
+
   const TOTAL_ALIAS = '{totalPages}';
   let pageNum = 1;
   let y = 0;
@@ -201,7 +234,7 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
     setFC(C.BRAND_BLUE);
     doc.rect(0, 0, PAGE_W, HEADER_H, 'F');
     doc.setFont('helvetica', 'bold'); doc.setFontSize(14); setTC(C.WHITE);
-    doc.text('FlightComp Claim Kit', ML, 11.5);
+    doc.text('Compensation Claim Kit', ML, 11.5);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
     doc.setTextColor(195, 219, 248);
     doc.text(sectionSubtitle, ML, HEADER_H - 3);
