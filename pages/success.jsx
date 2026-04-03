@@ -126,7 +126,7 @@ function FlightDetailsForm({ claimData, result, onSubmit }) {
           onClick={handleSubmit}
           disabled={loading}
         >
-          {loading ? 'Generating…' : 'Generate My Claim Kit →'}
+          {loading ? 'Generating…' : 'Generate My Flight Compensation Kit →'}
         </button>
         <div className="secure-note">Takes about 15 seconds · All 6 documents included</div>
       </div>
@@ -271,7 +271,7 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
     setFC(C.BRAND_BLUE);
     doc.rect(0, 0, PAGE_W, HEADER_H, 'F');
     doc.setFont('helvetica', 'bold'); doc.setFontSize(14); setTC(C.WHITE);
-    doc.text('Compensation Claim Kit', ML, 11.5);
+    doc.text('Flight Compensation Kit', ML, 11.5);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
     doc.setTextColor(195, 219, 248);
     doc.text(sectionSubtitle, ML, HEADER_H - 3);
@@ -557,7 +557,7 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
 
   // Title block
   doc.setFont('helvetica', 'bold'); doc.setFontSize(20); setTC(C.TEXT_PRI);
-  doc.text('Your Claim Kit', ML, y); y += 9;
+  doc.text('Your Flight Compensation Kit', ML, y); y += 9;
   doc.setFont('helvetica', 'normal'); doc.setFontSize(11); setTC(C.TEXT_LABEL);
   doc.text('Everything you need to claim your compensation — prepared and ready to use.', ML, y); y += 10;
 
@@ -943,6 +943,12 @@ export default function Success() {
       setLetter(json.letter);
       setState('ready');
       sessionStorage.removeItem('fc_claim');
+      // Save purchase record for 30-day follow-up cron (fire-and-forget)
+      fetch('/api/save-kit-purchase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answers: claimData, result, details }),
+      }).catch(() => {});
     } catch {
       setState('error');
     }
@@ -1026,7 +1032,7 @@ export default function Success() {
     return (
       <div className="loading-screen">
         <div className="loading-spinner" />
-        <div className="loading-title">Building your claim kit…</div>
+        <div className="loading-title">Building your Flight Compensation Kit…</div>
         <div className="loading-sub">
           Writing your personalised claim letter and preparing all 5 documents.
           This takes about 15 seconds.
@@ -1042,7 +1048,7 @@ export default function Success() {
     <div className="success-screen">
       <div className="success-header">
         <div className="success-icon">✅</div>
-        <div className="success-title">Your claim kit is ready</div>
+        <div className="success-title">Your Flight Compensation Kit is ready</div>
         <div className="success-sub">
           {details?.name || 'Your'} · {regulation} ·{' '}
           {result?.compensation?.amount ? `Up to ${result.compensation.amount}` : 'Compensation pending'} ·{' '}
@@ -1056,7 +1062,7 @@ export default function Success() {
       {/* Download */}
       <div className="letter-actions">
         <button className="btn-action primary" onClick={downloadPdf} disabled={pdfLoading}>
-          {pdfLoading ? '⏳ Generating PDF…' : '⬇️ Download Claim Kit (PDF)'}
+          {pdfLoading ? '⏳ Generating PDF…' : '⬇️ Download Flight Compensation Kit (PDF)'}
         </button>
         <button className="btn-action" onClick={copyLetter}>
           {copied ? '✓ Copied!' : '📋 Copy letter text'}

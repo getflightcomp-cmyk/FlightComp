@@ -614,7 +614,7 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
             </div>
             <p className="cta-handle-desc">
               We submit the claim, track responses, and follow up until you get paid.
-              No win, no fee — we only charge <strong style={{ color: 'var(--text)' }}>20% of your compensation</strong> if successful.
+              No win, no fee — we only charge <strong style={{ color: 'var(--text)' }}>29% of your compensation</strong> if successful. No hidden fees, no legal surcharges, ever.
             </p>
             {notified ? (
               <div className="notify-success">✓ You're on the list — we'll email you when this launches.</div>
@@ -638,19 +638,19 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
           </div>
         )}
 
-        {/* ── SECONDARY CTA: Claims Kit ($19) ── */}
+        {/* ── SECONDARY CTA: Flight Compensation Kit ($19) ── */}
         {showSecondaryCTA && (
           <div className="cta-diy">
             <div className="cta-diy-head">
-              <span className="cta-diy-title">Get Your Claims Kit</span>
+              <span className="cta-diy-title">Get Your Flight Compensation Kit</span>
               <span className="cta-diy-price">$19</span>
             </div>
             <p className="cta-diy-desc">
-              A complete {regulation} claims kit: personalised claim letter, airline submission guide,
+              A complete {regulation} Flight Compensation Kit: personalised claim letter, airline submission guide,
               follow-up and escalation templates. Download as PDF and send it yourself.
             </p>
             <button className="btn-diy" onClick={onGetLetter}>
-              Get Your Claims Kit — $19
+              Get Your Flight Compensation Kit — $19
             </button>
           </div>
         )}
@@ -1083,8 +1083,8 @@ export default function Home() {
                     <span className="lp-step-num">3</span>
                     <span className="lp-step-ico">📄</span>
                   </div>
-                  <div className="lp-step-title">Download your Claims Kit or let us handle it</div>
-                  <div className="lp-step-body">Get a complete Claims Kit (letter + submission guide + templates) for $19, or sign up for our no-win-no-fee managed service (coming soon).</div>
+                  <div className="lp-step-title">Download your Flight Compensation Kit or let us handle it</div>
+                  <div className="lp-step-body">Get a complete Flight Compensation Kit (letter + submission guide + templates) for $19, or sign up for our 29% no-win-no-fee managed service (coming soon).</div>
                 </div>
               </div>
             </div>
@@ -1132,8 +1132,8 @@ export default function Home() {
                   <div className="lp-compare-name">FlightComp</div>
                   <ul className="lp-compare-list">
                     <li><span className="lp-chk">✓</span>Free eligibility check — instant</li>
-                    <li><span className="lp-chk">✓</span>Flat $19 for your Claims Kit</li>
-                    <li><span className="lp-chk">✓</span>20% no-win-no-fee <span className="lp-soon">Coming soon</span></li>
+                    <li><span className="lp-chk">✓</span>Flat $19 for your Flight Compensation Kit</li>
+                    <li><span className="lp-chk">✓</span>29% no-win-no-fee, all-in <span className="lp-soon">Coming soon</span></li>
                   </ul>
                 </div>
               </div>
