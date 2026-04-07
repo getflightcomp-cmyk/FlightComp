@@ -45,7 +45,7 @@ function buildConfirmationHtml(data) {
           </p>
 
           <p style="font-size:14px;color:#64748b;line-height:1.6;margin:0;">
-            Our fee is <strong>25% of any compensation successfully recovered</strong>. If we don&apos;t win, you owe nothing.
+            Our fee is <strong>29% of any compensation successfully recovered</strong>. If we don&apos;t win, you owe nothing.
           </p>
         </td></tr>
 
@@ -80,7 +80,7 @@ function buildConfirmationText(data) {
     '',
     'Our team will review your claim and reach out within 48 hours with next steps.',
     '',
-    'Our fee is 25% of any compensation successfully recovered. No win, no fee.',
+    'Our fee is 29% of any compensation successfully recovered. No win, no fee.',
     '',
     '---',
     'Operated by Noontide Ventures LLC · getflightcomp.com',

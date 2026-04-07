@@ -614,7 +614,7 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
             </div>
             <p className="cta-handle-desc">
               We submit the claim, track responses, and follow up until you get paid.
-              No win, no fee — we only charge <strong style={{ color: 'var(--text)' }}>25% of your compensation</strong> if successful. No hidden fees, no legal surcharges, ever.
+              No win, no fee — we only charge <strong style={{ color: 'var(--text)' }}>29% of your compensation</strong> if successful. No hidden fees, no legal surcharges, ever.
             </p>
             {notified ? (
               <div className="notify-success">✓ You're on the list — we'll email you when this launches.</div>
@@ -1084,7 +1084,7 @@ export default function Home() {
                     <span className="lp-step-ico">📄</span>
                   </div>
                   <div className="lp-step-title">Download your Flight Compensation Kit or let us handle it</div>
-                  <div className="lp-step-body">Get a complete Flight Compensation Kit (letter + submission guide + templates) for $19, or sign up for our 25% no-win-no-fee managed service (coming soon).</div>
+                  <div className="lp-step-body">Get a complete Flight Compensation Kit (letter + submission guide + templates) for $19, or sign up for our 29% no-win-no-fee managed service (coming soon).</div>
                 </div>
               </div>
             </div>
@@ -1133,7 +1133,7 @@ export default function Home() {
                   <ul className="lp-compare-list">
                     <li><span className="lp-chk">✓</span>Free eligibility check — instant</li>
                     <li><span className="lp-chk">✓</span>Flat $19 for your Flight Compensation Kit</li>
-                    <li><span className="lp-chk">✓</span>25% no-win-no-fee, all-in <span className="lp-soon">Coming soon</span></li>
+                    <li><span className="lp-chk">✓</span>29% no-win-no-fee, all-in <span className="lp-soon">Coming soon</span></li>
                   </ul>
                 </div>
               </div>
