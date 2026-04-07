@@ -605,38 +605,66 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
 
       <div className="res-body">
 
-        {/* ── PRIMARY CTA: managed claim (coming soon) ── */}
-        {showPrimaryCTA && (
-          <div className="cta-handle">
-            <div className="cta-handle-top">
-              <span className="cta-handle-title">Let us handle your claim</span>
-              <span className="cta-handle-badge">COMING SOON</span>
+        {/* ── PRIMARY CTA: managed claim ── */}
+        {showPrimaryCTA && (() => {
+          // Build /authorize URL with pre-filled params from the eligibility check
+          const disruptionMap = { cancelled: 'Cancellation', delayed: 'Delay over 3 hours', denied: 'Denied boarding', downgraded: 'Downgrade' };
+          const params = new URLSearchParams();
+          if (answers.flightNumber) params.set('flight', answers.flightNumber);
+          if (answers.flightDate)   params.set('date',   answers.flightDate);
+          if (answers.from)         params.set('from',   answers.from);
+          if (answers.to)           params.set('to',     answers.to);
+          if (answers.disruption)   params.set('disruption', disruptionMap[answers.disruption] || answers.disruption);
+          if (regulation)           params.set('regulation', regulation);
+          if (compensation?.amount) params.set('compensation', compensation.amount);
+          const authorizeUrl = `/authorize?${params.toString()}`;
+
+          // Try to get airline name from carrier registry
+          let airlineName = 'the airline';
+          try {
+            const carrier = resolveAirline(answers.flightNumber);
+            if (carrier?.name) airlineName = carrier.name;
+          } catch { /* keep default */ }
+
+          return (
+            <div className="cta-handle">
+              <div className="cta-handle-top">
+                <span className="cta-handle-title">Let us handle your claim</span>
+              </div>
+              <div className="cta-howit">
+                <div className="cta-step"><span className="cta-step-n">1</span><span>You authorize us to act on your behalf.</span></div>
+                <div className="cta-step"><span className="cta-step-n">2</span><span>We submit your claim directly to {airlineName}.</span></div>
+                <div className="cta-step"><span className="cta-step-n">3</span><span>We handle all follow-ups and escalations.</span></div>
+                <div className="cta-step"><span className="cta-step-n">4</span><span>You only pay <strong style={{ color: 'var(--text)' }}>29%</strong> if we succeed. No win, no fee.</span></div>
+              </div>
+              <a className="btn-authorize" href={authorizeUrl}>
+                Start Authorization →
+              </a>
+              <div className="notify-fallback">
+                <p className="notify-fallback-label">Not ready yet? Leave your email and we'll follow up.</p>
+                {notified ? (
+                  <div className="notify-success">✓ Got it — we'll be in touch.</div>
+                ) : (
+                  <form className="notify-row" onSubmit={handleNotify}>
+                    <input
+                      className="notify-input"
+                      type="email"
+                      inputMode="email"
+                      autoComplete="email"
+                      placeholder="Your email address"
+                      value={notifyEmail}
+                      onChange={e => setNotifyEmail(e.target.value)}
+                      required
+                    />
+                    <button className="btn-notify" type="submit" disabled={!notifyEmail.trim()}>
+                      Notify Me
+                    </button>
+                  </form>
+                )}
+              </div>
             </div>
-            <p className="cta-handle-desc">
-              We submit the claim, track responses, and follow up until you get paid.
-              No win, no fee — we only charge <strong style={{ color: 'var(--text)' }}>29% of your compensation</strong> if successful. No hidden fees, no legal surcharges, ever.
-            </p>
-            {notified ? (
-              <div className="notify-success">✓ You're on the list — we'll email you when this launches.</div>
-            ) : (
-              <form className="notify-row" onSubmit={handleNotify}>
-                <input
-                  className="notify-input"
-                  type="email"
-                  inputMode="email"
-                  autoComplete="email"
-                  placeholder="Your email address"
-                  value={notifyEmail}
-                  onChange={e => setNotifyEmail(e.target.value)}
-                  required
-                />
-                <button className="btn-notify" type="submit" disabled={!notifyEmail.trim()}>
-                  Notify Me
-                </button>
-              </form>
-            )}
-          </div>
-        )}
+          );
+        })()}
 
         {/* ── SECONDARY CTA: Flight Compensation Kit ($19) ── */}
         {showSecondaryCTA && (

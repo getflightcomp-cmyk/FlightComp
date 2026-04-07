@@ -1,5 +1,6 @@
 import Head from 'next/head';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 
 const DISRUPTION_TYPES = [
   'Cancellation',
@@ -30,6 +31,26 @@ export default function Authorize() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError]     = useState('');
+  const [estimatedComp, setEstimatedComp] = useState('');
+  const [regulation, setRegulation]       = useState('');
+  const router = useRouter();
+
+  // Pre-fill form fields from query params (passed by the results page)
+  useEffect(() => {
+    if (!router.isReady) return;
+    const { airline, flight, date, from, to, disruption, regulation: reg, compensation } = router.query;
+    setForm(prev => ({
+      ...prev,
+      ...(airline    && { airline }),
+      ...(flight     && { flightNumber: flight }),
+      ...(date       && { flightDate: date }),
+      ...(from       && { depAirport: from }),
+      ...(to         && { arrAirport: to }),
+      ...(disruption && { disruptionType: disruption }),
+    }));
+    if (reg) setRegulation(reg);
+    if (compensation) setEstimatedComp(String(compensation));
+  }, [router.isReady, router.query]);
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -52,10 +73,15 @@ export default function Authorize() {
     setLoading(true);
     setError('');
     try {
+      const payload = {
+        ...form,
+        ...(regulation   && { regulation }),
+        ...(estimatedComp && { estimatedCompensation: estimatedComp }),
+      };
       const res = await fetch('/api/authorize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
@@ -103,6 +129,11 @@ This authorization is governed by the laws of the State of Georgia, United State
             <p style={{ fontSize: 14, color: 'var(--muted)', lineHeight: 1.6 }}>
               This agreement authorizes Noontide Ventures LLC (operating as FlightComp) to submit and manage your flight compensation claim.
             </p>
+            {estimatedComp && (
+              <div style={{ background: 'rgba(34,197,94,.08)', border: '1px solid rgba(34,197,94,.25)', borderRadius: 8, padding: '10px 14px', marginTop: 12, fontSize: 14, color: '#22c55e', fontWeight: 600 }}>
+                Estimated compensation: {estimatedComp}
+              </div>
+            )}
           </div>
 
           {success ? (

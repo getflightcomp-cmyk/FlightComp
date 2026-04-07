@@ -249,6 +249,26 @@ input, textarea, select { font-family: inherit; }
   flex-shrink: 0; margin-top: 3px;
 }
 .cta-handle-desc  { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 16px; }
+
+/* How-it-works steps inside primary CTA */
+.cta-howit { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+.cta-step  { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: var(--muted); line-height: 1.5; }
+.cta-step-n {
+  flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%;
+  background: rgba(59,130,246,.20); color: var(--blue);
+  font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+}
+.btn-authorize {
+  display: block; width: 100%; padding: 14px 20px;
+  background: var(--blue); color: white;
+  border: none; border-radius: var(--rbtn);
+  font-size: 15px; font-weight: 700; text-align: center; text-decoration: none;
+  cursor: pointer; margin-bottom: 18px; transition: opacity .15s;
+}
+.btn-authorize:hover { opacity: .88; }
+.notify-fallback       { border-top: 1px solid var(--border); padding-top: 14px; }
+.notify-fallback-label { font-size: 12px; color: var(--dim); margin: 0 0 10px; }
+
 .notify-row {
   display: flex; gap: 8px;
 }
