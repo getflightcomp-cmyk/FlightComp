@@ -13,7 +13,8 @@ export default function Terms() {
           <Link href="/" className="legal-back">← Back to Home</Link>
 
           <h1 className="legal-h1">Terms of Service</h1>
-          <p className="legal-date">Last updated: March 31, 2026</p>
+          <p style={{ fontSize: 14, color: 'var(--muted)', marginBottom: 4 }}>FlightComp is a service operated by Noontide Ventures LLC, a Georgia limited liability company.</p>
+          <p className="legal-date">Last updated: April 6, 2026</p>
 
           <section className="legal-section">
             <h2>1. What FlightComp Is</h2>
@@ -32,7 +33,7 @@ export default function Terms() {
 
           <section className="legal-section">
             <h2>4. Managed Claim Service (Coming Soon)</h2>
-            <p>FlightComp will offer a managed claims service on a no-win, no-fee basis. If we do not recover compensation on your behalf, you owe nothing. If we do, our fee is 29% of the compensation recovered — all-in, with no hidden fees or legal surcharges. Full terms for this service will be published before it launches.</p>
+            <p>FlightComp will offer a managed claims service on a no-win, no-fee basis. If we do not recover compensation on your behalf, you owe nothing. If we do, our fee is 25% of the compensation recovered — all-in, with no hidden fees or legal surcharges. Full terms for this service will be published before it launches.</p>
           </section>
 
           <section className="legal-section">
@@ -62,12 +63,12 @@ export default function Terms() {
 
           <section className="legal-section">
             <h2>10. Limitation of Liability</h2>
-            <p>To the maximum extent permitted by applicable law, FlightComp and its operators, affiliates, and contractors shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including but not limited to loss of compensation, loss of revenue, or loss of data, arising from your use of the service. FlightComp's total aggregate liability to you for all claims arising out of or relating to the service is limited to the amount you paid to FlightComp in the 12 months preceding the claim.</p>
+            <p>To the maximum extent permitted by applicable law, FlightComp, Noontide Ventures LLC, and their operators, affiliates, and contractors shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including but not limited to loss of compensation, loss of revenue, or loss of data, arising from your use of the service. FlightComp's total aggregate liability to you for all claims arising out of or relating to the service is limited to the amount you paid to FlightComp in the 12 months preceding the claim.</p>
           </section>
 
           <section className="legal-section">
             <h2>11. Indemnification</h2>
-            <p>You agree to indemnify, defend, and hold harmless FlightComp and its operators from any claims, damages, losses, or expenses (including reasonable legal fees) arising from your use of the service, your submission of a claim to an airline, any inaccurate information you provide, or your violation of these terms.</p>
+            <p>You agree to indemnify, defend, and hold harmless FlightComp, Noontide Ventures LLC, and their operators from any claims, damages, losses, or expenses (including reasonable legal fees) arising from your use of the service, your submission of a claim to an airline, any inaccurate information you provide, or your violation of these terms.</p>
           </section>
 
           <section className="legal-section">

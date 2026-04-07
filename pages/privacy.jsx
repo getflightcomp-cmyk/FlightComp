@@ -13,11 +13,11 @@ export default function Privacy() {
           <Link href="/" className="legal-back">← Back to Home</Link>
 
           <h1 className="legal-h1">Privacy Policy</h1>
-          <p className="legal-date">Last updated: March 31, 2026</p>
+          <p className="legal-date">Last updated: April 6, 2026</p>
 
           <section className="legal-section">
             <h2>1. Who We Are</h2>
-            <p>FlightComp operates <a href="https://getflightcomp.com">getflightcomp.com</a>. For privacy inquiries, contact us at <a href="mailto:privacy@getflightcomp.com">privacy@getflightcomp.com</a>.</p>
+            <p>FlightComp is a service operated by Noontide Ventures LLC, a Georgia limited liability company. Noontide Ventures LLC is the data controller for personal data processed through <a href="https://getflightcomp.com">getflightcomp.com</a>. For privacy inquiries, contact us at <a href="mailto:privacy@getflightcomp.com">privacy@getflightcomp.com</a>.</p>
           </section>
 
           <section className="legal-section">
