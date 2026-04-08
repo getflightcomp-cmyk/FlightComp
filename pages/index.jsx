@@ -635,7 +635,7 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
                 <div className="cta-step"><span className="cta-step-n">1</span><span>You authorize us to act on your behalf.</span></div>
                 <div className="cta-step"><span className="cta-step-n">2</span><span>We submit your claim directly to {airlineName}.</span></div>
                 <div className="cta-step"><span className="cta-step-n">3</span><span>We handle all follow-ups and escalations.</span></div>
-                <div className="cta-step"><span className="cta-step-n">4</span><span>You only pay <strong style={{ color: 'var(--text)' }}>29%</strong> if we succeed. No win, no fee.</span></div>
+                <div className="cta-step"><span className="cta-step-n">4</span><span>You only pay a small fee if we succeed. No win, no fee.</span></div>
               </div>
               <a className="btn-authorize" href={authorizeUrl}>
                 Start Authorization →
