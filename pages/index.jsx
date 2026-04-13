@@ -605,6 +605,24 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
 
       <div className="res-body">
 
+        {/* ── Regulation citation ── */}
+        {verdict !== 'unlikely' && regulation && (
+          <div className="reg-citation">
+            {regulation === 'EU261' && (
+              <>Under <strong>EU Regulation 261/2004, Article 7(1)</strong>, you may be entitled to compensation of <strong>{amountDisplay}</strong>. Article 5(1)(c) requires airlines to pay compensation for cancellations unless passengers were informed at least 14 days in advance.</>
+            )}
+            {regulation === 'UK261' && (
+              <>Under <strong>UK Regulation 261 (retained EU law), Article 7(1)</strong>, you may be entitled to compensation of <strong>{amountDisplay}</strong>. The UK Civil Aviation Authority enforces these rights for flights departing from UK airports.</>
+            )}
+            {regulation === 'APPR' && (
+              <>Under the <strong>Canadian Air Passenger Protection Regulations (SOR/2019-150), Section 19(1)</strong>, you may be entitled to <strong>{amountDisplay}</strong>. The Canadian Transportation Agency oversees compliance and can receive complaints if the airline refuses to pay.</>
+            )}
+            {regulation === 'SHY' && (
+              <>Under <strong>Turkey&apos;s SHY Regulation on Passenger Rights</strong>, you may be entitled to <strong>{amountDisplay}</strong> for international flights. The Turkish Directorate General of Civil Aviation (DGCA) enforces these rights.</>
+            )}
+          </div>
+        )}
+
         {/* ── PRIMARY CTA: managed claim ── */}
         {showPrimaryCTA && (() => {
           // Build /authorize URL with pre-filled params from the eligibility check
@@ -1112,7 +1130,7 @@ export default function Home() {
                     <span className="lp-step-ico">📄</span>
                   </div>
                   <div className="lp-step-title">Download your Flight Compensation Kit or let us handle it</div>
-                  <div className="lp-step-body">Get a complete Flight Compensation Kit (letter + submission guide + templates) for $19, or sign up for our 29% no-win-no-fee managed service (coming soon).</div>
+                  <div className="lp-step-body">Get a complete Flight Compensation Kit (letter + submission guide + templates) for $19, or sign up for our 25% no-win-no-fee managed service (coming soon).</div>
                 </div>
               </div>
             </div>
@@ -1140,31 +1158,79 @@ export default function Home() {
                 </div>
               </div>
               <div className="lp-uk-note">Also covers UK flights (UK261 — £220/£350/£520), Canadian flights (APPR — CA$400/CA$700/CA$1,000), and Turkish flights (SHY — €100 domestic / €250–€600 international for cancellations &amp; denied boarding; delays receive care only).</div>
+              <div className="lp-reg-badges">
+                <span className="lp-reg-badge">EU Regulation 261/2004</span>
+                <span className="lp-reg-badge">UK Regulation 261</span>
+                <span className="lp-reg-badge">Canada APPR (SOR/2019-150)</span>
+                <span className="lp-reg-badge">Turkey SHY Regulation</span>
+              </div>
             </div>
           </section>
 
-          {/* ── COMPARISON ── */}
+          {/* ── COMPARISON TABLE ── */}
           <section className="lp-section">
             <div className="lp-section-inner">
-              <h2 className="lp-section-h">Why not just use AirHelp?</h2>
-              <div className="lp-compare">
-                <div className="lp-compare-card lp-compare-other">
-                  <div className="lp-compare-name">AirHelp</div>
-                  <ul className="lp-compare-list">
-                    <li><span className="lp-x">✕</span>35–50% commission on your payout</li>
-                    <li><span className="lp-x">✕</span>Slow process — months to resolve</li>
-                    <li><span className="lp-x">✕</span>Eligibility check requires signup</li>
-                  </ul>
-                </div>
-                <div className="lp-compare-card lp-compare-us">
-                  <div className="lp-compare-name">FlightComp</div>
-                  <ul className="lp-compare-list">
-                    <li><span className="lp-chk">✓</span>Free eligibility check — instant</li>
-                    <li><span className="lp-chk">✓</span>Flat $19 for your Flight Compensation Kit</li>
-                    <li><span className="lp-chk">✓</span>29% no-win-no-fee, all-in <span className="lp-soon">Coming soon</span></li>
-                  </ul>
-                </div>
+              <h2 className="lp-section-h">How we compare</h2>
+              <div className="cmp-wrap">
+                <table className="cmp-table">
+                  <thead>
+                    <tr>
+                      <th className="cmp-th cmp-th-feature"></th>
+                      <th className="cmp-th cmp-th-us">FlightComp</th>
+                      <th className="cmp-th">AirHelp</th>
+                      <th className="cmp-th">ClaimCompass</th>
+                      <th className="cmp-th">Skycop</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="cmp-td cmp-td-feature">Eligibility check</td>
+                      <td className="cmp-td cmp-td-us"><span className="cmp-chk">✓</span> Free</td>
+                      <td className="cmp-td"><span className="cmp-x">✕</span> Paywalled</td>
+                      <td className="cmp-td"><span className="cmp-chk">✓</span> Free</td>
+                      <td className="cmp-td"><span className="cmp-chk">✓</span> Free</td>
+                    </tr>
+                    <tr>
+                      <td className="cmp-td cmp-td-feature">DIY Claims Kit</td>
+                      <td className="cmp-td cmp-td-us"><span className="cmp-chk">✓</span> $19 flat fee</td>
+                      <td className="cmp-td cmp-na">N/A</td>
+                      <td className="cmp-td cmp-na">N/A</td>
+                      <td className="cmp-td cmp-na">N/A</td>
+                    </tr>
+                    <tr>
+                      <td className="cmp-td cmp-td-feature">Managed service fee</td>
+                      <td className="cmp-td cmp-td-us"><strong>25%</strong></td>
+                      <td className="cmp-td">~35% <span className="cmp-caveat">(up to 50% with legal)</span></td>
+                      <td className="cmp-td">~35% <span className="cmp-caveat">(up to 50% with legal)</span></td>
+                      <td className="cmp-td">~25% <span className="cmp-caveat">(up to 50% with legal)</span></td>
+                    </tr>
+                    <tr>
+                      <td className="cmp-td cmp-td-feature">Additional legal fees</td>
+                      <td className="cmp-td cmp-td-us"><span className="cmp-chk">✓</span> None</td>
+                      <td className="cmp-td"><span className="cmp-x">✕</span> Up to 15% extra</td>
+                      <td className="cmp-td"><span className="cmp-x">✕</span> Up to 15% extra</td>
+                      <td className="cmp-td"><span className="cmp-x">✕</span> Up to 25% extra</td>
+                    </tr>
+                    <tr>
+                      <td className="cmp-td cmp-td-feature">No win, no fee</td>
+                      <td className="cmp-td cmp-td-us"><span className="cmp-chk">✓</span> Yes</td>
+                      <td className="cmp-td"><span className="cmp-chk">✓</span> Yes</td>
+                      <td className="cmp-td"><span className="cmp-chk">✓</span> Yes</td>
+                      <td className="cmp-td"><span className="cmp-chk">✓</span> Yes</td>
+                    </tr>
+                    <tr>
+                      <td className="cmp-td cmp-td-feature">Regulations covered</td>
+                      <td className="cmp-td cmp-td-us"><strong>EU261, UK261, APPR, SHY</strong></td>
+                      <td className="cmp-td">EU261, UK261</td>
+                      <td className="cmp-td">EU261, UK261</td>
+                      <td className="cmp-td">EU261</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
+              <p className="cmp-note">
+                Fees compared as of April 2026. FlightComp never charges additional legal action fees.
+              </p>
             </div>
           </section>
 
@@ -1184,7 +1250,9 @@ export default function Home() {
             <div className="lp-footer-inner">
               <div className="lp-footer-brand">FlightComp — EU261/UK261 Flight Compensation Tool</div>
               <div className="lp-footer-links">
-                <a href="#">About</a>
+                <a href="/about">About</a>
+                <a href="/how-it-works">How It Works</a>
+                <a href="/blog">Blog</a>
                 <a href="/privacy">Privacy Policy</a>
                 <a href="/terms">Terms of Service</a>
                 <a href="mailto:support@getflightcomp.com">Contact</a>

@@ -33,7 +33,7 @@ export default function Terms() {
 
           <section className="legal-section">
             <h2>4. Managed Claim Service (Coming Soon)</h2>
-            <p>FlightComp will offer a managed claims service on a no-win, no-fee basis. If we do not recover compensation on your behalf, you owe nothing. If we do, our fee is 29% of the compensation recovered — all-in, with no hidden fees or legal surcharges. Full terms for this service will be published before it launches.</p>
+            <p>FlightComp will offer a managed claims service on a no-win, no-fee basis. If we do not recover compensation on your behalf, you owe nothing. If we do, our fee is 25% of the compensation recovered — all-in, with no hidden fees or legal surcharges. Full terms for this service will be published before it launches.</p>
           </section>
 
           <section className="legal-section">

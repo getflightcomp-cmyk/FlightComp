@@ -104,7 +104,7 @@ export default function Authorize() {
 I confirm that:
 • The information I have provided is accurate and complete to the best of my knowledge.
 • I have not assigned this claim to any other party or company.
-• I understand that FlightComp's managed service fee is 29% of any compensation successfully recovered, and that no fee is owed if no compensation is recovered (no win, no fee).
+• I understand that FlightComp's managed service fee is 25% of any compensation successfully recovered, and that no fee is owed if no compensation is recovered (no win, no fee).
 • I understand that this authorization does not constitute a guarantee that compensation will be recovered.
 • I may revoke this authorization at any time by emailing support@getflightcomp.com.
 

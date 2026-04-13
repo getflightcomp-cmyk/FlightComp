@@ -121,7 +121,7 @@ export default async function handler(req, res) {
       ? parseFloat(String(authData.estimatedCompensation).replace(/[^0-9.]/g, ''))
       : null,
     currency,
-    feePercentage: 29,
+    feePercentage: 25,
 
     claimLetterText:        null,
     claimLetterGeneratedAt: null,

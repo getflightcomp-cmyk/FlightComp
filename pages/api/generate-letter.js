@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { selectTemplate, buildTemplateParams } from '../../lib/letterTemplates';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -336,10 +337,27 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Name and email are required' });
   }
 
+  // ── Try cached template first (no API call needed) ──
+  const regulation = result.regulation || 'EU261';
+  const disruption = answers.disruption || '';
+  const reason     = answers.reason || answers.apprReason || answers.shyReason || 'none';
+
+  const templateFn = selectTemplate({ regulation, disruption, reason });
+  if (templateFn) {
+    try {
+      const params = buildTemplateParams({ answers, result, details, flightDetails: flightDetails || {} });
+      const letter = templateFn(params);
+      return res.status(200).json({ letter, source: 'template' });
+    } catch (err) {
+      console.warn('[generate-letter] Template render failed, falling back to Claude:', err.message);
+    }
+  }
+
+  // ── Fallback: Claude API ──
   let prompt;
-  if (result.regulation === 'APPR') {
+  if (regulation === 'APPR') {
     prompt = buildAPPRPrompt({ answers, result, details, flightDetails: flightDetails || {} });
-  } else if (result.regulation === 'SHY') {
+  } else if (regulation === 'SHY') {
     prompt = buildSHYPrompt({ answers, result, details, flightDetails: flightDetails || {} });
   } else {
     prompt = buildPrompt({ answers, result, details, flightDetails: flightDetails || {} });
@@ -355,7 +373,7 @@ export default async function handler(req, res) {
     const letter = message.content[0]?.text || '';
     if (!letter) throw new Error('Empty response from Claude');
 
-    return res.status(200).json({ letter });
+    return res.status(200).json({ letter, source: 'claude' });
   } catch (err) {
     console.error('[generate-letter] Error:', err.message);
     return res.status(500).json({ error: 'Letter generation failed. Please try again.' });

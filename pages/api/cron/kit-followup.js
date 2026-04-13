@@ -63,7 +63,7 @@ function buildEmailHtml({ name, airline, flightNumber, regulation, compensationA
           <table width="100%" cellpadding="0" cellspacing="0" style="background:#0c447c;border-radius:6px;margin:0 0 24px;">
             <tr><td style="padding:18px 24px;text-align:center;">
               <p style="color:#c3daf8;font-size:12px;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;">Our fee</p>
-              <p style="color:#fff;font-size:22px;font-weight:bold;margin:0;">29% of your compensation</p>
+              <p style="color:#fff;font-size:22px;font-weight:bold;margin:0;">25% of your compensation</p>
               <p style="color:#c3daf8;font-size:13px;margin:6px 0 0;">Only if we win &mdash; no upfront cost, no hidden fees, ever.</p>
             </td></tr>
           </table>
@@ -113,7 +113,7 @@ function buildEmailText({ name, airline, flightNumber, regulation, compensationA
     '',
     'Our managed service handles follow-ups, escalation to ' + authority + ', and legal action if needed — all at no upfront cost.',
     '',
-    '29% of your compensation, only if we win. No hidden fees, ever.',
+    '25% of your compensation, only if we win. No hidden fees, ever.',
     '',
     'Let us handle it: https://getflightcomp.com',
     '',
