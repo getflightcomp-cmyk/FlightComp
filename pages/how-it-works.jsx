@@ -193,6 +193,125 @@ J. Smith`}</pre>
             </div>
           </section>
 
+          {/* ── COMPARISON ── */}
+          <section className="hiw-section">
+            <h2 className="hiw-section-h">How FlightComp compares</h2>
+
+            {/* Desktop table */}
+            <div className="hiw-cmp-desktop">
+              <div className="cmp-wrap">
+                <table className="cmp-table">
+                  <thead>
+                    <tr>
+                      <th className="cmp-th cmp-th-feature"></th>
+                      <th className="cmp-th cmp-th-us">FlightComp</th>
+                      <th className="cmp-th">AirHelp</th>
+                      <th className="cmp-th">ClaimCompass</th>
+                      <th className="cmp-th">Skycop</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="cmp-td cmp-td-feature">Eligibility check</td>
+                      <td className="cmp-td cmp-td-us"><span className="cmp-chk">✓</span> Free</td>
+                      <td className="cmp-td"><span className="cmp-x">✕</span> Paywalled</td>
+                      <td className="cmp-td"><span className="cmp-chk">✓</span> Free</td>
+                      <td className="cmp-td"><span className="cmp-chk">✓</span> Free</td>
+                    </tr>
+                    <tr>
+                      <td className="cmp-td cmp-td-feature">DIY Claims Kit</td>
+                      <td className="cmp-td cmp-td-us"><span className="cmp-chk">✓</span> $19 flat fee</td>
+                      <td className="cmp-td cmp-na">N/A</td>
+                      <td className="cmp-td cmp-na">N/A</td>
+                      <td className="cmp-td cmp-na">N/A</td>
+                    </tr>
+                    <tr>
+                      <td className="cmp-td cmp-td-feature">Managed service fee</td>
+                      <td className="cmp-td cmp-td-us"><strong>25%</strong></td>
+                      <td className="cmp-td">~35% <span className="cmp-caveat">(up to 50% with legal)</span></td>
+                      <td className="cmp-td">~35% <span className="cmp-caveat">(up to 50% with legal)</span></td>
+                      <td className="cmp-td">~25% <span className="cmp-caveat">(up to 50% with legal)</span></td>
+                    </tr>
+                    <tr>
+                      <td className="cmp-td cmp-td-feature">Additional legal fees</td>
+                      <td className="cmp-td cmp-td-us"><span className="cmp-chk">✓</span> None</td>
+                      <td className="cmp-td"><span className="cmp-x">✕</span> Up to 15% extra</td>
+                      <td className="cmp-td"><span className="cmp-x">✕</span> Up to 15% extra</td>
+                      <td className="cmp-td"><span className="cmp-x">✕</span> Up to 25% extra</td>
+                    </tr>
+                    <tr>
+                      <td className="cmp-td cmp-td-feature">No win, no fee</td>
+                      <td className="cmp-td cmp-td-us"><span className="cmp-chk">✓</span> Yes</td>
+                      <td className="cmp-td"><span className="cmp-chk">✓</span> Yes</td>
+                      <td className="cmp-td"><span className="cmp-chk">✓</span> Yes</td>
+                      <td className="cmp-td"><span className="cmp-chk">✓</span> Yes</td>
+                    </tr>
+                    <tr>
+                      <td className="cmp-td cmp-td-feature">Regulations covered</td>
+                      <td className="cmp-td cmp-td-us"><strong>EU261, UK261, APPR, SHY</strong></td>
+                      <td className="cmp-td">EU261, UK261</td>
+                      <td className="cmp-td">EU261, UK261</td>
+                      <td className="cmp-td">EU261</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Mobile cards */}
+            <div className="hiw-cmp-mobile">
+              {[
+                {
+                  name: 'AirHelp',
+                  eligibility: ['✕ Paywalled', '✓ Free'],
+                  diy:         ['N/A',          '✓ $19'],
+                  fee:         ['~35%+',         '25%'],
+                  legal:       ['Up to 15% extra', 'None'],
+                  regs:        ['EU261, UK261',  'EU261, UK261, APPR, SHY'],
+                },
+                {
+                  name: 'ClaimCompass',
+                  eligibility: ['✓ Free',        '✓ Free'],
+                  diy:         ['N/A',            '✓ $19'],
+                  fee:         ['~35%+',           '25%'],
+                  legal:       ['Up to 15% extra', 'None'],
+                  regs:        ['EU261, UK261',    'EU261, UK261, APPR, SHY'],
+                },
+                {
+                  name: 'Skycop',
+                  eligibility: ['✓ Free',         '✓ Free'],
+                  diy:         ['N/A',             '✓ $19'],
+                  fee:         ['~25%+',            '25%'],
+                  legal:       ['Up to 25% extra',  'None'],
+                  regs:        ['EU261',            'EU261, UK261, APPR, SHY'],
+                },
+              ].map(c => (
+                <div key={c.name} className="hiw-cmp-card">
+                  <div className="hiw-cmp-card-head">
+                    {c.name} <span>vs FlightComp</span>
+                  </div>
+                  {[
+                    { label: 'Eligibility check', theirs: c.eligibility[0], ours: c.eligibility[1] },
+                    { label: 'DIY Claims Kit',    theirs: c.diy[0],         ours: c.diy[1] },
+                    { label: 'Managed fee',       theirs: c.fee[0],         ours: c.fee[1] },
+                    { label: 'Extra legal fees',  theirs: c.legal[0],       ours: c.legal[1] },
+                    { label: 'Regulations',       theirs: c.regs[0],        ours: c.regs[1] },
+                  ].map(row => (
+                    <div key={row.label} className="hiw-cmp-row">
+                      <span className="hiw-cmp-label">{row.label}</span>
+                      <div className="hiw-cmp-vals">
+                        <span className="hiw-cmp-theirs">{row.theirs}</span>
+                        <span className="hiw-cmp-ours">{row.ours}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+
+            <p className="cmp-note">Fees compared as of April 2026. FlightComp never charges additional legal action fees.</p>
+          </section>
+
           {/* ── CTA ── */}
           <section className="hiw-cta-section">
             <p className="hiw-cta-label">Check your eligibility now — it&apos;s free and takes 2 minutes.</p>

@@ -1078,11 +1078,11 @@ export default function Home() {
           {/* ── HERO ── */}
           <section className="lp-hero">
             <div className="lp-hero-inner">
-              <div className="lp-badge">✈️ EU261 / UK261 / Canada APPR / Turkey SHY</div>
               <h1 className="lp-h1">
                 Your flight was cancelled.<br />
                 Find out what you&apos;re owed in 60 seconds.
               </h1>
+              <div className="lp-badge" style={{ marginTop: 0, marginBottom: 20 }}>✈️ EU261 / UK261 / Canada APPR / Turkey SHY</div>
               <p className="lp-sub">
                 Airlines legally owe you up to €600 (EU/UK), CA$1,000 (Canada), or €600 (Turkey) — but they use friction to avoid paying. We cut through it.
               </p>
@@ -1119,18 +1119,18 @@ export default function Home() {
                 <div className="lp-step">
                   <div className="lp-step-top">
                     <span className="lp-step-num">2</span>
-                    <span className="lp-step-ico">🛡️</span>
+                    <span className="lp-step-ico">✅</span>
                   </div>
-                  <div className="lp-step-title">Get your eligibility verdict instantly</div>
-                  <div className="lp-step-body">We run the EU261/UK261 rules and tell you if you&apos;re likely, possibly, or unlikely eligible — and how much.</div>
+                  <div className="lp-step-title">Get your eligibility verdict</div>
+                  <div className="lp-step-body">We check air passenger rights laws (e.g., EU261, UK261, APPR, SHY) and tell you if you&apos;re eligible — and how much you&apos;re owed.</div>
                 </div>
                 <div className="lp-step">
                   <div className="lp-step-top">
                     <span className="lp-step-num">3</span>
-                    <span className="lp-step-ico">📄</span>
+                    <span className="lp-step-ico">💰</span>
                   </div>
-                  <div className="lp-step-title">Download your Flight Compensation Kit or let us handle it</div>
-                  <div className="lp-step-body">Get a complete Flight Compensation Kit (letter + submission guide + templates) for $19, or sign up for our 25% no-win-no-fee managed service (coming soon).</div>
+                  <div className="lp-step-title">Let us handle it</div>
+                  <div className="lp-step-body">Authorize us to submit your claim and manage the process — 25% fee, no win no fee. Or get a DIY Claims Kit ($19) with your personalized letter and instructions.</div>
                 </div>
               </div>
             </div>
@@ -1158,79 +1158,6 @@ export default function Home() {
                 </div>
               </div>
               <div className="lp-uk-note">Also covers UK flights (UK261 — £220/£350/£520), Canadian flights (APPR — CA$400/CA$700/CA$1,000), and Turkish flights (SHY — €100 domestic / €250–€600 international for cancellations &amp; denied boarding; delays receive care only).</div>
-              <div className="lp-reg-badges">
-                <span className="lp-reg-badge">EU Regulation 261/2004</span>
-                <span className="lp-reg-badge">UK Regulation 261</span>
-                <span className="lp-reg-badge">Canada APPR (SOR/2019-150)</span>
-                <span className="lp-reg-badge">Turkey SHY Regulation</span>
-              </div>
-            </div>
-          </section>
-
-          {/* ── COMPARISON TABLE ── */}
-          <section className="lp-section">
-            <div className="lp-section-inner">
-              <h2 className="lp-section-h">How we compare</h2>
-              <div className="cmp-wrap">
-                <table className="cmp-table">
-                  <thead>
-                    <tr>
-                      <th className="cmp-th cmp-th-feature"></th>
-                      <th className="cmp-th cmp-th-us">FlightComp</th>
-                      <th className="cmp-th">AirHelp</th>
-                      <th className="cmp-th">ClaimCompass</th>
-                      <th className="cmp-th">Skycop</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td className="cmp-td cmp-td-feature">Eligibility check</td>
-                      <td className="cmp-td cmp-td-us"><span className="cmp-chk">✓</span> Free</td>
-                      <td className="cmp-td"><span className="cmp-x">✕</span> Paywalled</td>
-                      <td className="cmp-td"><span className="cmp-chk">✓</span> Free</td>
-                      <td className="cmp-td"><span className="cmp-chk">✓</span> Free</td>
-                    </tr>
-                    <tr>
-                      <td className="cmp-td cmp-td-feature">DIY Claims Kit</td>
-                      <td className="cmp-td cmp-td-us"><span className="cmp-chk">✓</span> $19 flat fee</td>
-                      <td className="cmp-td cmp-na">N/A</td>
-                      <td className="cmp-td cmp-na">N/A</td>
-                      <td className="cmp-td cmp-na">N/A</td>
-                    </tr>
-                    <tr>
-                      <td className="cmp-td cmp-td-feature">Managed service fee</td>
-                      <td className="cmp-td cmp-td-us"><strong>25%</strong></td>
-                      <td className="cmp-td">~35% <span className="cmp-caveat">(up to 50% with legal)</span></td>
-                      <td className="cmp-td">~35% <span className="cmp-caveat">(up to 50% with legal)</span></td>
-                      <td className="cmp-td">~25% <span className="cmp-caveat">(up to 50% with legal)</span></td>
-                    </tr>
-                    <tr>
-                      <td className="cmp-td cmp-td-feature">Additional legal fees</td>
-                      <td className="cmp-td cmp-td-us"><span className="cmp-chk">✓</span> None</td>
-                      <td className="cmp-td"><span className="cmp-x">✕</span> Up to 15% extra</td>
-                      <td className="cmp-td"><span className="cmp-x">✕</span> Up to 15% extra</td>
-                      <td className="cmp-td"><span className="cmp-x">✕</span> Up to 25% extra</td>
-                    </tr>
-                    <tr>
-                      <td className="cmp-td cmp-td-feature">No win, no fee</td>
-                      <td className="cmp-td cmp-td-us"><span className="cmp-chk">✓</span> Yes</td>
-                      <td className="cmp-td"><span className="cmp-chk">✓</span> Yes</td>
-                      <td className="cmp-td"><span className="cmp-chk">✓</span> Yes</td>
-                      <td className="cmp-td"><span className="cmp-chk">✓</span> Yes</td>
-                    </tr>
-                    <tr>
-                      <td className="cmp-td cmp-td-feature">Regulations covered</td>
-                      <td className="cmp-td cmp-td-us"><strong>EU261, UK261, APPR, SHY</strong></td>
-                      <td className="cmp-td">EU261, UK261</td>
-                      <td className="cmp-td">EU261, UK261</td>
-                      <td className="cmp-td">EU261</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <p className="cmp-note">
-                Fees compared as of April 2026. FlightComp never charges additional legal action fees.
-              </p>
             </div>
           </section>
 
