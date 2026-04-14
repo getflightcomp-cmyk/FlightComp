@@ -15,11 +15,14 @@ export default function About() {
           {/* ── Header ── */}
           <section className="about-header">
             <h1 className="about-h1">Built by a traveler, for travelers</h1>
-            <img
-              src="/images/ethan.jpg"
-              alt="Ethan, founder of FlightComp"
-              className="about-photo"
-            />
+            <div className="about-founder-row">
+              <img
+                src="/images/ethan.jpg"
+                alt="Ethan, founder of FlightComp"
+                className="about-photo"
+              />
+              <span className="about-founder-name">Call me Ethan.</span>
+            </div>
           </section>
 
           {/* ── Story ── */}
@@ -62,7 +65,7 @@ export default function About() {
             <h2 className="about-values-heading">Our Core Principles</h2>
             <div className="about-values">
               <div className="about-value">
-                <div className="about-value-icon" style={{ color: '#22C55E' }}>👁</div>
+                <div className="about-value-icon" style={{ color: '#22C55E' }}>🔍</div>
                 <div>
                   <div className="about-value-head">Transparency</div>
                   <div className="about-value-body">We show you our fees upfront. No hidden costs, no surprises.</div>
