@@ -1279,69 +1279,77 @@ input, textarea, select { font-family: inherit; }
   padding: 0 24px;
 }
 
-.about-header { margin-bottom: 48px; }
+.about-header {
+  margin-bottom: 40px;
+  text-align: center;
+}
 
 .about-h1 {
   font-size: clamp(26px, 5vw, 38px);
   font-weight: 800;
   letter-spacing: -.8px;
   color: var(--text);
-  margin-bottom: 36px;
+  margin-bottom: 28px;
   line-height: 1.15;
 }
 
-.about-founder {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-}
-
-.about-photo-placeholder {
-  width: 180px;
-  height: 180px;
+.about-photo {
+  display: block;
+  width: 150px;
+  height: 150px;
   border-radius: 50%;
-  border: 2px solid #3B82F6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  color: var(--dim);
-  font-family: 'DM Mono', monospace;
-  flex-shrink: 0;
-  background: var(--surf);
-}
-
-.about-founder-info { display: flex; flex-direction: column; gap: 6px; }
-
-.about-name {
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.about-role {
-  font-size: 14px;
-  color: #9CA3AF;
+  object-fit: cover;
+  margin: 0 auto;
+  border: 2px solid rgba(59, 130, 246, 0.45);
+  box-shadow: 0 0 0 5px rgba(59, 130, 246, 0.1);
 }
 
 .about-story {
-  margin-bottom: 52px;
+  margin-bottom: 28px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
 }
 
 .about-story p {
   font-size: 16px;
   line-height: 1.8;
   color: #D1D5DB;
+  margin: 0;
+}
+
+.about-credentials {
+  background: var(--surf2);
+  border: 1px solid var(--border);
+  border-radius: var(--rc);
+  padding: 18px 22px;
+  margin-bottom: 48px;
+}
+
+.about-credentials p {
+  font-size: 13px;
+  color: var(--dim);
+  line-height: 1.65;
+  margin: 0;
+}
+
+.about-values-section {
+  margin-bottom: 52px;
+}
+
+.about-values-heading {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--dim);
+  margin-bottom: 16px;
 }
 
 .about-values {
   display: flex;
   flex-direction: column;
   gap: 0;
-  margin-bottom: 52px;
   border: 1px solid var(--border);
   border-radius: var(--rc);
   overflow: hidden;
@@ -1358,11 +1366,11 @@ input, textarea, select { font-family: inherit; }
 .about-values .about-value:last-child { border-bottom: none; }
 
 .about-value-icon {
-  font-size: 20px;
-  color: var(--blue);
+  font-size: 48px;
   flex-shrink: 0;
-  margin-top: 1px;
   line-height: 1;
+  width: 52px;
+  text-align: center;
 }
 
 .about-value-head {
@@ -1413,8 +1421,8 @@ input, textarea, select { font-family: inherit; }
 }
 
 @media (max-width: 540px) {
-  .about-founder { flex-direction: column; align-items: flex-start; }
-  .about-photo-placeholder { width: 120px; height: 120px; }
+  .about-photo { width: 120px; height: 120px; }
+  .about-inner { padding: 0 16px; }
 }
 
 /* ══════════════════════════════════════════════════════
