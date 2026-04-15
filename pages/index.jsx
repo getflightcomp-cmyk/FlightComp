@@ -701,15 +701,6 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
           </div>
         )}
 
-        <Expander icon="💬" label="What to say at the desk right now">
-          <div className="desk-script">
-            {deskScript}
-            <button className="copy-btn" onClick={copyScript}>
-              {copied ? '✓ Copied' : 'Copy'}
-            </button>
-          </div>
-        </Expander>
-
         <Expander icon="🛡️" label="What the airline must provide now">
           {careRights.length > 0 ? (
             <div className="care-list">
@@ -727,6 +718,9 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
               No immediate care obligations apply for this disruption level.
             </p>
           )}
+          <div className="care-clarifier">
+            These immediate entitlements are separate from your statutory compensation. The airline owes you both.
+          </div>
         </Expander>
 
         <div className="summary">

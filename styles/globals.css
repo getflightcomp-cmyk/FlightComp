@@ -355,6 +355,17 @@ input, textarea, select { font-family: inherit; }
 .care-em  { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
 .care-txt { font-size: 14px; color: var(--muted); line-height: 1.5; }
 .care-txt strong { color: var(--text); font-weight: 600; }
+.care-clarifier {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-left: 3px solid #22C55E;
+  background: rgba(34, 197, 94, 0.08);
+  border-radius: 0 6px 6px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #22C55E;
+  line-height: 1.5;
+}
 
 /* Summary grid */
 .summary {
