@@ -27,7 +27,7 @@ export default function HowItWorks() {
     <>
       <Head>
         <title>How It Works | FlightComp</title>
-        <meta name="description" content="From eligibility check to compensation in your account — here's exactly what happens at every step, for both the DIY Claims Kit and our managed service." />
+        <meta name="description" content="From eligibility check to compensation in your account — here's exactly what happens at every step, for both the Flight Compensation Kit and our managed service." />
       </Head>
       <div className="hiw-pg">
         <div className="hiw-inner">
@@ -48,12 +48,12 @@ export default function HowItWorks() {
             <div className="hiw-track">
               <div className="hiw-track-header">
                 <div className="hiw-track-badge hiw-track-badge-diy">Do It Yourself</div>
-                <div className="hiw-track-price">$19 Claims Kit</div>
+                <div className="hiw-track-price">$19 Flight Compensation Kit</div>
               </div>
               <div className="hiw-track-steps">
                 <Step n="1" title="Check your eligibility (free)"
                   body="Answer a few questions about your flight. We'll tell you instantly if you're likely owed compensation and how much, based on the specific regulation that applies to your route." />
-                <Step n="2" title="Get your Claims Kit ($19)"
+                <Step n="2" title="Get your Flight Compensation Kit ($19)"
                   body="We generate a personalized, legally-cited claim letter addressed to your airline. The kit includes the letter, step-by-step submission instructions, follow-up templates, and a guide on what to expect." />
                 <Step n="3" title="Submit to your airline"
                   body="Send the letter to your airline using the instructions in your kit. Most airlines have a dedicated claims or customer relations email. The letter does the heavy lifting." />
@@ -134,7 +134,7 @@ J. Smith`}</pre>
                 <div className="hiw-tl-val">Instant</div>
               </div>
               <div className="hiw-tl-row">
-                <div className="hiw-tl-label">Claims Kit delivery</div>
+                <div className="hiw-tl-label">Flight Compensation Kit delivery</div>
                 <div className="hiw-tl-val">Immediate (digital download)</div>
               </div>
               <div className="hiw-tl-row">
@@ -219,7 +219,7 @@ J. Smith`}</pre>
                       <td className="cmp-td"><span className="cmp-chk">✓</span> Free</td>
                     </tr>
                     <tr>
-                      <td className="cmp-td cmp-td-feature">DIY Claims Kit</td>
+                      <td className="cmp-td cmp-td-feature">Flight Compensation Kit</td>
                       <td className="cmp-td cmp-td-us"><span className="cmp-chk">✓</span> $19 flat fee</td>
                       <td className="cmp-td cmp-na">N/A</td>
                       <td className="cmp-td cmp-na">N/A</td>
@@ -292,7 +292,7 @@ J. Smith`}</pre>
                   </div>
                   {[
                     { label: 'Eligibility check', theirs: c.eligibility[0], ours: c.eligibility[1] },
-                    { label: 'DIY Claims Kit',    theirs: c.diy[0],         ours: c.diy[1] },
+                    { label: 'Flight Compensation Kit', theirs: c.diy[0],    ours: c.diy[1] },
                     { label: 'Managed fee',       theirs: c.fee[0],         ours: c.fee[1] },
                     { label: 'Extra legal fees',  theirs: c.legal[0],       ours: c.legal[1] },
                     { label: 'Regulations',       theirs: c.regs[0],        ours: c.regs[1] },

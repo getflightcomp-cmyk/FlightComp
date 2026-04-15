@@ -48,7 +48,7 @@ export default function About() {
             <p>
               So I built FlightComp. Check your eligibility for free. If you&apos;re owed money, we&apos;ll handle
               the entire claim for you — at the lowest fee in the market, and if we don&apos;t win, you don&apos;t
-              pay. Prefer to do it yourself? We offer a DIY Claims Kit with everything you need.
+              pay. Prefer to do it yourself? We offer a Flight Compensation Kit with everything you need.
             </p>
           </section>
 

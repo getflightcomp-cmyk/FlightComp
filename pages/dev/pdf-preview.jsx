@@ -80,7 +80,7 @@ export default function PdfPreview() {
             Developer Tool
           </div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: '#f1f5f9', margin: '0 0 8px' }}>
-            PDF Claims Kit Preview
+            PDF Flight Compensation Kit Preview
           </h1>
           <p style={{ fontSize: 14, color: '#94a3b8', margin: 0, lineHeight: 1.6 }}>
             Loads mock claim data into sessionStorage and redirects to /success so you can test
@@ -127,7 +127,7 @@ export default function PdfPreview() {
         </button>
 
         <p style={{ fontSize: 12, color: '#475569', textAlign: 'center', marginTop: 16, lineHeight: 1.5 }}>
-          On /success, skip the timing form (or fill it in) then click &quot;Download Claims Kit (PDF)&quot;.
+          On /success, skip the timing form (or fill it in) then click &quot;Download Flight Compensation Kit (PDF)&quot;.
           <br />The AI letter generation will fire a real API call to /api/generate-letter.
         </p>
 

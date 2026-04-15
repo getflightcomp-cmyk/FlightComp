@@ -126,7 +126,7 @@ function FlightDetailsForm({ claimData, result, onSubmit }) {
           onClick={handleSubmit}
           disabled={loading}
         >
-          {loading ? 'Generating…' : 'Generate My Claims Kit →'}
+          {loading ? 'Generating…' : 'Generate My Flight Compensation Kit →'}
         </button>
         <div className="secure-note">Takes about 15 seconds · All 6 documents included</div>
       </div>
@@ -1061,7 +1061,7 @@ export default function Success() {
     return (
       <div className="loading-screen">
         <div className="loading-spinner" />
-        <div className="loading-title">Building your Claims Kit…</div>
+        <div className="loading-title">Building your Flight Compensation Kit…</div>
         <div className="loading-sub">
           Writing your personalised claim letter and preparing all 5 documents.
           This takes about 15 seconds.
@@ -1077,7 +1077,7 @@ export default function Success() {
     <div className="success-screen">
       <div className="success-header">
         <div className="success-icon">✅</div>
-        <div className="success-title">Your Claims Kit is ready</div>
+        <div className="success-title">Your Flight Compensation Kit is ready</div>
         <div className="success-sub">
           {details?.name || 'Your'} · {regulation} ·{' '}
           {result?.compensation?.amount ? `Up to ${result.compensation.amount}` : 'Compensation pending'} ·{' '}
@@ -1091,7 +1091,7 @@ export default function Success() {
       {/* Download */}
       <div className="letter-actions">
         <button className="btn-action primary" onClick={downloadPdf} disabled={pdfLoading}>
-          {pdfLoading ? '⏳ Generating PDF…' : '⬇️ Download Claims Kit (PDF)'}
+          {pdfLoading ? '⏳ Generating PDF…' : '⬇️ Download Flight Compensation Kit (PDF)'}
         </button>
         <button className="btn-action" onClick={copyLetter}>
           {copied ? '✓ Copied!' : '📋 Copy letter text'}

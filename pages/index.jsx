@@ -1124,7 +1124,7 @@ export default function Home() {
                     <span className="lp-step-ico">💰</span>
                   </div>
                   <div className="lp-step-title">Let us handle it</div>
-                  <div className="lp-step-body">Authorize us to submit your claim and manage the process — 25% fee, no win no fee. Or get a DIY Claims Kit ($19) with your personalized letter and instructions.</div>
+                  <div className="lp-step-body">Authorize us to submit your claim and manage the process — 25% fee, no win no fee. Or get a Flight Compensation Kit ($19) with your personalized letter and instructions.</div>
                 </div>
               </div>
             </div>
