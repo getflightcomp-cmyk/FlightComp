@@ -204,7 +204,7 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
   const ML = 25, MR = 25;
   const CONTENT_W = PAGE_W - ML - MR;
   const HEADER_H  = 18;
-  const CONTENT_Y = HEADER_H + 6;
+  const CONTENT_Y = HEADER_H + 10;
   const FOOTER_Y  = 280;
   const BODY_SIZE = 10;
   const LINE_H    = 5.5;
@@ -271,7 +271,7 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
     setFC(C.BRAND_BLUE);
     doc.rect(0, 0, PAGE_W, HEADER_H, 'F');
     doc.setFont('helvetica', 'bold'); doc.setFontSize(14); setTC(C.WHITE);
-    doc.text('Claims Kit', ML, 11.5);
+    doc.text('Flight Compensation Kit', ML, 11.5);
     if (sectionSubtitle) {
       doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
       doc.setTextColor(195, 219, 248);
@@ -533,10 +533,10 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
 
   // Dynamic header subtitle (shown on all non-cover pages)
   const regHeaderText =
-    regulation === 'UK261' ? 'UK Regulation 261 \u00B7 Compensation Claim'
-    : regulation === 'APPR' ? 'Canada Air Passenger Protection Regulations \u00B7 Compensation Claim'
-    : regulation === 'SHY'  ? 'Turkey SHY Passenger Regulation \u00B7 Compensation Claim'
-    : 'EU Regulation 261/2004 \u00B7 Compensation Claim';
+    regulation === 'UK261' ? 'UK Regulation 261'
+    : regulation === 'APPR' ? 'Canadian Air Passenger Protection Regulations (APPR)'
+    : regulation === 'SHY'  ? 'Turkey SHY Passenger Rights Regulation'
+    : 'EU Regulation 261/2004';
 
   // Resolve route to IATA codes for display
   const resolveCode = (raw) => {
@@ -550,16 +550,28 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
 
   const delayInfo = calcDelay(flightDetails?.scheduledTime, flightDetails?.actualTime);
 
+  // Format any date string (YYYY-MM-DD or similar) as "15 March 2026"
+  const fmtDate = (dateStr) => {
+    if (!dateStr) return dateStr;
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
+    if (m) return new Date(parseInt(m[1]), parseInt(m[2]) - 1, parseInt(m[3]))
+      .toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? dateStr : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  };
+  const flightDateFmt = fmtDate(flightDate);
+
   // ═══════════════════════════════════════════════
   // PAGE 1 — COVER
   // ═══════════════════════════════════════════════
-  // sectionSubtitle already set to TOC text — draw cover header
+  // Draw cover header with regulation subtitle
+  sectionSubtitle = regHeaderText;
   drawPageHeader();
   y = CONTENT_Y;
 
   // Title block
   doc.setFont('helvetica', 'bold'); doc.setFontSize(20); setTC(C.TEXT_PRI);
-  doc.text('Your Claims Kit', ML, y); y += 9;
+  doc.text('Claims Overview', ML, y); y += 9;
   doc.setFont('helvetica', 'normal'); doc.setFontSize(11); setTC(C.TEXT_LABEL);
   doc.text('Everything you need to claim your compensation — prepared and ready to use.', ML, y); y += 10;
 
@@ -581,7 +593,7 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
   drawSumRow('Target Compensation', compAmount || 'See letter', col2);
   bly += 16;
   drawSumRow('Flight', flightNum || '—', col1);
-  drawSumRow('Date', flightDate || '—', col2);
+  drawSumRow('Date', flightDateFmt || '—', col2);
   y += SUMBOX_H + 8;
 
   // "This kit contains" list
@@ -650,9 +662,24 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
   y += 4;
   drawSection('ESCALATION AUTHORITY');
   renderPara(`If the airline does not resolve your claim, file a free complaint with:`);
-  drawTableBox([
-    [escalation.name, escalation.url],
-  ]);
+  {
+    const PAD = 4;
+    const nameWrapped = doc.splitTextToSize(escalation.name, CONTENT_W - PAD * 2);
+    const hasUrl = !!escalation.url;
+    const boxH = PAD * 2 + nameWrapped.length * 5.5 + (hasUrl ? 7 : 0) + 2;
+    checkPage(boxH + 4);
+    setFC(C.LT_BLUE_BG); setDC(C.LT_BLUE_BD); doc.setLineWidth(0.5);
+    rnd(ML, y, CONTENT_W, boxH);
+    let ry = y + PAD + 4;
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9); setTC(C.DARK_BLUE);
+    for (const nl of nameWrapped) { doc.text(nl, ML + PAD, ry); ry += 5.5; }
+    if (hasUrl) {
+      ry += 1;
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); setTC(C.ACCENT_BLUE);
+      doc.text(escalation.url, ML + PAD, ry);
+    }
+    y += boxH + 6;
+  }
   if (escalation.note) {
     doc.setFont('helvetica', 'italic'); doc.setFontSize(9); setTC(C.TEXT_LABEL);
     const noteLines = doc.splitTextToSize(escalation.note, CONTENT_W);
@@ -706,7 +733,7 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
   drawSection('FLIGHT DETAILS');
   const flightRows = [
     flightNum                               && ['Flight number',    flightNum],
-    flightDate                              && ['Date of travel',   flightDate],
+    flightDate                              && ['Date of travel',   flightDateFmt],
     (fromIATA && toIATA)                    && ['Route',            `${fromIATA} to ${toIATA}`],
     result?.distanceKm                      && ['Distance',         `${result.distanceKm.toLocaleString()} km`],
     flightDetails?.scheduledTime            && ['Scheduled arrival', flightDetails.scheduledTime],
@@ -765,11 +792,11 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
     'Customer Relations Department',
     airlineName,
     '',
-    `Re: Follow-Up — Compensation Claim for Flight ${flightNum} on ${flightDate}`,
+    `Re: Follow-Up — Compensation Claim for Flight ${flightNum} on ${flightDateFmt}`,
     '',
     `Dear Sir or Madam,`,
     '',
-    `I am writing to follow up on a formal compensation claim I submitted on ${todayStr} regarding flight ${flightNum} on ${flightDate} from ${fromIATA} to ${toIATA}.`,
+    `I am writing to follow up on a formal compensation claim I submitted on ${todayStr} regarding flight ${flightNum} on ${flightDateFmt} from ${fromIATA} to ${toIATA}.`,
     '',
     `I have not yet received a response or acknowledgement of my claim. Under ${regFull}, airlines are required to respond to passenger compensation claims within a reasonable timeframe. I submitted my original claim ${deadlineDays} days ago and have still not received a substantive reply.`,
     '',
@@ -808,11 +835,11 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
     'Customer Relations Department',
     airlineName,
     '',
-    `Re: Escalation Notice — Unanswered Compensation Claim for Flight ${flightNum} on ${flightDate}`,
+    `Re: Escalation Notice — Unanswered Compensation Claim for Flight ${flightNum} on ${flightDateFmt}`,
     '',
     'Dear Sir or Madam,',
     '',
-    `I am writing to formally escalate my compensation claim regarding flight ${flightNum} on ${flightDate} from ${fromIATA} to ${toIATA}.`,
+    `I am writing to formally escalate my compensation claim regarding flight ${flightNum} on ${flightDateFmt} from ${fromIATA} to ${toIATA}.`,
     '',
     `I submitted a formal claim on ${todayStr} under ${regFull}. As of the date of this letter, I have not received a substantive response or resolution.`,
     '',
