@@ -204,7 +204,7 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
   const ML = 25, MR = 25;
   const CONTENT_W = PAGE_W - ML - MR;
   const HEADER_H  = 18;
-  const CONTENT_Y = HEADER_H + 20;
+  const CONTENT_Y = HEADER_H + 14;
   const FOOTER_Y  = 280;
   const BODY_SIZE = 10;
   const LINE_H    = 5.5;
