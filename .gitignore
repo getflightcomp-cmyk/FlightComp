@@ -1,3 +1,12 @@
 .env.local
+.env*.local
 data/
 node_modules/
+.vercel
+.next/
+.DS_Store
+.claude/
+public/.DS_Store
+public/images/.DS_Store
+supabase/.DS_Store
+*.trace
