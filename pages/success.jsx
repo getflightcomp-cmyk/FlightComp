@@ -259,6 +259,9 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
   let pageNum = 1;
   let y = 0;
   let sectionSubtitle = ''; // cover page: no subtitle; set by newPage() for inner pages
+  // When set, newPage() draws a continuation gray shading box on each new page.
+  // { lx, w, vPad } — left x, width, and vertical padding to advance y after drawing.
+  let letterBox = null;
 
   const setTC = c => doc.setTextColor(...c);
   const setFC = c => doc.setFillColor(...c);
@@ -298,6 +301,12 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
     sectionSubtitle = regHeaderText;
     drawPageHeader();
     y = CONTENT_Y;
+    // Continue gray shading box when rendering a letter that spans multiple pages
+    if (letterBox) {
+      setFC(C.GRAY_BG); setDC(C.GRAY_BD); doc.setLineWidth(0.5);
+      doc.rect(letterBox.lx, y, letterBox.w, FOOTER_Y - y - 5, 'FD');
+      y += letterBox.vPad;
+    }
   }
 
   // ── Page-break guard ──
@@ -453,8 +462,9 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
     }
     checkPage(Math.min(totalH, 60));
     setFC(C.GRAY_BG); setDC(C.GRAY_BD); doc.setLineWidth(0.5);
-    // Draw box (approximate — content may overflow to new page)
     doc.rect(ML, y, CONTENT_W, Math.min(totalH, FOOTER_Y - y - 10), 'FD');
+    // Activate shading so page breaks within this letter continue the gray box
+    letterBox = { lx: ML, w: CONTENT_W, vPad: PAD };
     y += PAD;
     for (const para of paragraphs) {
       doc.setFont('helvetica', 'normal'); doc.setFontSize(9); setTC(C.TEXT_BODY);
@@ -467,6 +477,7 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
       y += 3;
     }
     y += PAD;
+    letterBox = null; // end template letter shading
   }
 
   // ── Callout box (tinted) ──
@@ -694,8 +705,9 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
   doc.text('Formal Compensation Claim Letter', ML, y); y += 8;
   drawCallout('Send this letter to your airline\'s claims department via email. Keep a copy for your records.', C.LT_BLUE_BG, C.LT_BLUE_BD);
 
-  // Gray shading behind letter body (Change 4c)
+  // Gray shading behind letter body — continues across pages via letterBox
   const LPAD = 4;
+  letterBox = { lx: ML - LPAD, w: CONTENT_W + LPAD * 2, vPad: LPAD };
   setFC(C.GRAY_BG); setDC(C.GRAY_BD); doc.setLineWidth(0.5);
   doc.rect(ML - LPAD, y - 1, CONTENT_W + LPAD * 2, FOOTER_Y - y - 5, 'FD');
   y += LPAD + 1;
@@ -796,6 +808,7 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
     doc.setFont('helvetica', 'normal'); doc.setFontSize(9); setTC(C.TEXT_LABEL);
     checkPage(); doc.text(senderEmail, ML, y); y += LINE_H;
   }
+  letterBox = null; // end claim letter shading
 
   // ═══════════════════════════════════════════════
   // 14-DAY FOLLOW-UP PAGE
