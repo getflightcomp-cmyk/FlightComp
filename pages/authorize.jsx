@@ -88,6 +88,14 @@ export default function Authorize() {
         throw new Error(j.error || 'Submission failed');
       }
       setSuccess(true);
+      // Mark email_captures row as converted (managed service authorised)
+      if (form.email) {
+        fetch('/api/mark-converted', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: form.email }),
+        }).catch(() => {});
+      }
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
     } finally {

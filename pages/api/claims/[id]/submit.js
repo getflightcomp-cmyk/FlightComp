@@ -51,7 +51,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
   const { id } = req.query;
-  let claim = getClaimById(id);
+  let claim = await getClaimById(id);
   if (!claim) return res.status(404).json({ error: 'Claim not found' });
   if (claim.status !== 'letter_generated') {
     return res.status(400).json({ error: `Cannot submit: claim is in status '${claim.status}'` });
@@ -117,6 +117,6 @@ export default async function handler(req, res) {
     // Non-fatal
   }
 
-  saveClaim(claim);
+  await saveClaim(claim);
   return res.status(200).json({ ok: true, claim });
 }

@@ -76,7 +76,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
   const { id } = req.query;
-  let claim = getClaimById(id);
+  let claim = await getClaimById(id);
   if (!claim) return res.status(404).json({ error: 'Claim not found' });
   if (claim.status === 'resolved') {
     return res.status(400).json({ error: 'Cannot escalate a resolved claim' });
@@ -126,6 +126,6 @@ export default async function handler(req, res) {
     console.error('[claims/escalate] Passenger email failed:', err);
   }
 
-  saveClaim(claim);
+  await saveClaim(claim);
   return res.status(200).json({ ok: true, claim, authority: auth });
 }

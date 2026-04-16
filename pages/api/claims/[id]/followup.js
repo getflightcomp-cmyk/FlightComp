@@ -99,7 +99,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
   const { id } = req.query;
-  let claim = getClaimById(id);
+  let claim = await getClaimById(id);
   if (!claim) return res.status(404).json({ error: 'Claim not found' });
 
   const validStatuses = ['awaiting_response', 'rejected', 'followup_sent', 'more_info_needed'];
@@ -168,6 +168,6 @@ export default async function handler(req, res) {
     );
   }
 
-  saveClaim(claim);
+  await saveClaim(claim);
   return res.status(200).json({ ok: true, claim, readyForEscalation: newCount >= 2 });
 }

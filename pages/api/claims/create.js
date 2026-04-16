@@ -59,7 +59,8 @@ export default async function handler(req, res) {
 
   // Check for duplicate claim
   const { readClaims } = await import('../../../lib/claims');
-  const existing = readClaims().find(c => c.authorizationId === authData.authId);
+  const allClaims = await readClaims();
+  const existing = allClaims.find(c => c.authorizationId === authData.authId);
   if (existing && !isTest) {
     return res.status(409).json({ error: 'A claim already exists for this authorization', claim: existing });
   }
@@ -162,7 +163,7 @@ export default async function handler(req, res) {
   );
 
   try {
-    saveClaim(claim);
+    await saveClaim(claim);
   } catch (err) {
     console.error('[claims/create] Failed to save:', err);
     return res.status(500).json({ error: 'Failed to save claim' });
