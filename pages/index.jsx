@@ -684,19 +684,19 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
           );
         })()}
 
-        {/* ── SECONDARY CTA: Flight Compensation Kit ($19) ── */}
+        {/* ── SECONDARY CTA: Flight Compensation Kit ($14.99) ── */}
         {showSecondaryCTA && (
           <div className="cta-diy">
             <div className="cta-diy-head">
               <span className="cta-diy-title">Get Your Flight Compensation Kit</span>
-              <span className="cta-diy-price">$19</span>
+              <span className="cta-diy-price">$14.99</span>
             </div>
             <p className="cta-diy-desc">
               A complete {regulation} Flight Compensation Kit: personalised claim letter, airline submission guide,
               follow-up and escalation templates. Download as PDF and send it yourself.
             </p>
             <button className="btn-diy" onClick={onGetLetter}>
-              Get Your Flight Compensation Kit — $19
+              Get Your Flight Compensation Kit — $14.99
             </button>
           </div>
         )}
@@ -843,11 +843,11 @@ function PersonalDetailsScreen({ details, onChange, onSubmit, onBack, result }) 
               Card details are handled by Stripe — we never see them.
             </div>
           </div>
-          <span className="payment-price">$19</span>
+          <span className="payment-price">$14.99</span>
         </div>
 
         <button className="btn-pay" onClick={handleSubmit} disabled={!canSubmit || loading}>
-          {loading ? 'Redirecting…' : 'Pay $19 & Get My Letter →'}
+          {loading ? 'Redirecting…' : 'Pay $14.99 & Get My Letter →'}
         </button>
         <div className="secure-note">🔒 Secured by Stripe · SSL encrypted</div>
       </div>
@@ -1138,7 +1138,7 @@ export default function Home() {
                     <span className="lp-step-ico">💰</span>
                   </div>
                   <div className="lp-step-title">Let us handle it</div>
-                  <div className="lp-step-body">Authorize us to submit your claim and manage the process — 25% fee, no win no fee. Or get a Flight Compensation Kit ($19) with your personalized letter and instructions.</div>
+                  <div className="lp-step-body">Authorize us to submit your claim and manage the process — 25% fee, no win no fee. Or get a Flight Compensation Kit ($14.99) with your personalized letter and instructions.</div>
                 </div>
               </div>
             </div>

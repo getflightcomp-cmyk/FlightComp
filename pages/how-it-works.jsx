@@ -44,25 +44,7 @@ export default function HowItWorks() {
           {/* ── Two tracks ── */}
           <section className="hiw-tracks">
 
-            {/* Track 1: DIY */}
-            <div className="hiw-track">
-              <div className="hiw-track-header">
-                <div className="hiw-track-badge hiw-track-badge-diy">Do It Yourself</div>
-                <div className="hiw-track-price">$19 Flight Compensation Kit</div>
-              </div>
-              <div className="hiw-track-steps">
-                <Step n="1" title="Check your eligibility (free)"
-                  body="Answer a few questions about your flight. We'll tell you instantly if you're likely owed compensation and how much, based on the specific regulation that applies to your route." />
-                <Step n="2" title="Get your Flight Compensation Kit ($19)"
-                  body="We generate a personalized, legally-cited claim letter addressed to your airline. The kit includes the letter, step-by-step submission instructions, follow-up templates, and a guide on what to expect." />
-                <Step n="3" title="Submit to your airline"
-                  body="Send the letter to your airline using the instructions in your kit. Most airlines have a dedicated claims or customer relations email. The letter does the heavy lifting." />
-                <Step n="4" title="Get paid"
-                  body="Airlines typically respond within 4–8 weeks. If they reject your claim, the kit includes follow-up templates and escalation guidance for the relevant aviation authority." />
-              </div>
-            </div>
-
-            {/* Track 2: Managed */}
+            {/* Track 1: Managed */}
             <div className="hiw-track">
               <div className="hiw-track-header">
                 <div className="hiw-track-badge hiw-track-badge-managed">Let Us Handle It</div>
@@ -77,6 +59,24 @@ export default function HowItWorks() {
                   body="We send a formal claim letter to the airline on your behalf, citing the specific legal provisions. If the airline doesn't respond or rejects the claim, we send follow-ups and can escalate to the relevant aviation authority — UK CAA, Canadian CTA, Turkish DGCA, or EU national enforcement bodies." />
                 <Step n="4" title="You get paid"
                   body="When the airline pays, we transfer the compensation to your bank account minus our 25% fee. If we don't recover anything, you owe nothing." />
+              </div>
+            </div>
+
+            {/* Track 2: DIY */}
+            <div className="hiw-track">
+              <div className="hiw-track-header">
+                <div className="hiw-track-badge hiw-track-badge-diy">Do It Yourself</div>
+                <div className="hiw-track-price">$14.99 Flight Compensation Kit</div>
+              </div>
+              <div className="hiw-track-steps">
+                <Step n="1" title="Check your eligibility (free)"
+                  body="Answer a few questions about your flight. We'll tell you instantly if you're likely owed compensation and how much, based on the specific regulation that applies to your route." />
+                <Step n="2" title="Get your Flight Compensation Kit ($14.99)"
+                  body="We generate a personalized, legally-cited claim letter addressed to your airline. The kit includes the letter, step-by-step submission instructions, follow-up templates, and a guide on what to expect." />
+                <Step n="3" title="Submit to your airline"
+                  body="Send the letter to your airline using the instructions in your kit. Most airlines have a dedicated claims or customer relations email. The letter does the heavy lifting." />
+                <Step n="4" title="Get paid"
+                  body="Airlines typically respond within 4–8 weeks. If they reject your claim, the kit includes follow-up templates and escalation guidance for the relevant aviation authority." />
               </div>
             </div>
 
@@ -207,7 +207,6 @@ J. Smith`}</pre>
                       <th className="cmp-th cmp-th-us">FlightComp</th>
                       <th className="cmp-th">AirHelp</th>
                       <th className="cmp-th">ClaimCompass</th>
-                      <th className="cmp-th">Skycop</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -216,12 +215,10 @@ J. Smith`}</pre>
                       <td className="cmp-td cmp-td-us"><span className="cmp-chk">✓</span> Free</td>
                       <td className="cmp-td"><span className="cmp-x">✕</span> Paywalled</td>
                       <td className="cmp-td"><span className="cmp-chk">✓</span> Free</td>
-                      <td className="cmp-td"><span className="cmp-chk">✓</span> Free</td>
                     </tr>
                     <tr>
                       <td className="cmp-td cmp-td-feature">Flight Compensation Kit</td>
-                      <td className="cmp-td cmp-td-us"><span className="cmp-chk">✓</span> $19 flat fee</td>
-                      <td className="cmp-td cmp-na">N/A</td>
+                      <td className="cmp-td cmp-td-us"><span className="cmp-chk">✓</span> $14.99 flat fee</td>
                       <td className="cmp-td cmp-na">N/A</td>
                       <td className="cmp-td cmp-na">N/A</td>
                     </tr>
@@ -230,19 +227,16 @@ J. Smith`}</pre>
                       <td className="cmp-td cmp-td-us"><strong>25%</strong></td>
                       <td className="cmp-td">~35% <span className="cmp-caveat">(up to 50% with legal)</span></td>
                       <td className="cmp-td">~35% <span className="cmp-caveat">(up to 50% with legal)</span></td>
-                      <td className="cmp-td">~25% <span className="cmp-caveat">(up to 50% with legal)</span></td>
                     </tr>
                     <tr>
                       <td className="cmp-td cmp-td-feature">Additional legal fees</td>
                       <td className="cmp-td cmp-td-us"><span className="cmp-chk">✓</span> None</td>
                       <td className="cmp-td"><span className="cmp-x">✕</span> Up to 15% extra</td>
                       <td className="cmp-td"><span className="cmp-x">✕</span> Up to 15% extra</td>
-                      <td className="cmp-td"><span className="cmp-x">✕</span> Up to 25% extra</td>
                     </tr>
                     <tr>
                       <td className="cmp-td cmp-td-feature">No win, no fee</td>
                       <td className="cmp-td cmp-td-us"><span className="cmp-chk">✓</span> Yes</td>
-                      <td className="cmp-td"><span className="cmp-chk">✓</span> Yes</td>
                       <td className="cmp-td"><span className="cmp-chk">✓</span> Yes</td>
                       <td className="cmp-td"><span className="cmp-chk">✓</span> Yes</td>
                     </tr>
@@ -251,7 +245,6 @@ J. Smith`}</pre>
                       <td className="cmp-td cmp-td-us"><strong>EU261, UK261, APPR, SHY</strong></td>
                       <td className="cmp-td">EU261, UK261</td>
                       <td className="cmp-td">EU261, UK261</td>
-                      <td className="cmp-td">EU261</td>
                     </tr>
                   </tbody>
                 </table>
@@ -264,7 +257,7 @@ J. Smith`}</pre>
                 {
                   name: 'AirHelp',
                   eligibility: ['✕ Paywalled', '✓ Free'],
-                  diy:         ['N/A',          '✓ $19'],
+                  diy:         ['N/A',          '✓ $14.99'],
                   fee:         ['~35%+',         '25%'],
                   legal:       ['Up to 15% extra', 'None'],
                   regs:        ['EU261, UK261',  'EU261, UK261, APPR, SHY'],
@@ -272,18 +265,10 @@ J. Smith`}</pre>
                 {
                   name: 'ClaimCompass',
                   eligibility: ['✓ Free',        '✓ Free'],
-                  diy:         ['N/A',            '✓ $19'],
+                  diy:         ['N/A',            '✓ $14.99'],
                   fee:         ['~35%+',           '25%'],
                   legal:       ['Up to 15% extra', 'None'],
                   regs:        ['EU261, UK261',    'EU261, UK261, APPR, SHY'],
-                },
-                {
-                  name: 'Skycop',
-                  eligibility: ['✓ Free',         '✓ Free'],
-                  diy:         ['N/A',             '✓ $19'],
-                  fee:         ['~25%+',            '25%'],
-                  legal:       ['Up to 25% extra',  'None'],
-                  regs:        ['EU261',            'EU261, UK261, APPR, SHY'],
                 },
               ].map(c => (
                 <div key={c.name} className="hiw-cmp-card">

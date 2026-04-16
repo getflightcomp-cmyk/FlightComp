@@ -13,7 +13,7 @@ export default function Privacy() {
           <Link href="/" className="legal-back">← Back to Home</Link>
 
           <h1 className="legal-h1">Privacy Policy</h1>
-          <p className="legal-date">Last updated: April 6, 2026</p>
+          <p className="legal-date">Last updated: April 16, 2026</p>
 
           <section className="legal-section">
             <h2>1. Who We Are</h2>
@@ -39,7 +39,7 @@ export default function Privacy() {
           <section className="legal-section">
             <h2>3. How We Use Your Data</h2>
             <ul>
-              <li>To determine your eligibility under EU261/UK261</li>
+              <li>To determine your eligibility under air passenger rights regulations including EU261, UK261, Canadian APPR, and Turkey SHY</li>
               <li>To generate your personalized claim letter</li>
               <li>To process your payment via Stripe</li>
               <li>To send you claim tracking updates (only if you provide your email)</li>
@@ -50,7 +50,7 @@ export default function Privacy() {
 
           <section className="legal-section">
             <h2>4. Legal Basis for Processing (GDPR)</h2>
-            <p>If you are in the European Economic Area or United Kingdom, our legal bases for processing your data are:</p>
+            <p>If you are in the European Economic Area, United Kingdom, Canada, or Turkey, our legal bases for processing your data are:</p>
             <ul>
               <li><strong>Contract performance:</strong> We need your flight and personal details to generate your claim letter and provide the service you paid for.</li>
               <li><strong>Legitimate interest:</strong> We use anonymized analytics to improve the service.</li>

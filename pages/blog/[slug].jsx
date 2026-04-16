@@ -145,7 +145,7 @@ export default function BlogPost({ post }) {
               Find out in 2 minutes if you can claim
             </h3>
             <p style={{ fontSize: 14, color: 'var(--muted)', lineHeight: 1.6, marginBottom: 20 }}>
-              Free eligibility check — no signup required. If you qualify, get your Flight Compensation Kit for $19 or let us handle everything for 25% (no win, no fee).
+              Free eligibility check — no signup required. If you qualify, get your Flight Compensation Kit for $14.99 or let us handle everything for 25% (no win, no fee).
             </p>
             <a
               href="/"

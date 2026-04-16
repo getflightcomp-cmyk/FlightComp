@@ -35,7 +35,7 @@ export default async function handler(req, res) {
         {
           price_data: {
             currency: 'usd',
-            unit_amount: 1900, // $19.00
+            unit_amount: 1499, // $14.99
             product_data: {
               name: 'FlightComp Flight Compensation Kit',
               description:
