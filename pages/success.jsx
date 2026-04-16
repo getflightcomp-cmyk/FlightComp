@@ -415,10 +415,12 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
   }
 
   // ── Contact info box ──
+  // URLs are intentionally excluded — PDFs are static and links don't work reliably.
+  // Airlines with web-form-only contact get a search instruction via renderPara instead.
   function drawContactBox(contact) {
     const lines = [];
     if (contact.claimsEmail) lines.push(['Email', contact.claimsEmail]);
-    if (contact.claimsFormUrl) lines.push(['Online form', contact.claimsFormUrl]);
+    // claimsFormUrl is deliberately not rendered here
     if (contact.mailingAddress) lines.push(['Post', contact.mailingAddress]);
     if (!lines.length) return;
     const ROW_H = 7, PAD = 4;
@@ -645,7 +647,7 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
   doc.setFont('helvetica', 'normal'); doc.setFontSize(9); setTC(C.TEXT_BODY);
   const qs = airlineContact?.claimsEmail
     ? `Send the Formal Compensation Claim Letter to ${airlineContact.claimsEmail}`
-    : `Submit via the airline's online claims form — see How to Submit Your Claim section.`;
+    : `Submit via ${airlineName}'s online claims portal — see How to Submit Your Claim (page 2) for instructions.`;
   const qsLines = doc.splitTextToSize(qs, CONTENT_W - 10);
   doc.text(qsLines, ML + 5, y + 13);
   y += 26;
@@ -662,10 +664,19 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
 
   // Contact block
   drawSection('AIRLINE CONTACT DETAILS');
-  if (airlineContact) {
+  if (airlineContact?.claimsEmail || airlineContact?.mailingAddress) {
+    // Has a direct contact — show email and/or mailing address (no URLs)
     drawContactBox(airlineContact);
+    if (airlineContact.webFormOnly || (!airlineContact.claimsEmail && airlineContact.claimsFormUrl)) {
+      // Should not normally reach here, but guard just in case
+      renderPara(`${airlineName} requires claims via their online form. Search "${airlineName} EU261 claim" to find the current submission page.`);
+    }
+  } else if (airlineContact?.claimsFormUrl || airlineContact?.webFormOnly) {
+    // Web-form-only airline — no printable URL, give search instructions
+    renderPara(`${airlineName} requires claims to be submitted via their online portal. Search "${airlineName} customer relations" or "${airlineName} EU261 claim" to find the current submission page on their website.`);
   } else {
-    renderPara(`We don't have specific contact details for ${airlineName} on file. Search "[airline name] EU261 claim" or "[airline name] customer relations" to find the correct contact.`);
+    // Unknown airline
+    renderPara(`We don't have specific contact details for ${airlineName} on file. Search "${airlineName} EU261 claim" or "${airlineName} customer relations" to find the correct contact.`);
   }
 
   // Step-by-step
