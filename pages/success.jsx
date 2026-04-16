@@ -561,6 +561,15 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
   };
   const flightDateFmt = fmtDate(flightDate);
 
+  // Replace ISO dates (YYYY-MM-DD) in free text with named-month format
+  const fmtDatesInText = (text) => {
+    if (!text) return text;
+    return text.replace(/\b(\d{4})-(\d{2})-(\d{2})\b/g, (_, yr, mo, dy) =>
+      new Date(parseInt(yr), parseInt(mo) - 1, parseInt(dy))
+        .toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+    );
+  };
+
   // ═══════════════════════════════════════════════
   // PAGE 1 — COVER
   // ═══════════════════════════════════════════════
@@ -704,46 +713,11 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
   }
   if (senderName || details?.address || senderEmail) y += 4;
 
-  // Date — appears once (Change 5, item 2)
+  // Date — appears once
   doc.setFont('helvetica', 'normal'); doc.setFontSize(10); setTC(C.TEXT_BODY);
   checkPage(); doc.text(todayStr, ML, y); y += 8;
 
-  // Recipient address — appears once (Change 5, item 3)
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(10); setTC(C.TEXT_BODY);
-  doc.text('Customer Relations / Claims Department', ML, y); y += 5;
-  doc.text(airlineName, ML, y); y += 8;
-
-  // Subject line — fixed format with named-month flight date (Change 5, item 4)
-  const subjLine = `Re: Flight ${flightNum} on ${flightDateFmt} — Compensation Claim under ${regFull}`;
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(12); setTC(C.TEXT_PRI);
-  const subjLines = doc.splitTextToSize(subjLine, CONTENT_W);
-  for (const sl of subjLines) { doc.text(sl, ML, y); y += 6.5; }
-  y += 0.5;
-  setDC(C.BRAND_BLUE); doc.setLineWidth(0.7);
-  doc.line(ML, y, PAGE_W - MR, y);
-  y += 7;
-
-  // Salutation (Change 5, item 5)
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(BODY_SIZE); setTC(C.TEXT_BODY);
-  checkPage(); doc.text('To whom it may concern,', ML, y); y += 8;
-
-  // Filter body paragraphs — strip header/salutation/sender duplicates from AI letter
-  const filteredBodyParas = bodyParas.filter(p => {
-    const t = p.trim();
-    if (/^dear\s/i.test(t)) return false;
-    if (/^to whom it may concern/i.test(t)) return false;
-    if (/^customer relations/i.test(t)) return false;
-    if (/^\d{1,2}\s+\w+\s+\d{4}$/.test(t)) return false;
-    if (senderName && t.startsWith(senderName)) return false;
-    if (senderEmail && t === senderEmail) return false;
-    return true;
-  });
-
-  // Letter body (Change 5, item 6)
-  if (filteredBodyParas.length > 0) renderPara(filteredBodyParas[0]);
-
-  // Flight details table
-  drawSection('FLIGHT DETAILS');
+  // Flight details table — before recipient so it reads like a reference block
   const flightRows = [
     flightNum                               && ['Flight number',    flightNum],
     flightDate                              && ['Date of travel',   flightDateFmt],
@@ -753,12 +727,52 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
     flightDetails?.actualTime               && ['Actual arrival',   flightDetails.actualTime],
     delayInfo                               && ['Delay duration',   delayInfo.label],
   ].filter(Boolean);
-  drawTableBox(flightRows);
+  if (flightRows.length) { drawTableBox(flightRows); y += 2; }
 
-  // Legal basis + rest of letter body
-  if (filteredBodyParas.length > 1) {
+  // Recipient address
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(10); setTC(C.TEXT_BODY);
+  doc.text('Customer Relations / Claims Department', ML, y); y += 5;
+  doc.text(airlineName, ML, y); y += 8;
+
+  // Subject line — fixed format with named-month flight date
+  const subjLine = `Re: Flight ${flightNum} on ${flightDateFmt} — Compensation Claim under ${regFull}`;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(12); setTC(C.TEXT_PRI);
+  const subjLines = doc.splitTextToSize(subjLine, CONTENT_W);
+  for (const sl of subjLines) { doc.text(sl, ML, y); y += 6.5; }
+  y += 0.5;
+  setDC(C.BRAND_BLUE); doc.setLineWidth(0.7);
+  doc.line(ML, y, PAGE_W - MR, y);
+  y += 7;
+
+  // Salutation
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(BODY_SIZE); setTC(C.TEXT_BODY);
+  checkPage(); doc.text('To whom it may concern,', ML, y); y += 8;
+
+  // Filter body paragraphs — strip header/salutation/sender/opening duplicates from AI letter
+  const filteredBodyParas = bodyParas.filter(p => {
+    const t = p.trim();
+    if (/^dear\s/i.test(t)) return false;
+    if (/^to whom it may concern/i.test(t)) return false;
+    if (/^customer relations/i.test(t)) return false;
+    if (/^\d{1,2}\s+\w+\s+\d{4}$/.test(t)) return false;
+    if (senderName && t.startsWith(senderName)) return false;
+    if (senderEmail && t === senderEmail) return false;
+    if (/^i am writing to/i.test(t)) return false; // replaced by fixed opening sentence
+    return true;
+  });
+
+  // Fixed opening sentence — references flight details box, avoids repetition
+  const disruptionType =
+    claimData?.disruption === 'delayed'    ? 'delay'
+    : claimData?.disruption === 'cancelled'  ? 'cancellation'
+    : claimData?.disruption === 'denied'     ? 'denied boarding'
+    : 'disruption';
+  renderPara(`I am writing to claim statutory compensation under ${regFull} for the ${disruptionType} of the above-referenced flight.`);
+
+  // Legal basis — all filtered body paragraphs with date formatting applied
+  if (filteredBodyParas.length > 0) {
     drawSection('LEGAL BASIS & CLAIM');
-    for (const para of filteredBodyParas.slice(1)) renderPara(para);
+    for (const para of filteredBodyParas) renderPara(fmtDatesInText(para));
   }
 
   // Closing — payment request with deadline date in red
