@@ -12,10 +12,14 @@ const SAMPLE_DATA = {
     airlineCode: 'EZY',
   },
   result: {
+    verdict: 'likely',
+    verdictNote: '',
     regulation: 'UK261',
     compensation: { amount: '£220', numeric: 220 },
     distanceKm: 530,
     depInfo: { region: 'UK', country: 'GB' },
+    careRights: [],
+    isCovered: true,
   },
   details: {
     name: 'John Doe',
@@ -29,7 +33,7 @@ const PRESETS = {
     label: 'EU261 — CDG → LHR, cancelled (Air France)',
     data: {
       answers: { flightNumber: 'AF1234', flightDate: '2026-03-15', from: 'CDG', to: 'LHR', disruption: 'cancelled', airlineCode: 'AF' },
-      result: { regulation: 'EU261', compensation: { amount: '€600', numeric: 600 }, distanceKm: 345, depInfo: { region: 'EU', country: 'France' } },
+      result: { verdict: 'likely', verdictNote: '', regulation: 'EU261', compensation: { amount: '€600', numeric: 600 }, distanceKm: 345, depInfo: { region: 'EU', country: 'France' }, careRights: [], isCovered: true },
       details: { name: 'Jane Smith', email: 'jane.smith@example.com', address: '123 Test Street, London, UK' },
     },
   },
@@ -37,7 +41,7 @@ const PRESETS = {
     label: 'UK261 — LGW → EDI, 4h delay (easyJet)',
     data: {
       answers: { flightNumber: 'EZY8001', flightDate: '2026-03-20', from: 'LGW', to: 'EDI', disruption: 'delayed', airlineCode: 'EZY' },
-      result: { regulation: 'UK261', compensation: { amount: '£220', numeric: 220 }, distanceKm: 530, depInfo: { region: 'UK', country: 'GB' } },
+      result: { verdict: 'likely', verdictNote: '', regulation: 'UK261', compensation: { amount: '£220', numeric: 220 }, distanceKm: 530, depInfo: { region: 'UK', country: 'GB' }, careRights: [], isCovered: true },
       details: { name: 'John Doe', email: 'john.doe@example.com', address: '45 High Street, Manchester, UK' },
     },
   },
@@ -45,7 +49,7 @@ const PRESETS = {
     label: 'Canada APPR — YYZ → YVR, denied boarding',
     data: {
       answers: { flightNumber: 'AC115', flightDate: '2026-04-01', from: 'YYZ', to: 'YVR', disruption: 'denied_boarding', airlineCode: 'AC' },
-      result: { regulation: 'APPR', compensation: { amount: 'CA$900', numeric: 900 }, distanceKm: 3350, depInfo: { region: 'CA', country: 'CA' } },
+      result: { verdict: 'likely', verdictNote: '', regulation: 'APPR', compensation: { amount: 'CA$900', numeric: 900 }, distanceKm: 3350, depInfo: { region: 'CA', country: 'CA' }, careRights: [], isCovered: true },
       details: { name: 'Marie Tremblay', email: 'marie.tremblay@example.ca', address: '789 Maple Avenue, Toronto, ON, Canada' },
     },
   },
@@ -53,7 +57,7 @@ const PRESETS = {
     label: 'Turkey SHY — IST → LHR, cancelled',
     data: {
       answers: { flightNumber: 'TK1987', flightDate: '2026-05-10', from: 'IST', to: 'LHR', disruption: 'cancelled', airlineCode: 'TK' },
-      result: { regulation: 'SHY', compensation: { amount: '€600', numeric: 600 }, distanceKm: 2520, depInfo: { region: 'TR', country: 'TR' } },
+      result: { verdict: 'likely', verdictNote: '', regulation: 'SHY', compensation: { amount: '€600', numeric: 600 }, distanceKm: 2520, depInfo: { region: 'TR', country: 'TR' }, careRights: [], isCovered: true },
       details: { name: 'Ayşe Kaya', email: 'ayse.kaya@example.com', address: 'Bağcılar Mahallesi, Istanbul, Türkiye' },
     },
   },

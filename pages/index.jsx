@@ -533,7 +533,7 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
   const [captureEmail, setCaptureEmail] = useState('');
   const [captureStatus, setCaptureStatus] = useState('idle'); // idle | submitting | done | error
   const { verdict, regulation, compensation, verdictNote, careRights, deskScript, distanceKm, shyMeta, alsoCoveredByEU261 } = result;
-  const meta = VERDICT_META[verdict];
+  const meta = VERDICT_META[verdict] ?? VERDICT_META.likely;
   const amountDisplay = compensation?.amount || (verdict !== 'unlikely' ? '€250–€600' : null);
   const isSHYDelay = regulation === 'SHY' && answers.disruption === 'delayed';
   const showPrimaryCTA = verdict === 'likely' || verdict === 'possibly' || isSHYDelay;
