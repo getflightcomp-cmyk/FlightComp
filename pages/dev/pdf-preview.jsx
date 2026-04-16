@@ -4,37 +4,37 @@ import { useRouter } from 'next/router';
 // Sample data for PDF preview — edit freely to test different scenarios
 const SAMPLE_DATA = {
   answers: {
-    flightNumber: 'LH1234',
-    flightDate: '2026-03-15',
-    from: 'LHR',
-    to: 'FRA',
-    disruption: 'cancelled',
-    airlineCode: 'LH',
+    flightNumber: 'EZY8001',
+    flightDate: '2026-03-20',
+    from: 'LGW',
+    to: 'EDI',
+    disruption: 'delayed',
+    airlineCode: 'EZY',
   },
   result: {
-    regulation: 'EU261',
-    compensation: { amount: '€600', numeric: 600 },
-    distanceKm: 630,
-    depInfo: { region: 'EU', country: 'GB' },
+    regulation: 'UK261',
+    compensation: { amount: '£220', numeric: 220 },
+    distanceKm: 530,
+    depInfo: { region: 'UK', country: 'GB' },
   },
   details: {
-    name: 'Jane Smith',
-    email: 'jane.smith@example.com',
-    address: '123 Test Street, London, UK',
+    name: 'John Doe',
+    email: 'john.doe@example.com',
+    address: '45 High Street, Manchester, UK',
   },
 };
 
 const PRESETS = {
   EU261: {
-    label: 'EU261 — LHR → FRA, cancelled',
+    label: 'EU261 — CDG → LHR, cancelled (Air France)',
     data: {
-      answers: { flightNumber: 'LH1234', flightDate: '2026-03-15', from: 'LHR', to: 'FRA', disruption: 'cancelled', airlineCode: 'LH' },
-      result: { regulation: 'EU261', compensation: { amount: '€600', numeric: 600 }, distanceKm: 630, depInfo: { region: 'EU', country: 'GB' } },
+      answers: { flightNumber: 'AF1234', flightDate: '2026-03-15', from: 'CDG', to: 'LHR', disruption: 'cancelled', airlineCode: 'AF' },
+      result: { regulation: 'EU261', compensation: { amount: '€600', numeric: 600 }, distanceKm: 345, depInfo: { region: 'EU', country: 'France' } },
       details: { name: 'Jane Smith', email: 'jane.smith@example.com', address: '123 Test Street, London, UK' },
     },
   },
   UK261: {
-    label: 'UK261 — LGW → EDI, 4h delay',
+    label: 'UK261 — LGW → EDI, 4h delay (easyJet)',
     data: {
       answers: { flightNumber: 'EZY8001', flightDate: '2026-03-20', from: 'LGW', to: 'EDI', disruption: 'delayed', airlineCode: 'EZY' },
       result: { regulation: 'UK261', compensation: { amount: '£220', numeric: 220 }, distanceKm: 530, depInfo: { region: 'UK', country: 'GB' } },
