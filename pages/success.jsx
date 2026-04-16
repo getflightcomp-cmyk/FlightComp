@@ -661,7 +661,7 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
 
   y += 4;
   drawSection('ESCALATION AUTHORITY');
-  renderPara(`If the airline does not resolve your claim, file a free complaint with:`);
+  renderPara(`If the airline does not resolve your claim within 30 days, you can file a free complaint with:`);
   {
     const PAD = 4;
     const nameWrapped = doc.splitTextToSize(escalation.name, CONTENT_W - PAD * 2);
@@ -674,22 +674,16 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
     for (const nl of nameWrapped) { doc.text(nl, ML + PAD, ry); ry += 5.5; }
     y += boxH + 6;
   }
-  if (escalation.note) {
-    doc.setFont('helvetica', 'italic'); doc.setFontSize(9); setTC(C.TEXT_LABEL);
-    const noteLines = doc.splitTextToSize(escalation.note, CONTENT_W);
-    for (const nl of noteLines) { checkPage(); doc.text(nl, ML, y); y += 4.5; }
-    y += 3;
-  }
 
   // ═══════════════════════════════════════════════
   // PAGE 3 — CLAIM LETTER
   // ═══════════════════════════════════════════════
   newPage();
 
-  // Section title + instruction (Change 4a + 4b)
-  drawSection('FORMAL COMPENSATION CLAIM LETTER');
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); setTC(C.TEXT_LABEL);
-  doc.text('Send this letter to your airline\'s claims department via email. Keep a copy for your records.', ML, y); y += 9;
+  // Section title + instruction — styled to match follow-up/escalation pages
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(16); setTC(C.TEXT_PRI);
+  doc.text('Formal Compensation Claim Letter', ML, y); y += 8;
+  drawCallout('Send this letter to your airline\'s claims department via email. Keep a copy for your records.', C.LT_BLUE_BG, C.LT_BLUE_BD);
 
   // Gray shading behind letter body (Change 4c)
   const LPAD = 4;
@@ -733,11 +727,15 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
   doc.setFont('helvetica', 'normal'); doc.setFontSize(BODY_SIZE); setTC(C.TEXT_BODY);
   checkPage(); doc.text('To whom it may concern,', ML, y); y += 8;
 
-  // Filter body paragraphs — skip any that duplicate header/salutation (Change 5)
+  // Filter body paragraphs — strip header/salutation/sender duplicates from AI letter
   const filteredBodyParas = bodyParas.filter(p => {
-    if (/^dear\s/i.test(p)) return false;
-    if (/^customer relations/i.test(p)) return false;
-    if (/^\d{1,2}\s+\w+\s+\d{4}$/.test(p.trim())) return false;
+    const t = p.trim();
+    if (/^dear\s/i.test(t)) return false;
+    if (/^to whom it may concern/i.test(t)) return false;
+    if (/^customer relations/i.test(t)) return false;
+    if (/^\d{1,2}\s+\w+\s+\d{4}$/.test(t)) return false;
+    if (senderName && t.startsWith(senderName)) return false;
+    if (senderEmail && t === senderEmail) return false;
     return true;
   });
 
