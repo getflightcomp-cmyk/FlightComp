@@ -674,26 +674,35 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
   if (airlineContact?.claimsEmail || airlineContact?.mailingAddress) {
     // Has a direct contact — show email and/or mailing address (no URLs)
     drawContactBox(airlineContact);
+    if (airlineContact.claimsEmail) {
+      renderPara(`Send your claim to: ${airlineContact.claimsEmail}`);
+    }
     if (airlineContact.webFormOnly || (!airlineContact.claimsEmail && airlineContact.claimsFormUrl)) {
       // Should not normally reach here, but guard just in case
-      renderPara(`${airlineName} requires claims via their online form. Search "${airlineName} ${regSearchTerm}" to find the current submission page.`);
+      renderPara(`${airlineName} accepts claims through their online portal. Search "${airlineName} flight compensation claim" to find their submission page. When filling out the form, use the details and legal citations from the Formal Compensation Claim Letter included in this kit.`);
     }
   } else if (airlineContact?.claimsFormUrl || airlineContact?.webFormOnly) {
     // Web-form-only airline — no printable URL, give search instructions
-    renderPara(`${airlineName} requires claims to be submitted via their online portal. Search "${airlineName} customer relations" or "${airlineName} ${regSearchTerm}" to find the current submission page on their website.`);
+    renderPara(`${airlineName} accepts claims through their online portal. Search "${airlineName} flight compensation claim" to find their submission page. When filling out the form, use the details and legal citations from the Formal Compensation Claim Letter included in this kit.`);
   } else {
     // Unknown airline
     renderPara(`We don't have specific contact details for ${airlineName} on file. Search "${airlineName} ${regSearchTerm}" or "${airlineName} customer relations" to find the correct contact.`);
   }
 
-  // Step-by-step
+  // Step-by-step — instructions differ based on whether airline accepts email or web-form only
   drawSection('STEP-BY-STEP INSTRUCTIONS');
-  const subSteps = [
-    `Send the Formal Compensation Claim Letter (next section) to ${airlineName} using the contact details above. Email is fastest; post requires proof of delivery.`,
-    'Keep a copy of everything you send and note today\'s date as your submission date.',
-    `The airline has ${deadlineDays} days to respond under ${regFull}. Mark your calendar for ${deadlineDateStr}.`,
-    `If you don't receive a response by ${followUpDateStr}, send the 14-Day Follow-Up Template included in this kit.`,
+  const subSteps = airlineContact?.claimsEmail ? [
+    `Send the Formal Compensation Claim Letter (page 3) via email to: ${airlineContact.claimsEmail}`,
+    `Use the subject line from the letter as your email subject and copy the full letter text into the body of the email.`,
+    `Keep a copy of the sent email and note today's date as your submission date.`,
+    `The airline has ${deadlineDays} days to respond under ${regFull}. If you do not receive a response by ${followUpDateStr}, send the 14-Day Follow-Up Template included in this kit.`,
     `If the airline rejects your claim or you receive no satisfactory response by ${escalationDateStr}, send the 30-Day Escalation Template and file a complaint with ${escalation.name}.`,
+  ] : [
+    `Go to ${airlineName}'s website and find their claims or customer relations portal. Search "${airlineName} flight compensation claim" to find the correct page.`,
+    `Fill out the airline's online form using the details from your Formal Compensation Claim Letter (page 3). In any free-text or description fields, copy the key paragraphs from your claim letter — especially the legal basis, flight details, and compensation amount.`,
+    `Save or screenshot your submission confirmation and any reference number the airline provides.`,
+    `The airline has ${deadlineDays} days to respond under ${regFull}. If you do not receive a response by ${followUpDateStr}, submit the Follow-Up Template content (page 5) through the same portal or via email to ${airlineName}'s general customer service.`,
+    `If the airline rejects your claim or you receive no satisfactory response by ${escalationDateStr}, use the 30-Day Escalation Template and file a complaint with ${escalation.name}.`,
   ];
   subSteps.forEach((step, i) => drawStep(i + 1, step));
 
@@ -721,7 +730,12 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
   // Section title + instruction — styled to match follow-up/escalation pages
   doc.setFont('helvetica', 'bold'); doc.setFontSize(16); setTC(C.TEXT_PRI);
   doc.text('Formal Compensation Claim Letter', ML, y); y += 8;
-  drawCallout('Send this letter to your airline\'s claims department via email. Keep a copy for your records.', C.LT_BLUE_BG, C.LT_BLUE_BD);
+  drawCallout(
+    airlineContact?.claimsEmail
+      ? 'Send this letter to your airline\'s claims department via email. Keep a copy for your records.'
+      : `Use the content of this letter when submitting your claim through ${airlineName}'s online portal. Copy the legal citations and compensation details into the form's text fields.`,
+    C.LT_BLUE_BG, C.LT_BLUE_BD
+  );
 
   // Gray shading behind letter body — continues across pages via letterBox
   const LPAD = 4;
@@ -837,7 +851,9 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
   doc.text('14-Day Follow-Up Template', ML, y); y += 8;
 
   drawCallout(
-    `Send this follow-up if you have not received a response by ${followUpDateStr} (14 days after your original submission).`,
+    airlineContact?.claimsEmail
+      ? `Send this follow-up via email to ${airlineContact.claimsEmail} if you have not received a response by ${followUpDateStr} (14 days after your original submission).`
+      : `Submit this follow-up through ${airlineName}'s online portal, or contact their customer service team directly referencing your original claim submission and reference number, if you have not received a response by ${followUpDateStr}.`,
     C.LT_BLUE_BG, C.LT_BLUE_BD
   );
 
@@ -878,7 +894,9 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
   doc.text('30-Day Escalation Template', ML, y); y += 8;
 
   drawCallout(
-    `Send this escalation letter if you have not received a satisfactory response by ${escalationDateStr} (30 days after your original submission).`,
+    airlineContact?.claimsEmail
+      ? `Send this escalation letter via email to ${airlineContact.claimsEmail} if you have not received a satisfactory response by ${escalationDateStr} (30 days after your original submission).`
+      : `Submit this escalation through ${airlineName}'s online portal, or contact their customer service team directly referencing your claim, if you have not received a satisfactory response by ${escalationDateStr}.`,
     [255, 247, 237], [254, 215, 170]
   );
 
@@ -1035,6 +1053,14 @@ export default function Success() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ answers: claimData, result, details, stripeSessionId }),
       }).catch(() => {});
+      // Mark email_captures row as converted (kit purchased)
+      if (details?.email) {
+        fetch('/api/mark-converted', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: details.email }),
+        }).catch(() => {});
+      }
     } catch {
       setState('error');
     }
