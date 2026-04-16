@@ -9,11 +9,23 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { customerEmail, successUrl, cancelUrl } = req.body;
+  const { customerEmail, successUrl, cancelUrl, claimMeta } = req.body;
 
   if (!successUrl || !cancelUrl) {
     return res.status(400).json({ error: 'Missing successUrl or cancelUrl' });
   }
+
+  // Attach claim data as Stripe metadata so the webhook can fulfil the order
+  // without relying on client sessionStorage. All values must be strings.
+  const metadata = claimMeta ? {
+    email:        String(claimMeta.email        || '').slice(0, 500),
+    name:         String(claimMeta.name         || '').slice(0, 500),
+    airline:      String(claimMeta.airline      || '').slice(0, 500),
+    flightNumber: String(claimMeta.flightNumber || '').slice(0, 500),
+    route:        String(claimMeta.route        || '').slice(0, 500),
+    regulation:   String(claimMeta.regulation   || '').slice(0, 500),
+    compensation: String(claimMeta.compensation || '').slice(0, 500),
+  } : {};
 
   try {
     const session = await stripe.checkout.sessions.create({
@@ -37,7 +49,7 @@ export default async function handler(req, res) {
       customer_email: customerEmail || undefined,
       success_url: successUrl,
       cancel_url: cancelUrl,
-      // Allow the checkout session to show a "back" button to cancel
+      metadata,
       payment_intent_data: {
         description: 'FlightComp — Flight Compensation Kit',
       },

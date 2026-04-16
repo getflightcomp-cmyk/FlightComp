@@ -1033,13 +1033,27 @@ export default function Home() {
     sessionStorage.setItem('fc_claim', JSON.stringify(payload));
 
     const base = process.env.NEXT_PUBLIC_BASE_URL || window.location.origin;
+
+    // Build the metadata object the webhook will use to record the purchase.
+    // {CHECKOUT_SESSION_ID} is a Stripe magic placeholder — replaced in the redirect.
+    const claimMeta = {
+      email:        details.email                    || '',
+      name:         details.name                     || '',
+      airline:      answers.airlineName              || '',
+      flightNumber: answers.flightNumber             || '',
+      route:        `${answers.from || ''}–${answers.to || ''}`,
+      regulation:   result?.regulation               || '',
+      compensation: result?.compensation?.amount     || '',
+    };
+
     const res = await fetch('/api/create-checkout-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         customerEmail: details.email,
-        successUrl: `${base}/success`,
+        successUrl: `${base}/success?session_id={CHECKOUT_SESSION_ID}`,
         cancelUrl: `${base}/cancel`,
+        claimMeta,
       }),
     });
 

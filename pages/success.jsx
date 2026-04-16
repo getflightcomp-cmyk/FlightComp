@@ -1008,11 +1008,14 @@ export default function Success() {
       setLetter(json.letter);
       setState('ready');
       sessionStorage.removeItem('fc_claim');
-      // Save purchase record for 30-day follow-up cron (fire-and-forget)
+      // Client-side fallback — webhook is the source of truth; this runs in case
+      // the webhook fires before the session is available or is delayed.
+      // stripeSessionId enables deduplication so both never create duplicate records.
+      const stripeSessionId = new URLSearchParams(window.location.search).get('session_id') || null;
       fetch('/api/save-kit-purchase', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers: claimData, result, details }),
+        body: JSON.stringify({ answers: claimData, result, details, stripeSessionId }),
       }).catch(() => {});
     } catch {
       setState('error');
