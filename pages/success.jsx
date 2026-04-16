@@ -551,6 +551,13 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
     : regulation === 'SHY'  ? 'Turkey SHY Passenger Rights Regulation'
     : 'EU Regulation 261/2004';
 
+  // Search-hint keyword used in airline contact fallback messages on page 2
+  const regSearchTerm =
+    regulation === 'UK261' ? 'UK261 claim'
+    : regulation === 'APPR' ? 'Canada flight compensation'
+    : regulation === 'SHY'  ? 'Turkey flight compensation'
+    : 'EU261 claim';
+
   // Resolve route to IATA codes for display
   const resolveCode = (raw) => {
     if (!raw) return raw;
@@ -669,14 +676,14 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
     drawContactBox(airlineContact);
     if (airlineContact.webFormOnly || (!airlineContact.claimsEmail && airlineContact.claimsFormUrl)) {
       // Should not normally reach here, but guard just in case
-      renderPara(`${airlineName} requires claims via their online form. Search "${airlineName} EU261 claim" to find the current submission page.`);
+      renderPara(`${airlineName} requires claims via their online form. Search "${airlineName} ${regSearchTerm}" to find the current submission page.`);
     }
   } else if (airlineContact?.claimsFormUrl || airlineContact?.webFormOnly) {
     // Web-form-only airline — no printable URL, give search instructions
-    renderPara(`${airlineName} requires claims to be submitted via their online portal. Search "${airlineName} customer relations" or "${airlineName} EU261 claim" to find the current submission page on their website.`);
+    renderPara(`${airlineName} requires claims to be submitted via their online portal. Search "${airlineName} customer relations" or "${airlineName} ${regSearchTerm}" to find the current submission page on their website.`);
   } else {
     // Unknown airline
-    renderPara(`We don't have specific contact details for ${airlineName} on file. Search "${airlineName} EU261 claim" or "${airlineName} customer relations" to find the correct contact.`);
+    renderPara(`We don't have specific contact details for ${airlineName} on file. Search "${airlineName} ${regSearchTerm}" or "${airlineName} customer relations" to find the correct contact.`);
   }
 
   // Step-by-step
