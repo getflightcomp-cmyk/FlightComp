@@ -2,33 +2,39 @@ import Head from 'next/head';
 import { blogPosts, getPostBySlug } from '../../lib/blogPosts';
 
 // ── Minimal markdown renderer ─────────────────────────
-// Supports: ## h2, ### h3, **bold**, - list items, blank lines = paragraph breaks
+// Supports: ## h2, ### h3, **bold**, [text](url), - list items,
+//           --- horizontal rule, # h1 (skipped — rendered as post.title),
+//           blank lines = paragraph breaks, mixed text+list blocks
 function renderMarkdown(md) {
   if (!md) return null;
   const blocks = md.split(/\n{2,}/).map(b => b.trim()).filter(Boolean);
   const elements = [];
-  let listItems = [];
-
-  function flushList(key) {
-    if (listItems.length > 0) {
-      elements.push(
-        <ul key={`ul-${key}`} style={{ color: 'var(--muted)', fontSize: 15, lineHeight: 1.75, marginBottom: 20, paddingLeft: 22 }}>
-          {listItems.map((item, i) => (
-            <li key={i} style={{ marginBottom: 4 }} dangerouslySetInnerHTML={{ __html: inlineFormat(item) }} />
-          ))}
-        </ul>
-      );
-      listItems = [];
-    }
-  }
 
   blocks.forEach((block, i) => {
-    // Check if entire block is a list
     const lines = block.split('\n');
     const allList = lines.every(l => l.startsWith('- '));
+    const hasListLines = lines.some(l => l.startsWith('- '));
+    const hasNonListLines = lines.some(l => !l.startsWith('- '));
 
-    if (allList) {
-      flushList(i);
+    if (block === '---') {
+      elements.push(
+        <hr key={i} style={{ border: 'none', borderTop: '1px solid var(--border)', margin: '28px 0' }} />
+      );
+    } else if (block.startsWith('# ')) {
+      // Skip h1 — already rendered as post.title above
+    } else if (block.startsWith('### ')) {
+      elements.push(
+        <h3 key={i} style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)', marginTop: 28, marginBottom: 8, lineHeight: 1.3 }}>
+          {block.slice(4)}
+        </h3>
+      );
+    } else if (block.startsWith('## ')) {
+      elements.push(
+        <h2 key={i} style={{ fontSize: 21, fontWeight: 700, color: 'var(--text)', marginTop: 36, marginBottom: 12, lineHeight: 1.3, paddingBottom: 8, borderBottom: '1px solid var(--border)' }}>
+          {block.slice(3)}
+        </h2>
+      );
+    } else if (allList) {
       elements.push(
         <ul key={i} style={{ color: 'var(--muted)', fontSize: 15, lineHeight: 1.75, marginBottom: 20, paddingLeft: 22 }}>
           {lines.map((l, j) => (
@@ -36,22 +42,41 @@ function renderMarkdown(md) {
           ))}
         </ul>
       );
-    } else if (block.startsWith('### ')) {
-      flushList(i);
-      elements.push(
-        <h3 key={i} style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)', marginTop: 28, marginBottom: 8, lineHeight: 1.3 }}>
-          {block.slice(4)}
-        </h3>
-      );
-    } else if (block.startsWith('## ')) {
-      flushList(i);
-      elements.push(
-        <h2 key={i} style={{ fontSize: 21, fontWeight: 700, color: 'var(--text)', marginTop: 36, marginBottom: 12, lineHeight: 1.3, paddingBottom: 8, borderBottom: '1px solid var(--border)' }}>
-          {block.slice(3)}
-        </h2>
-      );
+    } else if (hasListLines && hasNonListLines) {
+      // Mixed block: text line(s) immediately followed by list items (no blank line between)
+      let textAccum = [];
+      let listAccum = [];
+      let subIdx = 0;
+      const flushSub = () => {
+        if (textAccum.length > 0) {
+          elements.push(
+            <p key={`${i}-t${subIdx++}`} style={{ fontSize: 15, color: 'var(--muted)', lineHeight: 1.75, marginBottom: 12 }}
+               dangerouslySetInnerHTML={{ __html: inlineFormat(textAccum.join(' ')) }} />
+          );
+          textAccum = [];
+        }
+        if (listAccum.length > 0) {
+          elements.push(
+            <ul key={`${i}-l${subIdx++}`} style={{ color: 'var(--muted)', fontSize: 15, lineHeight: 1.75, marginBottom: 20, paddingLeft: 22 }}>
+              {listAccum.map((item, j) => (
+                <li key={j} style={{ marginBottom: 4 }} dangerouslySetInnerHTML={{ __html: inlineFormat(item) }} />
+              ))}
+            </ul>
+          );
+          listAccum = [];
+        }
+      };
+      for (const line of lines) {
+        if (line.startsWith('- ')) {
+          if (textAccum.length > 0) flushSub();
+          listAccum.push(line.slice(2));
+        } else {
+          if (listAccum.length > 0) flushSub();
+          textAccum.push(line);
+        }
+      }
+      flushSub();
     } else {
-      flushList(i);
       elements.push(
         <p key={i} style={{ fontSize: 15, color: 'var(--muted)', lineHeight: 1.75, marginBottom: 20 }}
            dangerouslySetInnerHTML={{ __html: inlineFormat(block) }} />
@@ -64,14 +89,17 @@ function renderMarkdown(md) {
 
 function inlineFormat(text) {
   // **bold** → <strong>
-  return text.replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--text);font-weight:600">$1</strong>');
+  let out = text.replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--text);font-weight:600">$1</strong>');
+  // [text](url) → <a>
+  out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color:var(--blue);text-decoration:underline;text-underline-offset:2px">$1</a>');
+  return out;
 }
 // ──────────────────────────────────────────────────────
 
 export default function BlogPost({ post }) {
   if (!post) return null;
 
-  const canonicalUrl = `https://getflightcomp.com/blog/${post.slug}`;
+  const canonicalUrl = `https://www.getflightcomp.com/blog/${post.slug}`;
 
   return (
     <>
@@ -93,7 +121,7 @@ export default function BlogPost({ post }) {
           description: post.excerpt,
           datePublished: post.date,
           author: { '@type': 'Organization', name: 'FlightComp' },
-          publisher: { '@type': 'Organization', name: 'FlightComp', url: 'https://getflightcomp.com' },
+          publisher: { '@type': 'Organization', name: 'FlightComp', url: 'https://www.getflightcomp.com' },
         })}} />
       </Head>
 
