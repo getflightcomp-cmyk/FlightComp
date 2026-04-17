@@ -4,9 +4,9 @@ import { assessClaim, assessClaimAPPR, assessClaimSHY, detectRegulation, tryReso
 import { resolveAirline, getCarrierRegion, isLargeCanadianCarrier } from '../lib/carriers';
 
 /* ══════════════════════════════════════════════════════
-   Turkish localization — standalone page
-   Canonical: https://www.getflightcomp.com/tr
-   Covers EU261 / UK261 / APPR / SHY (same logic, TR strings)
+   French (Canadian) localization — standalone page
+   Canonical: https://www.getflightcomp.com/fr
+   Covers APPR / EU261 / UK261 / SHY (same logic, FR-CA strings)
 ══════════════════════════════════════════════════════ */
 
 function ProgressBar({ step, total, onBack }) {
@@ -14,7 +14,7 @@ function ProgressBar({ step, total, onBack }) {
     <div className="prog-wrap">
       <div className="prog-head">
         <button className="prog-back" onClick={onBack}>
-          ← Geri
+          ← Retour
         </button>
         <span className="prog-step">{step}/{total}</span>
       </div>
@@ -25,20 +25,20 @@ function ProgressBar({ step, total, onBack }) {
   );
 }
 
-// ── S1: Aksama türü ───────────────────────────────────
+// ── Q1: Type d'incident ───────────────────────────────
 function Q1Disruption({ value, onChange }) {
   const opts = [
-    { value: 'delayed',    icon: '⏱️', title: 'Gecikmeli',        sub: 'Uçuş geç kalktı veya geç indi' },
-    { value: 'cancelled',  icon: '✕',  title: 'İptal edildi',     sub: 'Uçuş gerçekleşmedi' },
-    { value: 'denied',     icon: '🚫', title: 'Biniş reddedildi', sub: 'Uçağa almanlar engellendi' },
-    { value: 'downgraded', icon: '⬇️', title: 'Sınıf düşürüldü', sub: 'Rezervasyondan daha düşük sınıfta yer verildi' },
+    { value: 'delayed',    icon: '⏱️', title: 'Retardé',              sub: 'Le vol a décollé ou atterri en retard' },
+    { value: 'cancelled',  icon: '✕',  title: 'Annulé',               sub: 'Le vol n\'a pas eu lieu' },
+    { value: 'denied',     icon: '🚫', title: 'Embarquement refusé',  sub: 'On vous a empêché de monter à bord' },
+    { value: 'downgraded', icon: '⬇️', title: 'Déclassement',         sub: 'Placé dans une classe inférieure à celle réservée' },
   ];
   return (
     <div className="screen">
       <ProgressBar step={1} total={6} onBack={() => history.back()} />
       <div className="q-body">
-        <div className="q-label">Soru 1/6</div>
-        <h2 className="q-head">Uçuşunuzda ne yaşandı?</h2>
+        <div className="q-label">Question 1 sur 6</div>
+        <h2 className="q-head">Qu&apos;est-il arrivé à votre vol?</h2>
         <div className="opts">
           {opts.map(o => (
             <button
@@ -60,18 +60,18 @@ function Q1Disruption({ value, onChange }) {
   );
 }
 
-// ── S2: Sefer numarası ────────────────────────────────
+// ── Q2: Numéro de vol ─────────────────────────────────
 function Q2FlightNumber({ value, onChange, onNext, onBack }) {
   return (
     <div className="screen">
       <ProgressBar step={2} total={6} onBack={onBack} />
       <div className="q-body">
-        <div className="q-label">Soru 2/6</div>
-        <h2 className="q-head">Sefer numaranız neydi?</h2>
+        <div className="q-label">Question 2 sur 6</div>
+        <h2 className="q-head">Quel était le numéro de votre vol?</h2>
         <input
           className="inp inp-mono"
           type="text"
-          placeholder="örn. TK 123"
+          placeholder="p. ex. AC 123"
           value={value}
           onChange={e => onChange(e.target.value.toUpperCase())}
           autoFocus
@@ -79,23 +79,23 @@ function Q2FlightNumber({ value, onChange, onNext, onBack }) {
           spellCheck={false}
         />
         <p className="q-helper">
-          Biniş kartınızda veya rezervasyon onayında bulunur.{' '}
-          <strong>Bilmiyorsanız boş bırakabilirsiniz.</strong>
+          Vous le trouverez sur votre carte d&apos;embarquement ou votre confirmation de réservation.{' '}
+          <strong>Laissez vide si inconnu.</strong>
         </p>
-        <button className="btn-cont" onClick={onNext}>Devam →</button>
+        <button className="btn-cont" onClick={onNext}>Continuer →</button>
       </div>
     </div>
   );
 }
 
-// ── S3: Uçuş tarihi ───────────────────────────────────
+// ── Q3: Date du vol ───────────────────────────────────
 function Q3Date({ value, onChange, onNext, onBack }) {
   return (
     <div className="screen">
       <ProgressBar step={3} total={6} onBack={onBack} />
       <div className="q-body">
-        <div className="q-label">Soru 3/6</div>
-        <h2 className="q-head">Uçuş ne zaman gerçekleşti?</h2>
+        <div className="q-label">Question 3 sur 6</div>
+        <h2 className="q-head">Quand le vol a-t-il eu lieu?</h2>
         <input
           className="inp inp-date"
           type="date"
@@ -105,16 +105,16 @@ function Q3Date({ value, onChange, onNext, onBack }) {
           autoFocus
         />
         <p className="q-helper">
-          EU261 talepleri için <strong>3 yıllık süre sınırı</strong> (UK261 için 6 yıl, APPR için 1 yıl).
-          Eski uçuşlar için de başvuru yapılabilir.
+          Réclamations EU261&nbsp;: <strong>délai de 3&nbsp;ans</strong> (6&nbsp;ans UK261, 1&nbsp;an RPPA).
+          Les vols plus anciens peuvent tout de même être vérifiés.
         </p>
-        <button className="btn-cont" onClick={onNext} disabled={!value}>Devam →</button>
+        <button className="btn-cont" onClick={onNext} disabled={!value}>Continuer →</button>
       </div>
     </div>
   );
 }
 
-// ── S4: Rota ──────────────────────────────────────────
+// ── Q4: Trajet ────────────────────────────────────────
 function Q4Route({ from, to, onFromChange, onToChange, onNext, onBack }) {
   const fromResolved = from.trim().length > 2 ? tryResolveAirport(from) : true;
   const toResolved   = to.trim().length > 2   ? tryResolveAirport(to)   : true;
@@ -124,15 +124,15 @@ function Q4Route({ from, to, onFromChange, onToChange, onNext, onBack }) {
     <div className="screen">
       <ProgressBar step={4} total={6} onBack={onBack} />
       <div className="q-body">
-        <div className="q-label">Soru 4/6</div>
-        <h2 className="q-head">Rotanız neydi?</h2>
+        <div className="q-label">Question 4 sur 6</div>
+        <h2 className="q-head">Quel était votre trajet?</h2>
         <div className="route-row">
           <div className="route-wrap">
-            <span className="route-lbl">Nereden</span>
+            <span className="route-lbl">Départ</span>
             <input
               className="route-inp"
               type="text"
-              placeholder="Havalimanı kodu veya şehir (örn. IST, İstanbul)"
+              placeholder="Code ou ville (p. ex. YUL, Montréal)"
               value={from}
               onChange={e => onFromChange(e.target.value)}
               autoFocus
@@ -141,17 +141,17 @@ function Q4Route({ from, to, onFromChange, onToChange, onNext, onBack }) {
             />
             {fromWarn && (
               <span style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4, display: 'block' }}>
-                Bu havalimanını tanıyamadık. 3 harfli IATA kodunu deneyin (örn. IST, LHR, CDG).
+                Aéroport non reconnu. Essayez le code à 3 lettres (p.&nbsp;ex. YUL, YYZ, CDG).
               </span>
             )}
           </div>
           <div className="route-arrow">↓</div>
           <div className="route-wrap">
-            <span className="route-lbl">Nereye</span>
+            <span className="route-lbl">Arrivée</span>
             <input
               className="route-inp"
               type="text"
-              placeholder="Havalimanı kodu veya şehir (örn. LHR, Londra)"
+              placeholder="Code ou ville (p. ex. LHR, Londres)"
               value={to}
               onChange={e => onToChange(e.target.value)}
               autoComplete="off"
@@ -159,24 +159,24 @@ function Q4Route({ from, to, onFromChange, onToChange, onNext, onBack }) {
             />
             {toWarn && (
               <span style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4, display: 'block' }}>
-                Bu havalimanını tanıyamadık. 3 harfli IATA kodunu deneyin (örn. IST, LHR, CDG).
+                Aéroport non reconnu. Essayez le code à 3 lettres (p.&nbsp;ex. YUL, YYZ, CDG).
               </span>
             )}
           </div>
         </div>
         <p className="q-helper">
-          <strong>AB/AEA/İngiltere havalimanlarından</strong> kalkan uçuşlar (EU261/UK261) ve
-          <strong> Kanada havalimanlarına/dan uçuşlar</strong> (APPR) ve Türkiye&apos;deki uçuşlar (SHY) kapsanır.
+          Couvre les vols au départ d&apos;<strong>aéroports canadiens</strong> (RPPA), les aéroports
+          de l&apos;<strong>UE/EEE/R.-U.</strong> (EU261/UK261) et les vols en <strong>Turquie</strong> (SHY).
         </p>
         <button className="btn-cont" onClick={onNext} disabled={!from.trim() || !to.trim()}>
-          Devam →
+          Continuer →
         </button>
       </div>
     </div>
   );
 }
 
-// ── SAirline: Havayolu adı ────────────────────────────
+// ── QAirline: Compagnie aérienne ─────────────────────
 function QAirline({ value, onChange, onNext, onBack }) {
   const resolved = value.trim().length > 1 ? resolveAirline(value) : true;
   const showWarn = value.trim().length > 2 && !resolved;
@@ -184,12 +184,12 @@ function QAirline({ value, onChange, onNext, onBack }) {
     <div className="screen">
       <ProgressBar step={5} total={7} onBack={onBack} />
       <div className="q-body">
-        <div className="q-label">Soru 5/7</div>
-        <h2 className="q-head">Uçuşu hangi havayolu işletti?</h2>
+        <div className="q-label">Question 5 sur 7</div>
+        <h2 className="q-head">Quelle compagnie aérienne exploitait votre vol?</h2>
         <input
           className="inp inp-mono"
           type="text"
-          placeholder="örn. Türk Hava Yolları veya TK"
+          placeholder="p. ex. Air Canada ou AC"
           value={value}
           onChange={e => onChange(e.target.value)}
           autoFocus
@@ -198,34 +198,34 @@ function QAirline({ value, onChange, onNext, onBack }) {
         />
         {showWarn && (
           <span style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4, display: 'block' }}>
-            Bu havayolunu tanıyamadık. 2 harfli IATA kodunu deneyin (örn. TK, PC, XQ) veya boş bırakın.
+            Compagnie non reconnue. Essayez le code IATA à 2 lettres (p.&nbsp;ex. AC, WS, PD) ou laissez vide.
           </span>
         )}
         <p className="q-helper">
-          Havayolu adını veya IATA kodunu girin (örn. TK, PC, XQ).{' '}
-          <strong>Bilmiyorsanız boş bırakabilirsiniz.</strong>
+          Entrez le nom ou le code IATA (p.&nbsp;ex. AC, WS, PD).{' '}
+          <strong>Laissez vide si inconnu.</strong>
         </p>
-        <button className="btn-cont" onClick={onNext}>Devam →</button>
+        <button className="btn-cont" onClick={onNext}>Continuer →</button>
       </div>
     </div>
   );
 }
 
-// ── S5: Gecikme süresi (EU261/UK261) ─────────────────
+// ── Q5: Durée du retard (EU261/UK261) ─────────────────
 function Q5Delay({ value, onChange, disruption, onBack }) {
   const opts = [
-    { value: 'under2', title: '2 saatten az' },
-    { value: '2to3',   title: '2 – 3 saat' },
-    { value: '3to4',   title: '3 – 4 saat' },
-    { value: '4plus',  title: '4 saat ve üzeri' },
+    { value: 'under2', title: 'Moins de 2 heures' },
+    { value: '2to3',   title: '2 à 3 heures' },
+    { value: '3to4',   title: '3 à 4 heures' },
+    { value: '4plus',  title: '4 heures et plus' },
   ];
   if (disruption !== 'delayed') return null;
   return (
     <div className="screen">
       <ProgressBar step={5} total={6} onBack={onBack} />
       <div className="q-body">
-        <div className="q-label">Soru 5/6</div>
-        <h2 className="q-head">Varışta gecikme ne kadar sürdü?</h2>
+        <div className="q-label">Question 5 sur 6</div>
+        <h2 className="q-head">Quelle a été la durée du retard à l&apos;arrivée?</h2>
         <div className="opts">
           {opts.map(o => (
             <button
@@ -241,28 +241,28 @@ function Q5Delay({ value, onChange, disruption, onBack }) {
           ))}
         </div>
         <p className="q-helper">
-          EU261 tazminatı için <strong>son varış noktasında 3 saati aşan gecikme</strong> gerekir.
+          L&apos;indemnisation EU261 requiert un <strong>retard de 3 heures ou plus à la destination finale</strong>.
         </p>
       </div>
     </div>
   );
 }
 
-// ── S6: Neden (EU261/UK261) ───────────────────────────
+// ── Q6: Motif (EU261/UK261) ───────────────────────────
 function Q6Reason({ value, onChange, onBack }) {
   const opts = [
-    { value: 'technical', icon: '🔧', title: 'Teknik / mekanik arıza', sub: 'Uçak arızası, bakım sorunu' },
-    { value: 'crew',      icon: '👥', title: 'Mürettebat / personel',  sub: 'Eksik mürettebat, zamanlama sorunları' },
-    { value: 'weather',   icon: '🌩️', title: 'Olumsuz hava koşulları', sub: 'Fırtına, sis, buz veya ATC kısıtlamaları' },
-    { value: 'none',      icon: '❓', title: 'Açıklama yapılmadı',     sub: 'Havayolu neden bildirmedi' },
-    { value: 'other',     icon: '📋', title: 'Diğer',                  sub: 'Grev, havalimanı yoğunluğu vb.' },
+    { value: 'technical', icon: '🔧', title: 'Problème technique / mécanique', sub: 'Panne d\'appareil, problème de maintenance' },
+    { value: 'crew',      icon: '👥', title: 'Manque de personnel navigant',   sub: 'Équipage absent, problème d\'horaire du personnel' },
+    { value: 'weather',   icon: '🌩️', title: 'Conditions météorologiques',     sub: 'Tempête, brouillard, verglas ou restrictions ATC' },
+    { value: 'none',      icon: '❓', title: 'Aucune raison donnée',            sub: 'La compagnie n\'a pas expliqué' },
+    { value: 'other',     icon: '📋', title: 'Autre',                           sub: 'Grève, congestion aéroportuaire, etc.' },
   ];
   return (
     <div className="screen">
       <ProgressBar step={6} total={6} onBack={onBack} />
       <div className="q-body">
-        <div className="q-label">Soru 6/6</div>
-        <h2 className="q-head">Havayolu ne gibi bir sebep gösterdi?</h2>
+        <div className="q-label">Question 6 sur 6</div>
+        <h2 className="q-head">Quelle raison la compagnie aérienne a-t-elle donnée?</h2>
         <div className="opts">
           {opts.map(o => (
             <button
@@ -284,20 +284,20 @@ function Q6Reason({ value, onChange, onBack }) {
   );
 }
 
-// ── S5 SHY: Gecikme süresi ───────────────────────────
+// ── Q5 SHY: Durée du retard ───────────────────────────
 function Q5SHYDelay({ value, onChange, onBack }) {
   const opts = [
-    { value: 'under2', title: '2 saatten az' },
-    { value: '2to3',   title: '2 – 3 saat' },
-    { value: '3to4',   title: '3 – 4 saat' },
-    { value: '4plus',  title: '5 saat ve üzeri' },
+    { value: 'under2', title: 'Moins de 2 heures' },
+    { value: '2to3',   title: '2 à 3 heures' },
+    { value: '3to4',   title: '3 à 4 heures' },
+    { value: '4plus',  title: '5 heures et plus' },
   ];
   return (
     <div className="screen">
       <ProgressBar step={5} total={6} onBack={onBack} />
       <div className="q-body">
-        <div className="q-label">Soru 5/6</div>
-        <h2 className="q-head">Varışta gecikme ne kadar sürdü?</h2>
+        <div className="q-label">Question 5 sur 6</div>
+        <h2 className="q-head">Quelle a été la durée du retard à l&apos;arrivée?</h2>
         <div className="opts">
           {opts.map(o => (
             <button
@@ -313,26 +313,26 @@ function Q5SHYDelay({ value, onChange, onBack }) {
           ))}
         </div>
         <p className="q-helper">
-          Türkiye SHY kapsamında <strong>gecikmeler nakit tazminat hakkı doğurmaz</strong> — yalnızca bakım hakları (yemek, konaklama) geçerlidir.
+          Note&nbsp;: en vertu de la réglementation SHY (Turquie), <strong>les retards ne donnent pas droit à une indemnisation financière</strong> — seuls les droits aux soins s&apos;appliquent (repas, hébergement).
         </p>
       </div>
     </div>
   );
 }
 
-// ── S SHY Neden ───────────────────────────────────────
+// ── Q SHY Motif ───────────────────────────────────────
 function QSHYReason({ value, onChange, onBack, step, total }) {
   const opts = [
-    { value: 'airline',      icon: '🔧', title: 'Havayolunun sorumluluğu', sub: 'Teknik arıza, mürettebat eksikliği, overbooking, operasyonel sorun' },
-    { value: 'forcemajeure', icon: '🌩️', title: 'Mücbir sebep',            sub: 'Şiddetli hava, siyasi istikrarsızlık, doğal afet, havalimanı grevi, güvenlik riski' },
-    { value: 'unknown',      icon: '❓', title: 'Açıklama yapılmadı',       sub: 'Havayolu neden bildirmedi' },
+    { value: 'airline',      icon: '🔧', title: 'Responsabilité de la compagnie', sub: 'Problème technique, manque d\'équipage, surbooking, problème opérationnel' },
+    { value: 'forcemajeure', icon: '🌩️', title: 'Force majeure',                  sub: 'Conditions météo sévères, instabilité politique, catastrophe naturelle, grève aéroportuaire, risque sécuritaire' },
+    { value: 'unknown',      icon: '❓', title: 'Aucune raison donnée',            sub: 'La compagnie n\'a pas expliqué' },
   ];
   return (
     <div className="screen">
       <ProgressBar step={step} total={total} onBack={onBack} />
       <div className="q-body">
-        <div className="q-label">Soru {step}/{total}</div>
-        <h2 className="q-head">Aksamanın nedeni neydi?</h2>
+        <div className="q-label">Question {step} sur {total}</div>
+        <h2 className="q-head">Quelle était la cause de l&apos;incident?</h2>
         <div className="opts">
           {opts.map(o => (
             <button
@@ -350,25 +350,25 @@ function QSHYReason({ value, onChange, onBack, step, total }) {
           ))}
         </div>
         <p className="q-helper">
-          Teknik arızalar ve mürettebat eksikliği SHY kapsamında mücbir sebep sayılmaz — havayolunun <strong>sorumluluğundadır</strong>.
+          Les pannes techniques et le manque d&apos;équipage <strong>ne constituent pas</strong> un cas de force majeure en vertu de la réglementation SHY — ils relèvent de la responsabilité de la compagnie.
         </p>
       </div>
     </div>
   );
 }
 
-// ── S SHY Bildirim (iptaller) ─────────────────────────
+// ── Q SHY Préavis (annulations) ───────────────────────
 function QSHYNotified({ value, onChange, onBack, step, total }) {
   const opts = [
-    { value: 'yes', icon: '✓', title: 'Evet, 14+ gün önceden', sub: 'Kalkıştan en az 14 gün önce bilgilendirildim' },
-    { value: 'no',  icon: '✕', title: 'Hayır — 14 günden az',  sub: '14 günden kısa süre önce veya havalimanında öğrendim' },
+    { value: 'yes', icon: '✓', title: 'Oui, 14 jours ou plus à l\'avance', sub: 'J\'ai été informé au moins 14 jours avant le départ' },
+    { value: 'no',  icon: '✕', title: 'Non — moins de 14 jours',           sub: 'Informé moins de 14 jours avant, ou à l\'aéroport' },
   ];
   return (
     <div className="screen">
       <ProgressBar step={step} total={total} onBack={onBack} />
       <div className="q-body">
-        <div className="q-label">Soru {step}/{total}</div>
-        <h2 className="q-head">İptal önceden size bildirildi mi?</h2>
+        <div className="q-label">Question {step} sur {total}</div>
+        <h2 className="q-head">Avez-vous été informé de l&apos;annulation à l&apos;avance?</h2>
         <div className="opts">
           {opts.map(o => (
             <button
@@ -386,27 +386,27 @@ function QSHYNotified({ value, onChange, onBack, step, total }) {
           ))}
         </div>
         <p className="q-helper">
-          SHY kapsamında havayolları, yalnızca kalkıştan <strong>14 günden kısa süre önce</strong> yapılan iptaller için tazminat ödemek zorundadır.
+          La réglementation SHY n&apos;oblige les compagnies à indemniser les annulations que si le préavis a été donné <strong>moins de 14 jours</strong> avant le départ.
         </p>
       </div>
     </div>
   );
 }
 
-// ── S5 APPR: Gecikme seviyesi ─────────────────────────
+// ── Q5 APPR: Niveau de retard ─────────────────────────
 function Q5APPR({ value, onChange, onBack }) {
   const opts = [
-    { value: 'under3', title: '3 saatten az' },
-    { value: '3to6',   title: '3 – 6 saat' },
-    { value: '6to9',   title: '6 – 9 saat' },
-    { value: '9plus',  title: '9 saat ve üzeri' },
+    { value: 'under3', title: 'Moins de 3 heures' },
+    { value: '3to6',   title: '3 à 6 heures' },
+    { value: '6to9',   title: '6 à 9 heures' },
+    { value: '9plus',  title: '9 heures et plus' },
   ];
   return (
     <div className="screen">
       <ProgressBar step={5} total={7} onBack={onBack} />
       <div className="q-body">
-        <div className="q-label">Soru 5/7</div>
-        <h2 className="q-head">Varışta gecikme ne kadar sürdü?</h2>
+        <div className="q-label">Question 5 sur 7</div>
+        <h2 className="q-head">Quelle a été la durée du retard à l&apos;arrivée?</h2>
         <div className="opts">
           {opts.map(o => (
             <button
@@ -422,26 +422,26 @@ function Q5APPR({ value, onChange, onBack }) {
           ))}
         </div>
         <p className="q-helper">
-          APPR tazminatı <strong>3 saati aşan gecikmelerden</strong> itibaren başlar.
+          L&apos;indemnisation RPPA commence à partir de <strong>3 heures de retard à la destination finale</strong>.
         </p>
       </div>
     </div>
   );
 }
 
-// ── S Havayolu büyüklüğü (APPR) ───────────────────────
+// ── Q Taille de la compagnie (APPR) ──────────────────
 function QAirlineSize({ value, onChange, onBack, step, total }) {
   const opts = [
-    { value: 'large',   icon: '✈️', title: 'Büyük havayolu', sub: 'Air Canada, WestJet, Porter, Sunwing, Swoop, Flair, Air Transat' },
-    { value: 'small',   icon: '🛩️', title: 'Küçük havayolu', sub: 'Yukarıdaki listede yer almayan bölgesel veya charter taşıyıcı' },
-    { value: 'unknown', icon: '❓', title: 'Emin değilim',    sub: 'Büyük havayolu oranları uygulanacak' },
+    { value: 'large',   icon: '✈️', title: 'Grande compagnie aérienne', sub: 'Air Canada, WestJet, Porter, Sunwing, Swoop, Flair, Air Transat' },
+    { value: 'small',   icon: '🛩️', title: 'Petite compagnie aérienne', sub: 'Transporteur régional ou nolisé non listé ci-dessus' },
+    { value: 'unknown', icon: '❓', title: 'Je ne sais pas',             sub: 'Les tarifs des grandes compagnies seront appliqués' },
   ];
   return (
     <div className="screen">
       <ProgressBar step={step} total={total} onBack={onBack} />
       <div className="q-body">
-        <div className="q-label">Soru {step}/{total}</div>
-        <h2 className="q-head">Havayolu ne kadar büyük?</h2>
+        <div className="q-label">Question {step} sur {total}</div>
+        <h2 className="q-head">Quelle est la taille de la compagnie aérienne?</h2>
         <div className="opts">
           {opts.map(o => (
             <button
@@ -459,27 +459,27 @@ function QAirlineSize({ value, onChange, onBack, step, total }) {
           ))}
         </div>
         <p className="q-helper">
-          APPR tazminat miktarları büyük ve küçük havayolları için farklıdır.
+          Les montants d&apos;indemnisation RPPA diffèrent selon la taille de la compagnie.
         </p>
       </div>
     </div>
   );
 }
 
-// ── S APPR Neden ──────────────────────────────────────
+// ── Q Motif APPR ──────────────────────────────────────
 function QAPPRReason({ value, onChange, onBack, step, total }) {
   const opts = [
-    { value: 'controlled',   icon: '🔧', title: 'Havayolunun kontrolünde', sub: 'Teknik arıza, mürettebat sorunu, planlama, aşırı bilet satışı' },
-    { value: 'safety',       icon: '⚠️', title: 'Güvenlik kaynaklı',       sub: 'Uçağın yerde tutulmasını gerektiren güvenlik sorunu' },
-    { value: 'uncontrolled', icon: '🌩️', title: 'Havayolu kontrolü dışı',  sub: 'Şiddetli hava, ATC, havalimanı güvenliği, kuş çarpması' },
-    { value: 'unknown',      icon: '❓', title: 'Açıklama yapılmadı',       sub: 'Havayolu neden bildirmedi' },
+    { value: 'controlled',   icon: '🔧', title: 'Sous le contrôle de la compagnie', sub: 'Problème technique, manque d\'équipage, planification, surbooking' },
+    { value: 'safety',       icon: '⚠️', title: 'Lié à la sécurité',                sub: 'Problème de sécurité exigeant l\'immobilisation de l\'appareil' },
+    { value: 'uncontrolled', icon: '🌩️', title: 'Hors du contrôle de la compagnie', sub: 'Conditions météo sévères, ATC, sécurité aéroportuaire, impact aviaire' },
+    { value: 'unknown',      icon: '❓', title: 'Aucune raison donnée',              sub: 'La compagnie n\'a pas expliqué' },
   ];
   return (
     <div className="screen">
       <ProgressBar step={step} total={total} onBack={onBack} />
       <div className="q-body">
-        <div className="q-label">Soru {step}/{total}</div>
-        <h2 className="q-head">Aksamanın nedeni neydi?</h2>
+        <div className="q-label">Question {step} sur {total}</div>
+        <h2 className="q-head">Quelle était la cause de l&apos;incident?</h2>
         <div className="opts">
           {opts.map(o => (
             <button
@@ -501,7 +501,7 @@ function QAPPRReason({ value, onChange, onBack, step, total }) {
   );
 }
 
-// ── Sonuçlar ekranı ───────────────────────────────────
+// ── Écran des résultats ───────────────────────────────
 function Expander({ icon, label, children }) {
   const [open, setOpen] = useState(false);
   return (
@@ -518,27 +518,27 @@ function Expander({ icon, label, children }) {
   );
 }
 
-const VERDICT_META_TR = {
-  likely:   { badge: 'TAZMİNAT HAKKINIZ MUHTEMEL',     dot: '🟢' },
-  possibly: { badge: 'TAZMİNAT HAKKINIZ OLABİLİR',     dot: '🟡' },
-  unlikely: { badge: 'TAZMİNAT HAKKI MUHTEMELEN YOK',  dot: '🔴' },
+const VERDICT_META_FR = {
+  likely:   { badge: 'VOUS AVEZ PROBABLEMENT DROIT À UNE INDEMNISATION',     dot: '🟢' },
+  possibly: { badge: 'VOUS POURRIEZ AVOIR DROIT À UNE INDEMNISATION',         dot: '🟡' },
+  unlikely: { badge: 'VOUS N\'AVEZ PROBABLEMENT PAS DROIT À UNE INDEMNISATION', dot: '🔴' },
 };
 
-const DISRUPTION_LABELS_TR = {
-  cancelled:  'İptal',
-  delayed:    'Gecikme',
-  denied:     'Biniş reddi',
-  downgraded: 'Sınıf düşürme',
+const DISRUPTION_LABELS_FR = {
+  cancelled:  'Annulation',
+  delayed:    'Retard',
+  denied:     'Embarquement refusé',
+  downgraded: 'Déclassement',
 };
 
 function ResultsScreen({ result, answers, onGetLetter, onReset }) {
-  const [notifyEmail, setNotifyEmail]       = useState('');
-  const [notified, setNotified]             = useState(false);
-  const [captureEmail, setCaptureEmail]     = useState('');
-  const [captureStatus, setCaptureStatus]   = useState('idle');
+  const [notifyEmail, setNotifyEmail]     = useState('');
+  const [notified, setNotified]           = useState(false);
+  const [captureEmail, setCaptureEmail]   = useState('');
+  const [captureStatus, setCaptureStatus] = useState('idle');
 
   const { verdict, regulation, compensation, verdictNote, careRights, distanceKm, shyMeta } = result;
-  const meta = VERDICT_META_TR[verdict] ?? VERDICT_META_TR.likely;
+  const meta = VERDICT_META_FR[verdict] ?? VERDICT_META_FR.likely;
   const amountDisplay = compensation?.amount || (verdict !== 'unlikely' ? '€250–€600' : null);
   const isSHYDelay = regulation === 'SHY' && answers.disruption === 'delayed';
   const showPrimaryCTA = verdict === 'likely' || verdict === 'possibly' || isSHYDelay;
@@ -578,70 +578,62 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
   const regLabel = regulation === 'UK261'
     ? 'UK261/2004'
     : regulation === 'APPR'
-    ? 'Kanada APPR (SOR/2019-150)'
+    ? 'RPPA — Règlement sur la protection des passagers aériens (SOR/2019-150)'
     : regulation === 'SHY'
-    ? 'Türkiye SHY (Sivil Havacılık Yönetmeliği)'
-    : 'AB Tüzüğü 261/2004';
+    ? 'SHY — Réglementation turque sur les droits des passagers'
+    : 'Règlement UE 261/2004';
 
   return (
     <div className="res">
       <div className={`vbanner ${verdict}`}>
-        <div className="veyebrow">{meta.dot} Sonucunuz</div>
+        <div className="veyebrow">{meta.dot} Votre résultat</div>
         <div className="vbadge">{meta.badge}</div>
         {amountDisplay ? (
           <>
             <div className="vamount">{amountDisplay}</div>
-            <div className="vreg">{regLabel} kapsamında</div>
+            <div className="vreg">en vertu du {regLabel}</div>
           </>
         ) : (
           <div className="vreg" style={{ fontSize: 14, marginTop: 8, lineHeight: 1.5 }}>
-            Nakit tazminat yok — bakım hakları geçerli olabilir
+            Pas d&apos;indemnisation financière — des droits aux soins peuvent s&apos;appliquer
           </div>
         )}
         {verdictNote && <p className="vnote">{verdictNote}</p>}
         {shyMeta && (
           <div className="vnote" style={{ marginTop: 8, fontSize: 12, opacity: 0.8 }}>
-            <strong>Son başvuru tarihi:</strong> {shyMeta.deadline}<br />
-            <strong>Şikâyet mercii:</strong> {shyMeta.escalation}
+            <strong>Date limite&nbsp;:</strong> {shyMeta.deadline}<br />
+            <strong>Escalade&nbsp;:</strong> {shyMeta.escalation}
           </div>
         )}
       </div>
 
       <div className="res-body">
 
-        {/* ── Mevzuat referansı ── */}
+        {/* ── Référence réglementaire ── */}
         {verdict !== 'unlikely' && regulation && (
           <div className="reg-citation">
             {regulation === 'EU261' && (
-              <>
-                <strong>AB Tüzüğü 261/2004, Madde 7(1)</strong> kapsamında <strong>{amountDisplay}</strong> tazminat hakkınız doğmuş olabilir. Madde 5(1)(c) uyarınca havayolları, yolcuları en az 14 gün önceden bilgilendirmedikleri iptallerde tazminat ödemek zorundadır.
-              </>
+              <>En vertu du <strong>Règlement UE 261/2004, article&nbsp;7(1)</strong>, vous pourriez avoir droit à une indemnisation de <strong>{amountDisplay}</strong>. L&apos;article&nbsp;5(1)(c) oblige les compagnies à verser une indemnité pour les annulations lorsque les passagers n&apos;ont pas été informés au moins 14&nbsp;jours à l&apos;avance.</>
             )}
             {regulation === 'UK261' && (
-              <>
-                <strong>UK Tüzüğü 261 (korunan AB hukuku), Madde 7(1)</strong> kapsamında <strong>{amountDisplay}</strong> tazminat hakkınız doğmuş olabilir. İngiltere Sivil Havacılık Otoritesi (CAA), İngiltere&apos;den kalkan uçuşlarda bu hakları denetlemektedir.
-              </>
+              <>En vertu du <strong>Règlement UK261 (droit de l&apos;UE conservé), article&nbsp;7(1)</strong>, vous pourriez avoir droit à une indemnisation de <strong>{amountDisplay}</strong>. La Civil Aviation Authority (CAA) du Royaume-Uni applique ces droits pour les vols au départ du R.-U.</>
             )}
             {regulation === 'APPR' && (
-              <>
-                <strong>Kanada Hava Yolcusu Koruma Yönetmelikleri (SOR/2019-150), Madde 19(1)</strong> kapsamında <strong>{amountDisplay}</strong> tazminat hakkınız doğmuş olabilir. Kanada Ulaştırma Ajansı şikâyetleri almaktadır.
-              </>
+              <>En vertu du <strong>Règlement sur la protection des passagers aériens (RPPA, DORS/2019-150), article&nbsp;19(1)</strong>, vous pourriez avoir droit à <strong>{amountDisplay}</strong>. L&apos;Office des transports du Canada (OTC) supervise la conformité et peut recevoir des plaintes si la compagnie refuse de payer.</>
             )}
             {regulation === 'SHY' && (
-              <>
-                <strong>Türkiye SHY Yolcu Hakları Yönetmeliği</strong> kapsamında uluslararası uçuşlar için <strong>{amountDisplay}</strong> tazminat hakkınız doğmuş olabilir. Türkiye Sivil Havacılık Genel Müdürlüğü (SHGM) bu hakları denetlemektedir.
-              </>
+              <>En vertu du <strong>Règlement SHY de la Turquie sur les droits des passagers</strong>, vous pourriez avoir droit à <strong>{amountDisplay}</strong> pour les vols internationaux. La Direction générale de l&apos;aviation civile turque (DGCA) applique ces droits.</>
             )}
           </div>
         )}
 
-        {/* ── BİRİNCİL CTA ── */}
+        {/* ── CTA PRINCIPAL ── */}
         {showPrimaryCTA && (() => {
           const disruptionMap = {
-            cancelled:  'İptal',
-            delayed:    '3 saati aşan gecikme',
-            denied:     'Biniş reddi',
-            downgraded: 'Sınıf düşürme',
+            cancelled:  'Annulation',
+            delayed:    'Retard de plus de 3 heures',
+            denied:     'Embarquement refusé',
+            downgraded: 'Déclassement',
           };
           const params = new URLSearchParams();
           if (answers.flightNumber) params.set('flight',       answers.flightNumber);
@@ -651,33 +643,33 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
           if (answers.disruption)   params.set('disruption',   disruptionMap[answers.disruption] || answers.disruption);
           if (regulation)           params.set('regulation',   regulation);
           if (compensation?.amount) params.set('compensation', compensation.amount);
-          params.set('lang', 'tr');
+          params.set('lang', 'fr');
           const authorizeUrl = `/authorize?${params.toString()}`;
 
-          let airlineName = 'havayoluna';
+          let airlineName = 'la compagnie aérienne';
           try {
             const carrier = resolveAirline(answers.flightNumber);
-            if (carrier?.name) airlineName = carrier.name + ' şirketine';
+            if (carrier?.name) airlineName = carrier.name;
           } catch { /* keep default */ }
 
           return (
             <div className="cta-handle">
               <div className="cta-handle-top">
-                <span className="cta-handle-title">Başvurunuzu biz yapalım</span>
+                <span className="cta-handle-title">Laissez-nous gérer votre réclamation</span>
               </div>
               <div className="cta-howit">
-                <div className="cta-step"><span className="cta-step-n">1</span><span>Bizim adınıza hareket etmemize yetki veriyorsunuz.</span></div>
-                <div className="cta-step"><span className="cta-step-n">2</span><span>Başvurunuzu doğrudan {airlineName} iletiyoruz.</span></div>
-                <div className="cta-step"><span className="cta-step-n">3</span><span>Tüm takip ve itiraz süreçlerini yönetiyoruz.</span></div>
-                <div className="cta-step"><span className="cta-step-n">4</span><span>Yalnızca başarı durumunda %25 ödüyorsunuz. Sonuç alınamazsa ücret alınmaz.</span></div>
+                <div className="cta-step"><span className="cta-step-n">1</span><span>Vous nous autorisez à agir en votre nom.</span></div>
+                <div className="cta-step"><span className="cta-step-n">2</span><span>Nous soumettons votre réclamation directement à {airlineName}.</span></div>
+                <div className="cta-step"><span className="cta-step-n">3</span><span>Nous gérons tous les suivis et les démarches d&apos;escalade.</span></div>
+                <div className="cta-step"><span className="cta-step-n">4</span><span>Vous ne payez que si nous réussissons — 25&nbsp;% de frais. Aucun résultat, aucuns frais.</span></div>
               </div>
               <a className="btn-authorize" href={authorizeUrl}>
-                Yetkilendirmeyi Başlat →
+                Commencer l&apos;autorisation →
               </a>
               <div className="notify-fallback">
-                <p className="notify-fallback-label">Henüz hazır değil misiniz? E-postanızı bırakın, sizi arayalım.</p>
+                <p className="notify-fallback-label">Pas encore prêt? Laissez votre courriel et nous ferons un suivi.</p>
                 {notified ? (
-                  <div className="notify-success">✓ Tamam — en kısa sürede size ulaşacağız.</div>
+                  <div className="notify-success">✓ Reçu — nous vous contacterons bientôt.</div>
                 ) : (
                   <form className="notify-row" onSubmit={handleNotify}>
                     <input
@@ -685,13 +677,13 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
                       type="email"
                       inputMode="email"
                       autoComplete="email"
-                      placeholder="E-posta adresiniz"
+                      placeholder="Votre adresse courriel"
                       value={notifyEmail}
                       onChange={e => setNotifyEmail(e.target.value)}
                       required
                     />
                     <button className="btn-notify" type="submit" disabled={!notifyEmail.trim()}>
-                      Haber Ver
+                      Me notifier
                     </button>
                   </form>
                 )}
@@ -700,23 +692,23 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
           );
         })()}
 
-        {/* ── İKİNCİL CTA: Tazminat Kiti ── */}
+        {/* ── CTA SECONDAIRE : Trousse d'indemnisation ── */}
         {showSecondaryCTA && (
           <div className="cta-diy">
             <div className="cta-diy-head">
-              <span className="cta-diy-title">Uçuş Tazminat Kitinizi Alın</span>
-              <span className="cta-diy-price">$14.99</span>
+              <span className="cta-diy-title">Obtenez votre trousse d&apos;indemnisation</span>
+              <span className="cta-diy-price">14,99&nbsp;$</span>
             </div>
             <p className="cta-diy-desc">
-              Kişiselleştirilmiş talep mektubu, havayoluna başvuru rehberi ve takip şablonlarını içeren eksiksiz {regulation} Uçuş Tazminat Kiti. PDF olarak indirin ve kendiniz gönderin.
+              Une trousse {regulation} complète&nbsp;: lettre de réclamation personnalisée, guide de soumission à la compagnie aérienne, modèles de suivi et d&apos;escalade. Téléchargez en PDF et envoyez vous-même.
             </p>
             <button className="btn-diy" onClick={onGetLetter}>
-              Uçuş Tazminat Kitini Al — $14.99
+              Obtenir ma trousse d&apos;indemnisation — 14,99&nbsp;$
             </button>
           </div>
         )}
 
-        <Expander icon="🛡️" label="Havayolunun size şu an sağlaması gerekenler">
+        <Expander icon="🛡️" label="Ce que la compagnie aérienne doit vous fournir maintenant">
           {careRights.length > 0 ? (
             <div className="care-list">
               {careRights.map((r, i) => (
@@ -730,22 +722,22 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
             </div>
           ) : (
             <p style={{ color: 'var(--muted)', fontSize: 14, paddingTop: 14, lineHeight: 1.6 }}>
-              Bu aksama düzeyi için anlık bakım yükümlülüğü bulunmamaktadır.
+              Aucune obligation de soins immédiats ne s&apos;applique pour ce niveau d&apos;incident.
             </p>
           )}
           <div className="care-clarifier">
-            Bu anlık haklar, yasal tazminattan bağımsızdır. Havayolu her ikisini de sağlamakla yükümlüdür.
+            Ces droits immédiats sont distincts de votre indemnisation légale. La compagnie vous doit les deux.
           </div>
         </Expander>
 
         <div className="summary">
           {[
-            ['Aksama türü', DISRUPTION_LABELS_TR[answers.disruption] || '—'],
-            ['Sefer',       answers.flightNumber || '—'],
-            ['Rota',        `${answers.from} → ${answers.to}`],
-            ['Mesafe',      distanceKm ? `~${distanceKm.toLocaleString()} km` : 'Bilinmiyor'],
-            ['Mevzuat',     regulation],
-            ['Tarih',       answers.flightDate || '—'],
+            ['Incident',  DISRUPTION_LABELS_FR[answers.disruption] || '—'],
+            ['Vol',       answers.flightNumber || '—'],
+            ['Trajet',    `${answers.from} → ${answers.to}`],
+            ['Distance',  distanceKm ? `~${distanceKm.toLocaleString()} km` : 'Inconnue'],
+            ['Règlement', regulation],
+            ['Date',      answers.flightDate || '—'],
           ].map(([label, value]) => (
             <div key={label}>
               <div className="sum-label">{label}</div>
@@ -755,18 +747,18 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
         </div>
 
         <div className="res-disclaimer">
-          Sorumluluk reddi: FlightComp bir hukuk bürosu değildir ve hukuki tavsiye vermemektedir. EU261/UK261/APPR/SHY kapsamındaki haklarınız hakkında bilgi sunmakta ve talebinizi takip etmenize yardımcı olmaktayız. Hukuki danışmanlık için bir avukattan yardım almanızı öneririz.
+          Avertissement&nbsp;: FlightComp n&apos;est pas un cabinet juridique et ne fournit pas de conseils juridiques. Nous fournissons des informations sur vos droits en vertu du EU261/UK261/RPPA/SHY et des outils pour vous aider à soumettre votre réclamation. Pour des conseils juridiques, consultez un avocat qualifié.
         </div>
 
         <div className="reset-link">
-          <button onClick={onReset}>← Başka bir uçuşu sorgula</button>
+          <button onClick={onReset}>← Vérifier un autre vol</button>
         </div>
       </div>
     </div>
   );
 }
 
-// ── Kişisel Bilgiler ekranı ───────────────────────────
+// ── Écran des coordonnées ─────────────────────────────
 function PersonalDetailsScreen({ details, onChange, onSubmit, onBack }) {
   const [loading, setLoading] = useState(false);
   const canSubmit = details.name.trim() && details.email.trim() && details.address.trim();
@@ -780,20 +772,20 @@ function PersonalDetailsScreen({ details, onChange, onSubmit, onBack }) {
   return (
     <div className="details-screen">
       <div style={{ paddingTop: 20 }}>
-        <button className="prog-back" onClick={onBack}>← Sonuçlara geri dön</button>
+        <button className="prog-back" onClick={onBack}>← Retour aux résultats</button>
       </div>
       <div className="details-body">
         <div>
-          <div className="q-label">Neredeyse tamam</div>
-          <h2 className="q-head" style={{ fontSize: 22 }}>Mektup için bilgileriniz</h2>
+          <div className="q-label">Presque terminé</div>
+          <h2 className="q-head" style={{ fontSize: 22 }}>Vos coordonnées pour la lettre</h2>
         </div>
 
         <div className="field-group">
-          <label className="field-label">Ad Soyad *</label>
+          <label className="field-label">Nom complet *</label>
           <input
             className="field-input"
             type="text"
-            placeholder="örn. Ahmet Yılmaz"
+            placeholder="p. ex. Marie Tremblay"
             value={details.name}
             onChange={e => onChange({ name: e.target.value })}
             autoFocus
@@ -801,22 +793,22 @@ function PersonalDetailsScreen({ details, onChange, onSubmit, onBack }) {
         </div>
 
         <div className="field-group">
-          <label className="field-label">E-posta adresi *</label>
+          <label className="field-label">Adresse courriel *</label>
           <input
             className="field-input"
             type="email"
-            placeholder="ahmet@ornek.com"
+            placeholder="marie@exemple.com"
             value={details.email}
             onChange={e => onChange({ email: e.target.value })}
           />
-          <span className="field-hint">Fatura ve takip e-postanız buraya gönderilecektir.</span>
+          <span className="field-hint">Votre reçu et les suivis vous seront envoyés ici.</span>
         </div>
 
         <div className="field-group">
-          <label className="field-label">Ev adresi *</label>
+          <label className="field-label">Adresse domicile *</label>
           <textarea
             className="field-textarea"
-            placeholder={"Örnek Mah. Atatürk Cad. No:1\nİstanbul\n34000"}
+            placeholder={"123, rue Principale\nMontréal (Québec)\nH2X 1A1"}
             value={details.address}
             onChange={e => onChange({ address: e.target.value })}
             rows={3}
@@ -824,53 +816,53 @@ function PersonalDetailsScreen({ details, onChange, onSubmit, onBack }) {
         </div>
 
         <div className="field-group">
-          <label className="field-label">Rezervasyon numarası</label>
+          <label className="field-label">Numéro de réservation</label>
           <input
             className="field-input inp-mono"
             type="text"
-            placeholder="örn. ABC123"
+            placeholder="p. ex. ABC123"
             value={details.bookingRef}
             onChange={e => onChange({ bookingRef: e.target.value.toUpperCase() })}
             style={{ fontSize: 16 }}
           />
-          <span className="field-hint">İsteğe bağlı — başvurunuzu güçlendirir.</span>
+          <span className="field-hint">Facultatif — renforce votre réclamation.</span>
         </div>
 
         <div className="field-group">
-          <label className="field-label">Banka / ödeme bilgileri</label>
+          <label className="field-label">Coordonnées bancaires / de paiement</label>
           <textarea
             className="field-textarea"
-            placeholder={"IBAN: TR00 0000 0000 0000 0000 0000 00\nveya PayPal: ahmet@ornek.com\n(İsteğe bağlı — havayolunun para iadesi için)"}
+            placeholder={"IBAN : FR00 0000 0000 0000 0000 0000 000\nou PayPal : marie@exemple.com\n(Facultatif — pour le remboursement de la compagnie aérienne)"}
             value={details.bankDetails}
             onChange={e => onChange({ bankDetails: e.target.value })}
             rows={3}
           />
-          <span className="field-hint">İsteğe bağlı. Yalnızca mektubunuzun içinde kullanılır.</span>
+          <span className="field-hint">Facultatif. Utilisé uniquement dans votre lettre.</span>
         </div>
 
         <div className="payment-card">
           <span className="payment-card-ico">🔒</span>
           <div className="payment-card-txt">
-            <div className="payment-card-title">Stripe üzerinden güvenli ödeme</div>
+            <div className="payment-card-title">Paiement sécurisé via Stripe</div>
             <div className="payment-card-sub">
-              Ödeme tamamlandıktan hemen sonra mektubunuz oluşturulur.
-              Kart bilgileri Stripe tarafından işlenir — biz görmeyiz.
+              Votre lettre est générée immédiatement après le paiement.
+              Les données de carte sont traitées par Stripe — nous ne les voyons jamais.
             </div>
           </div>
-          <span className="payment-price">$14.99</span>
+          <span className="payment-price">14,99&nbsp;$</span>
         </div>
 
         <button className="btn-pay" onClick={handleSubmit} disabled={!canSubmit || loading}>
-          {loading ? 'Yönlendiriliyor…' : '$14.99 Öde ve Mektubumu Al →'}
+          {loading ? 'Redirection…' : 'Payer 14,99 $ et obtenir ma lettre →'}
         </button>
-        <div className="secure-note">🔒 Stripe ile güvenli · SSL şifreli</div>
+        <div className="secure-note">🔒 Sécurisé par Stripe · Chiffrement SSL</div>
       </div>
     </div>
   );
 }
 
 /* ══════════════════════════════════════════════════════
-   Ana sayfa — durum makinesi
+   Page principale — machine à états
 ══════════════════════════════════════════════════════ */
 
 const INITIAL_ANSWERS = {
@@ -891,7 +883,7 @@ const INITIAL_ANSWERS = {
   shyReason: '',
   shyNotified14: '',
   detectedRegulation: '',
-  language: 'tr',
+  language: 'fr',
 };
 
 const INITIAL_DETAILS = {
@@ -902,11 +894,11 @@ const INITIAL_DETAILS = {
   bankDetails: '',
 };
 
-export default function TurkishHome() {
+export default function FrenchHome() {
   const restored = (() => {
     if (typeof window === 'undefined') return null;
     try {
-      const raw = sessionStorage.getItem('fc_claim_tr');
+      const raw = sessionStorage.getItem('fc_claim_fr');
       if (!raw) return null;
       const p = JSON.parse(raw);
       return p.answers && p.result ? p : null;
@@ -1026,8 +1018,7 @@ export default function TurkishHome() {
 
   async function handlePay() {
     const payload = { answers, result, details };
-    sessionStorage.setItem('fc_claim_tr', JSON.stringify(payload));
-    // Also set the main key so the /success page can read it
+    sessionStorage.setItem('fc_claim_fr', JSON.stringify(payload));
     sessionStorage.setItem('fc_claim', JSON.stringify(payload));
 
     const base = process.env.NEXT_PUBLIC_BASE_URL || window.location.origin;
@@ -1039,7 +1030,7 @@ export default function TurkishHome() {
       route:        `${answers.from || ''}–${answers.to || ''}`,
       regulation:   result?.regulation           || '',
       compensation: result?.compensation?.amount || '',
-      language:     'tr',
+      language:     'fr',
     };
 
     const res = await fetch('/api/create-checkout-session', {
@@ -1048,47 +1039,55 @@ export default function TurkishHome() {
       body: JSON.stringify({
         customerEmail: details.email,
         successUrl: `${base}/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancelUrl:  `${base}/tr`,
+        cancelUrl:  `${base}/fr`,
         claimMeta,
       }),
     });
 
-    if (!res.ok) { alert('Ödeme başlatılamadı. Lütfen tekrar deneyin.'); return; }
+    if (!res.ok) { alert('La configuration du paiement a échoué. Veuillez réessayer.'); return; }
     const { url } = await res.json();
     window.location.href = url;
   }
 
-  // ── Render ─────────────────────────────────────────
-
-  // Language toggle — fixed position, shown on all screens
+  // ── Sélecteur de langue ────────────────────────────
   const langToggle = (
     <div style={{ position: 'fixed', top: 14, right: 14, zIndex: 200, display: 'flex', gap: 6 }}>
-      {[['EN', '/'], ['FR', '/fr']].map(([label, href]) => (
-        <a key={label} href={href} style={{
+      <a href="/"
+        style={{
           fontSize: 12, fontWeight: 700, color: 'var(--muted)',
           background: 'var(--surf)', border: '1px solid var(--border)',
           borderRadius: 6, padding: '4px 10px', textDecoration: 'none',
           letterSpacing: '0.05em',
-        }}>{label}</a>
-      ))}
+        }}
+      >EN</a>
+      <a href="/tr"
+        style={{
+          fontSize: 12, fontWeight: 700, color: 'var(--muted)',
+          background: 'var(--surf)', border: '1px solid var(--border)',
+          borderRadius: 6, padding: '4px 10px', textDecoration: 'none',
+          letterSpacing: '0.05em',
+        }}
+      >TR</a>
     </div>
   );
+
+  // ── Render ─────────────────────────────────────────
 
   if (screen === 'hook') {
     return (
       <>
         <Head>
-          <title>Uçuş İptali Tazminat Hesaplama | FlightComp — SHY &amp; EU261</title>
-          <meta name="description" content="Ücretsiz uçuş iptali ve gecikme tazminat sorgulama. SHY yolcu hakları, EU261 ve UK261 kapsamında tazminat hakkınızı 60 saniyede öğrenin." />
-          <meta name="keywords" content="uçuş iptali tazminat, SHY yolcu hakları, EU261 Türkiye, uçuş gecikmesi tazminat, havayolu şikayeti, SHY yönetmeliği, uçuş hakkı sorgula" />
-          <meta property="og:title" content="Uçuşunuz iptal mi edildi? 60 saniyede tazminat hakkınızı öğrenin." />
-          <meta property="og:description" content="Ücretsiz SHY / EU261 uygunluk sorgulama. Anında sonuç, kayıt gerektirmez." />
+          <title>Compensation Vol Annulé ou Retardé | FlightComp — RPPA &amp; EU261</title>
+          <meta name="description" content="Votre vol a été annulé ou retardé? Vérifiez en 60 secondes si vous avez droit à une indemnisation. Couverture RPPA (Canada), EU261, UK261 et SHY." />
+          <meta name="keywords" content="compensation vol annulé Canada, droits passagers aériens RPPA, indemnisation retard vol, vol annulé remboursement, réclamation compagnie aérienne Canada, EU261 Canada, RPPA indemnisation" />
+          <meta property="og:title" content="Votre vol a été annulé? Découvrez ce que vous êtes en droit de recevoir." />
+          <meta property="og:description" content="Vérification gratuite RPPA / EU261. Obtenez votre résultat en 60 secondes." />
           <meta property="og:type" content="website" />
-          <meta property="og:url" content="https://www.getflightcomp.com/tr" />
-          <link rel="canonical" href="https://www.getflightcomp.com/tr" />
-          <link rel="alternate" hrefLang="tr" href="https://www.getflightcomp.com/tr" />
-          <link rel="alternate" hrefLang="en" href="https://www.getflightcomp.com" />
+          <meta property="og:url" content="https://www.getflightcomp.com/fr" />
+          <link rel="canonical" href="https://www.getflightcomp.com/fr" />
           <link rel="alternate" hrefLang="fr" href="https://www.getflightcomp.com/fr" />
+          <link rel="alternate" hrefLang="en" href="https://www.getflightcomp.com" />
+          <link rel="alternate" hrefLang="tr" href="https://www.getflightcomp.com/tr" />
           <link rel="alternate" hrefLang="x-default" href="https://www.getflightcomp.com" />
         </Head>
 
@@ -1100,110 +1099,110 @@ export default function TurkishHome() {
           <section className="lp-hero">
             <div className="lp-hero-inner">
               <h1 className="lp-h1">
-                Uçuşunuz iptal mi edildi veya gecikti mi?<br />
-                60 saniyede tazminat hakkınızı öğrenin.
+                Votre vol a été annulé ou retardé?<br />
+                Vérifiez vos droits en 60 secondes.
               </h1>
-              <div className="lp-badge" style={{ marginTop: 0, marginBottom: 20 }}>✈️ SHY / EU261 / UK261 / Kanada APPR</div>
+              <div className="lp-badge" style={{ marginTop: 0, marginBottom: 20 }}>✈️ RPPA (Canada) / EU261 / UK261 / SHY (Turquie)</div>
               <p className="lp-sub">
-                Havayolları yasal olarak size €600&apos;a kadar (AB/İngiltere), CA$1.000&apos;e kadar (Kanada) veya €600&apos;a kadar (Türkiye) tazminat ödemek zorundadır — ancak bürokratik engeller koyarak bunu zorlaştırırlar. Biz bu engelleri aşıyoruz.
+                Les compagnies aériennes vous doivent légalement jusqu&apos;à 1&nbsp;000&nbsp;$CA (Canada), 600&nbsp;€ (UE/R.-U.) ou 600&nbsp;€ (Turquie) — mais elles utilisent des obstacles administratifs pour éviter de payer. Nous les contournons pour vous.
               </p>
               <button className="btn-hook lp-cta" onClick={() => setScreen('q1')}>
-                Uçuşumu Sorgula →
+                Vérifier mon vol →
               </button>
               <div className="lp-hero-trust">
-                <span>Ücretsiz</span>
+                <span>Gratuit</span>
                 <span className="lp-dot">·</span>
-                <span>Kayıt gerekmez</span>
+                <span>Sans inscription</span>
                 <span className="lp-dot">·</span>
-                <span>Anında sonuç</span>
+                <span>Résultat instantané</span>
               </div>
               <p style={{ color: 'var(--muted)', fontSize: 13, marginTop: 10 }}>
-                AB, İngiltere, Kanada ve Türkiye&apos;deki uçuşları kapsar.
-                ABD iç hat seferleri kapsam dışıdır.
+                Couvre les vols au Canada, dans l&apos;UE, au R.-U. et en Turquie.
+                Les vols intérieurs américains ne sont pas couverts.
               </p>
             </div>
           </section>
 
-          {/* ── NASIL ÇALIŞIR ── */}
+          {/* ── COMMENT ÇA MARCHE ── */}
           <section className="lp-section">
             <div className="lp-section-inner">
-              <h2 className="lp-section-h">Nasıl çalışır</h2>
+              <h2 className="lp-section-h">Comment ça marche</h2>
               <div className="lp-steps">
                 <div className="lp-step">
                   <div className="lp-step-top">
                     <span className="lp-step-num">1</span>
                     <span className="lp-step-ico">📋</span>
                   </div>
-                  <div className="lp-step-title">6 kısa soruyu yanıtlayın</div>
-                  <div className="lp-step-body">Sefer numarası, rota, aksama türü, gecikme süresi ve havayolunun gösterdiği neden.</div>
+                  <div className="lp-step-title">Répondez à 6 questions rapides</div>
+                  <div className="lp-step-body">Numéro de vol, trajet, type d&apos;incident, durée du retard et raison fournie par la compagnie.</div>
                 </div>
                 <div className="lp-step">
                   <div className="lp-step-top">
                     <span className="lp-step-num">2</span>
                     <span className="lp-step-ico">✅</span>
                   </div>
-                  <div className="lp-step-title">Uygunluk sonucunuzu alın</div>
-                  <div className="lp-step-body">SHY, EU261, UK261 ve APPR kapsamında haklarınızı kontrol eder, ne kadar tazminat alabileceğinizi bildiririz.</div>
+                  <div className="lp-step-title">Obtenez votre verdict d&apos;admissibilité</div>
+                  <div className="lp-step-body">Nous vérifions vos droits selon le RPPA, EU261, UK261 ou SHY, et vous indiquons si vous êtes admissible — et le montant auquel vous avez droit.</div>
                 </div>
                 <div className="lp-step">
                   <div className="lp-step-top">
                     <span className="lp-step-num">3</span>
                     <span className="lp-step-ico">💰</span>
                   </div>
-                  <div className="lp-step-title">Biz hallediyoruz</div>
-                  <div className="lp-step-body">Başvurunuzu sunmamıza yetki verin — %25 başarı ücreti, sonuç alınamazsa ücret alınmaz. Ya da $14.99&apos;lık Tazminat Kiti ile kendiniz gönderin.</div>
+                  <div className="lp-step-title">On s&apos;occupe de tout</div>
+                  <div className="lp-step-body">Autorisez-nous à soumettre votre réclamation — frais de 25&nbsp;%, aucun résultat aucuns frais. Ou obtenez une trousse d&apos;indemnisation (14,99&nbsp;$) avec votre lettre personnalisée.</div>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* ── GÜVEN SİNYALLERİ ── */}
+          {/* ── DROITS RÉGLEMENTAIRES ── */}
           <section className="lp-section lp-trust-section">
             <div className="lp-section-inner">
-              <h2 className="lp-section-h">SHY Yönetmeliği ve EU261 kapsamında haklar</h2>
+              <h2 className="lp-section-h">Fondé sur le RPPA et le Règlement UE 261/2004</h2>
               <p className="lp-body">
-                Türkiye SHY yönetmeliği ve AB Tüzüğü 261/2004, havayollarının uygun uçuşlarda iptal, uzun gecikme ve biniş reddi için yolculara tazminat ödemesini zorunlu kılar. Avukatsız talep edebilirsiniz.
+                Le Règlement sur la protection des passagers aériens (RPPA) et le Règlement UE 261/2004 obligent les compagnies à indemniser les passagers pour les annulations, les longs retards et les refus d&apos;embarquement sur les vols admissibles. Vous n&apos;avez pas besoin d&apos;un avocat — c&apos;est votre droit.
               </p>
               <div className="lp-comp-grid">
                 <div className="lp-comp-card">
-                  <span className="lp-comp-amt">€250</span>
-                  <span className="lp-comp-lbl">1.500 km&apos;nin altındaki uçuşlar</span>
+                  <span className="lp-comp-amt">400&nbsp;$CA</span>
+                  <span className="lp-comp-lbl">Retard de 3 à 6 heures (grande cie)</span>
                 </div>
                 <div className="lp-comp-card">
-                  <span className="lp-comp-amt">€400</span>
-                  <span className="lp-comp-lbl">1.500–3.500 km arası uçuşlar</span>
+                  <span className="lp-comp-amt">700&nbsp;$CA</span>
+                  <span className="lp-comp-lbl">Retard de 6 à 9 heures (grande cie)</span>
                 </div>
                 <div className="lp-comp-card lp-comp-card-hi">
-                  <span className="lp-comp-amt">€600</span>
-                  <span className="lp-comp-lbl">3.500 km&apos;yi aşan uçuşlar</span>
+                  <span className="lp-comp-amt">1&nbsp;000&nbsp;$CA</span>
+                  <span className="lp-comp-lbl">Retard de 9 h et plus (grande cie)</span>
                 </div>
               </div>
-              <div className="lp-uk-note">İngiltere uçuşları (UK261 — £220/£350/£520), Kanada uçuşları (APPR — CA$400/CA$700/CA$1.000) ve Türkiye uçuşları (SHY — yurt içi €100 / uluslararası €250–€600 iptal &amp; biniş reddi; gecikmede yalnızca bakım hakkı) da kapsanmaktadır.</div>
+              <div className="lp-uk-note">Couvre également les vols de l&apos;UE (EU261 — €250/€400/€600), les vols du R.-U. (UK261 — £220/£350/£520) et les vols en Turquie (SHY — annulations et refus d&apos;embarquement; les retards donnent droit uniquement aux soins).</div>
             </div>
           </section>
 
-          {/* ── FİNAL CTA ── */}
+          {/* ── CTA FINAL ── */}
           <section className="lp-final-cta">
             <div className="lp-section-inner lp-final-inner">
-              <h2 className="lp-final-h">Uçuşunuzun uygun olup olmadığını kontrol edin</h2>
+              <h2 className="lp-final-h">Vérifiez si votre vol est admissible</h2>
               <button className="btn-hook lp-cta" onClick={() => setScreen('q1')}>
-                Uçuşumu Sorgula →
+                Vérifier mon vol →
               </button>
-              <div className="lp-final-sub">Ücretsiz · 60 saniye · AB, İngiltere, Kanada ve Türkiye uçuşlarını kapsar</div>
+              <div className="lp-final-sub">Gratuit · 60 secondes · Couvre les vols canadiens, de l&apos;UE, du R.-U. et de la Turquie</div>
             </div>
           </section>
 
-          {/* ── FOOTER ── */}
+          {/* ── PIED DE PAGE ── */}
           <footer className="lp-footer">
             <div className="lp-footer-inner">
-              <div className="lp-footer-brand">FlightComp — SHY / EU261 / UK261 Uçuş Tazminat Aracı</div>
+              <div className="lp-footer-brand">FlightComp — Outil d&apos;indemnisation RPPA / EU261 / UK261</div>
               <div className="lp-footer-links">
-                <a href="/about">Hakkımızda</a>
-                <a href="/how-it-works">Nasıl Çalışır</a>
-                <a href="/blog">Blog</a>
-                <a href="/privacy">Gizlilik Politikası</a>
-                <a href="/terms">Kullanım Şartları</a>
-                <a href="mailto:support@getflightcomp.com">İletişim</a>
+                <a href="/about">À propos</a>
+                <a href="/how-it-works">Comment ça marche</a>
+                <a href="/blog">Blogue</a>
+                <a href="/privacy">Politique de confidentialité</a>
+                <a href="/terms">Conditions d&apos;utilisation</a>
+                <a href="mailto:support@getflightcomp.com">Contact</a>
               </div>
               <div className="lp-footer-copy">© 2026 Noontide Ventures LLC · FlightComp</div>
             </div>
@@ -1278,10 +1277,10 @@ export default function TurkishHome() {
         <div className="screen">
           <div className="q-body" style={{ textAlign: 'center', paddingTop: 40 }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>✈️</div>
-            <h2 className="q-head" style={{ color: 'var(--text)' }}>Kapsam Dışı</h2>
+            <h2 className="q-head" style={{ color: 'var(--text)' }}>Vol non couvert</h2>
             <p style={{ color: 'var(--muted)', fontSize: 15, lineHeight: 1.7, marginBottom: 28 }}>
-              Rotanız ve havayolunuza göre bu uçuş EU261, UK261, Kanada APPR veya Türkiye SHY kapsamında değil.
-              ABD iç hat seferleri ve bu mevzuatlar dışındaki güzergahlar şu an desteklenmemektedir.
+              D&apos;après votre trajet et votre compagnie aérienne, ce vol n&apos;est pas couvert par le EU261, UK261, le RPPA canadien ou la réglementation SHY turque.
+              Les vols intérieurs américains et les routes en dehors de ces réglementations ne sont pas pris en charge pour l&apos;instant.
             </p>
             <button className="btn-cont" onClick={() => {
               setAnswers(INITIAL_ANSWERS);
@@ -1289,7 +1288,7 @@ export default function TurkishHome() {
               setResult(null);
               setScreen('hook');
             }}>
-              Başka Bir Uçuşu Sorgula
+              Vérifier un autre vol
             </button>
           </div>
         </div>

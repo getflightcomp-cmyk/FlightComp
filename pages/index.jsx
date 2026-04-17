@@ -1081,22 +1081,21 @@ export default function Home() {
           <link rel="canonical" href="https://www.getflightcomp.com" />
           <link rel="alternate" hrefLang="en" href="https://www.getflightcomp.com" />
           <link rel="alternate" hrefLang="tr" href="https://www.getflightcomp.com/tr" />
+          <link rel="alternate" hrefLang="fr" href="https://www.getflightcomp.com/fr" />
           <link rel="alternate" hrefLang="x-default" href="https://www.getflightcomp.com" />
         </Head>
 
         {/* Language toggle */}
-        <a
-          href="/tr"
-          style={{
-            position: 'fixed', top: 14, right: 14, zIndex: 200,
-            fontSize: 12, fontWeight: 700, color: 'var(--muted)',
-            background: 'var(--surf)', border: '1px solid var(--border)',
-            borderRadius: 6, padding: '4px 10px', textDecoration: 'none',
-            letterSpacing: '0.05em',
-          }}
-        >
-          TR
-        </a>
+        <div style={{ position: 'fixed', top: 14, right: 14, zIndex: 200, display: 'flex', gap: 6 }}>
+          {[['TR', '/tr'], ['FR', '/fr']].map(([label, href]) => (
+            <a key={label} href={href} style={{
+              fontSize: 12, fontWeight: 700, color: 'var(--muted)',
+              background: 'var(--surf)', border: '1px solid var(--border)',
+              borderRadius: 6, padding: '4px 10px', textDecoration: 'none',
+              letterSpacing: '0.05em',
+            }}>{label}</a>
+          ))}
+        </div>
 
         <div className="lp">
 
