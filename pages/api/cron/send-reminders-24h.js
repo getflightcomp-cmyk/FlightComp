@@ -2,7 +2,7 @@
  * GET /api/cron/send-reminders-24h
  *
  * Sends a 24-hour reminder email to users who:
- *   - Captured between 23 and 25 hours ago
+ *   - Captured between 12 and 36 hours ago
  *   - Have an eligibility_verdict of 'likely' or 'possibly'
  *   - Have NOT yet converted (converted_at IS NULL)
  *   - Have NOT unsubscribed (unsubscribed_at IS NULL)
@@ -134,8 +134,8 @@ export default async function handler(req, res) {
   }
 
   const now       = new Date();
-  const windowEnd = new Date(now.getTime() - 23 * 60 * 60 * 1000); // 23h ago
-  const windowStart = new Date(now.getTime() - 25 * 60 * 60 * 1000); // 25h ago
+  const windowEnd   = new Date(now.getTime() - 12 * 60 * 60 * 1000); // 12h ago
+  const windowStart = new Date(now.getTime() - 36 * 60 * 60 * 1000); // 36h ago
 
   // Query eligible rows
   const { data: rows, error } = await adminClient

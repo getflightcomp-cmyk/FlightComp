@@ -2,7 +2,7 @@
  * GET /api/cron/send-reminders-72h
  *
  * Sends a 72-hour reminder email to users who:
- *   - Captured between 71 and 73 hours ago
+ *   - Captured between 60 and 84 hours ago
  *   - Have an eligibility_verdict of 'likely' or 'possibly'
  *   - Have NOT yet converted (converted_at IS NULL)
  *   - Have NOT unsubscribed (unsubscribed_at IS NULL)
@@ -138,8 +138,8 @@ export default async function handler(req, res) {
   }
 
   const now         = new Date();
-  const windowEnd   = new Date(now.getTime() - 71 * 60 * 60 * 1000); // 71h ago
-  const windowStart = new Date(now.getTime() - 73 * 60 * 60 * 1000); // 73h ago
+  const windowEnd   = new Date(now.getTime() - 60 * 60 * 60 * 1000); // 60h ago
+  const windowStart = new Date(now.getTime() - 84 * 60 * 60 * 1000); // 84h ago
 
   // Query eligible rows
   const { data: rows, error } = await adminClient
