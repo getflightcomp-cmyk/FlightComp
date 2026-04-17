@@ -902,6 +902,33 @@ const INITIAL_DETAILS = {
   bankDetails: '',
 };
 
+function LangToggle({ active }) {
+  const langs = [
+    { code: 'EN', flag: '🇬🇧', href: '/' },
+    { code: 'TR', flag: '🇹🇷', href: '/tr' },
+    { code: 'FR', flag: '🇫🇷', href: '/fr' },
+    { code: 'DE', flag: '🇩🇪', href: '/de' },
+    { code: 'ES', flag: '🇪🇸', href: '/es' },
+  ];
+  return (
+    <div style={{ position: 'fixed', top: 12, right: 12, zIndex: 200, display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: 240 }}>
+      {langs.map(({ code, flag, href }) => {
+        const isActive = code === active;
+        return (
+          <a key={code} href={href} style={{
+            fontSize: 11, fontWeight: 700,
+            color: isActive ? 'var(--text)' : 'var(--muted)',
+            background: isActive ? 'var(--surf2)' : 'var(--surf)',
+            border: `1px solid ${isActive ? 'var(--blue)' : 'var(--border)'}`,
+            borderRadius: 6, padding: '3px 7px', textDecoration: 'none',
+            letterSpacing: '0.04em',
+          }}>{flag} {code}</a>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function TurkishHome() {
   const restored = (() => {
     if (typeof window === 'undefined') return null;
@@ -1060,19 +1087,7 @@ export default function TurkishHome() {
 
   // ── Render ─────────────────────────────────────────
 
-  // Language toggle — fixed position, shown on all screens
-  const langToggle = (
-    <div style={{ position: 'fixed', top: 14, right: 14, zIndex: 200, display: 'flex', gap: 6 }}>
-      {[['EN', '/'], ['FR', '/fr']].map(([label, href]) => (
-        <a key={label} href={href} style={{
-          fontSize: 12, fontWeight: 700, color: 'var(--muted)',
-          background: 'var(--surf)', border: '1px solid var(--border)',
-          borderRadius: 6, padding: '4px 10px', textDecoration: 'none',
-          letterSpacing: '0.05em',
-        }}>{label}</a>
-      ))}
-    </div>
-  );
+  const langToggle = <LangToggle active="TR" />;
 
   if (screen === 'hook') {
     return (
@@ -1089,6 +1104,8 @@ export default function TurkishHome() {
           <link rel="alternate" hrefLang="tr" href="https://www.getflightcomp.com/tr" />
           <link rel="alternate" hrefLang="en" href="https://www.getflightcomp.com" />
           <link rel="alternate" hrefLang="fr" href="https://www.getflightcomp.com/fr" />
+          <link rel="alternate" hrefLang="de" href="https://www.getflightcomp.com/de" />
+          <link rel="alternate" hrefLang="es" href="https://www.getflightcomp.com/es" />
           <link rel="alternate" hrefLang="x-default" href="https://www.getflightcomp.com" />
         </Head>
 

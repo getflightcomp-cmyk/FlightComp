@@ -4,9 +4,9 @@ import { assessClaim, assessClaimAPPR, assessClaimSHY, detectRegulation, tryReso
 import { resolveAirline, getCarrierRegion, isLargeCanadianCarrier } from '../lib/carriers';
 
 /* ══════════════════════════════════════════════════════
-   French (Canadian) localization — standalone page
-   Canonical: https://www.getflightcomp.com/fr
-   Covers APPR / EU261 / UK261 / SHY (same logic, FR-CA strings)
+   Deutsche Lokalisierung — eigenständige Seite
+   Canonical: https://www.getflightcomp.com/de
+   Abdeckung: EU261 / UK261 / APPR / SHY (gleiche Logik, DE-Strings)
 ══════════════════════════════════════════════════════ */
 
 function ProgressBar({ step, total, onBack }) {
@@ -14,7 +14,7 @@ function ProgressBar({ step, total, onBack }) {
     <div className="prog-wrap">
       <div className="prog-head">
         <button className="prog-back" onClick={onBack}>
-          ← Retour
+          ← Zurück
         </button>
         <span className="prog-step">{step}/{total}</span>
       </div>
@@ -25,20 +25,19 @@ function ProgressBar({ step, total, onBack }) {
   );
 }
 
-// ── Q1: Type d'incident ───────────────────────────────
 function Q1Disruption({ value, onChange }) {
   const opts = [
-    { value: 'delayed',    icon: '⏱️', title: 'Retardé',              sub: 'Le vol a décollé ou atterri en retard' },
-    { value: 'cancelled',  icon: '✕',  title: 'Annulé',               sub: 'Le vol n\'a pas eu lieu' },
-    { value: 'denied',     icon: '🚫', title: 'Embarquement refusé',  sub: 'On vous a empêché de monter à bord' },
-    { value: 'downgraded', icon: '⬇️', title: 'Déclassement',         sub: 'Placé dans une classe inférieure à celle réservée' },
+    { value: 'delayed',    icon: '⏱️', title: 'Verspätet',        sub: 'Flug hat sich verspätet' },
+    { value: 'cancelled',  icon: '✕',  title: 'Annulliert',        sub: 'Flug hat nicht stattgefunden' },
+    { value: 'denied',     icon: '🚫', title: 'Nichtbeförderung',  sub: 'Sie wurden nicht an Bord gelassen' },
+    { value: 'downgraded', icon: '⬇️', title: 'Herabstufung',      sub: 'In eine niedrigere Klasse eingestuft als gebucht' },
   ];
   return (
     <div className="screen">
       <ProgressBar step={1} total={6} onBack={() => history.back()} />
       <div className="q-body">
-        <div className="q-label">Question 1 sur 6</div>
-        <h2 className="q-head">Qu&apos;est-il arrivé à votre vol?</h2>
+        <div className="q-label">Frage 1 von 6</div>
+        <h2 className="q-head">Was ist mit Ihrem Flug passiert?</h2>
         <div className="opts">
           {opts.map(o => (
             <button
@@ -60,18 +59,17 @@ function Q1Disruption({ value, onChange }) {
   );
 }
 
-// ── Q2: Numéro de vol ─────────────────────────────────
 function Q2FlightNumber({ value, onChange, onNext, onBack }) {
   return (
     <div className="screen">
       <ProgressBar step={2} total={6} onBack={onBack} />
       <div className="q-body">
-        <div className="q-label">Question 2 sur 6</div>
-        <h2 className="q-head">Quel était le numéro de votre vol?</h2>
+        <div className="q-label">Frage 2 von 6</div>
+        <h2 className="q-head">Wie lautete Ihre Flugnummer?</h2>
         <input
           className="inp inp-mono"
           type="text"
-          placeholder="p. ex. AC 123"
+          placeholder="z. B. LH 123"
           value={value}
           onChange={e => onChange(e.target.value.toUpperCase())}
           autoFocus
@@ -79,23 +77,22 @@ function Q2FlightNumber({ value, onChange, onNext, onBack }) {
           spellCheck={false}
         />
         <p className="q-helper">
-          Vous le trouverez sur votre carte d&apos;embarquement ou votre confirmation de réservation.{' '}
-          <strong>Laissez vide si inconnu.</strong>
+          Diese finden Sie auf Ihrer Bordkarte oder Buchungsbestätigung.{' '}
+          <strong>Lassen Sie das Feld leer, falls unbekannt.</strong>
         </p>
-        <button className="btn-cont" onClick={onNext}>Continuer →</button>
+        <button className="btn-cont" onClick={onNext}>Weiter →</button>
       </div>
     </div>
   );
 }
 
-// ── Q3: Date du vol ───────────────────────────────────
 function Q3Date({ value, onChange, onNext, onBack }) {
   return (
     <div className="screen">
       <ProgressBar step={3} total={6} onBack={onBack} />
       <div className="q-body">
-        <div className="q-label">Question 3 sur 6</div>
-        <h2 className="q-head">Quand le vol a-t-il eu lieu?</h2>
+        <div className="q-label">Frage 3 von 6</div>
+        <h2 className="q-head">Wann hat der Flug stattgefunden?</h2>
         <input
           className="inp inp-date"
           type="date"
@@ -105,16 +102,15 @@ function Q3Date({ value, onChange, onNext, onBack }) {
           autoFocus
         />
         <p className="q-helper">
-          Réclamations EU261&nbsp;: <strong>délai de 3&nbsp;ans</strong> (6&nbsp;ans UK261, 1&nbsp;an RPPA).
-          Les vols plus anciens peuvent tout de même être vérifiés.
+          EU261-Ansprüche: <strong>3-Jahres-Frist</strong> (6&nbsp;Jahre UK261, 1&nbsp;Jahr APPR).
+          Auch ältere Flüge können geprüft werden.
         </p>
-        <button className="btn-cont" onClick={onNext} disabled={!value}>Continuer →</button>
+        <button className="btn-cont" onClick={onNext} disabled={!value}>Weiter →</button>
       </div>
     </div>
   );
 }
 
-// ── Q4: Trajet ────────────────────────────────────────
 function Q4Route({ from, to, onFromChange, onToChange, onNext, onBack }) {
   const fromResolved = from.trim().length > 2 ? tryResolveAirport(from) : true;
   const toResolved   = to.trim().length > 2   ? tryResolveAirport(to)   : true;
@@ -124,15 +120,15 @@ function Q4Route({ from, to, onFromChange, onToChange, onNext, onBack }) {
     <div className="screen">
       <ProgressBar step={4} total={6} onBack={onBack} />
       <div className="q-body">
-        <div className="q-label">Question 4 sur 6</div>
-        <h2 className="q-head">Quel était votre trajet?</h2>
+        <div className="q-label">Frage 4 von 6</div>
+        <h2 className="q-head">Wie war Ihre Route?</h2>
         <div className="route-row">
           <div className="route-wrap">
-            <span className="route-lbl">Départ</span>
+            <span className="route-lbl">Von</span>
             <input
               className="route-inp"
               type="text"
-              placeholder="Code ou ville (p. ex. YUL, Montréal)"
+              placeholder="Code oder Stadt (z. B. FRA, Frankfurt)"
               value={from}
               onChange={e => onFromChange(e.target.value)}
               autoFocus
@@ -141,17 +137,17 @@ function Q4Route({ from, to, onFromChange, onToChange, onNext, onBack }) {
             />
             {fromWarn && (
               <span style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4, display: 'block' }}>
-                Aéroport non reconnu. Essayez le code à 3 lettres (p.&nbsp;ex. YUL, YYZ, CDG).
+                Flughafen nicht erkannt. Versuchen Sie den 3-Buchstaben-Code (z.&nbsp;B. FRA, LHR, CDG).
               </span>
             )}
           </div>
           <div className="route-arrow">↓</div>
           <div className="route-wrap">
-            <span className="route-lbl">Arrivée</span>
+            <span className="route-lbl">Nach</span>
             <input
               className="route-inp"
               type="text"
-              placeholder="Code ou ville (p. ex. LHR, Londres)"
+              placeholder="Code oder Stadt (z. B. LHR, London)"
               value={to}
               onChange={e => onToChange(e.target.value)}
               autoComplete="off"
@@ -159,24 +155,22 @@ function Q4Route({ from, to, onFromChange, onToChange, onNext, onBack }) {
             />
             {toWarn && (
               <span style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4, display: 'block' }}>
-                Aéroport non reconnu. Essayez le code à 3 lettres (p.&nbsp;ex. YUL, YYZ, CDG).
+                Flughafen nicht erkannt. Versuchen Sie den 3-Buchstaben-Code (z.&nbsp;B. FRA, LHR, CDG).
               </span>
             )}
           </div>
         </div>
         <p className="q-helper">
-          Couvre les vols au départ d&apos;<strong>aéroports canadiens</strong> (RPPA), les aéroports
-          de l&apos;<strong>UE/EEE/R.-U.</strong> (EU261/UK261) et les vols en <strong>Turquie</strong> (SHY).
+          Gilt für Flüge ab <strong>EU/EWR/UK-Flughäfen</strong> (EU261/UK261), <strong>kanadischen Flughäfen</strong> (APPR) und Flüge in der <strong>Türkei</strong> (SHY).
         </p>
         <button className="btn-cont" onClick={onNext} disabled={!from.trim() || !to.trim()}>
-          Continuer →
+          Weiter →
         </button>
       </div>
     </div>
   );
 }
 
-// ── QAirline: Compagnie aérienne ─────────────────────
 function QAirline({ value, onChange, onNext, onBack }) {
   const resolved = value.trim().length > 1 ? resolveAirline(value) : true;
   const showWarn = value.trim().length > 2 && !resolved;
@@ -184,12 +178,12 @@ function QAirline({ value, onChange, onNext, onBack }) {
     <div className="screen">
       <ProgressBar step={5} total={7} onBack={onBack} />
       <div className="q-body">
-        <div className="q-label">Question 5 sur 7</div>
-        <h2 className="q-head">Quelle compagnie aérienne exploitait votre vol?</h2>
+        <div className="q-label">Frage 5 von 7</div>
+        <h2 className="q-head">Welche Fluggesellschaft hat Ihren Flug durchgeführt?</h2>
         <input
           className="inp inp-mono"
           type="text"
-          placeholder="p. ex. Air Canada ou AC"
+          placeholder="z. B. Lufthansa oder LH"
           value={value}
           onChange={e => onChange(e.target.value)}
           autoFocus
@@ -198,34 +192,33 @@ function QAirline({ value, onChange, onNext, onBack }) {
         />
         {showWarn && (
           <span style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4, display: 'block' }}>
-            Compagnie non reconnue. Essayez le code IATA à 2 lettres (p.&nbsp;ex. AC, WS, PD) ou laissez vide.
+            Fluggesellschaft nicht erkannt. Versuchen Sie den 2-Buchstaben-IATA-Code (z.&nbsp;B. LH, BA, AF) oder lassen Sie das Feld leer.
           </span>
         )}
         <p className="q-helper">
-          Entrez le nom ou le code IATA (p.&nbsp;ex. AC, WS, PD).{' '}
-          <strong>Laissez vide si inconnu.</strong>
+          Geben Sie den Namen oder IATA-Code ein (z.&nbsp;B. LH, BA, AF).{' '}
+          <strong>Lassen Sie das Feld leer, falls unbekannt.</strong>
         </p>
-        <button className="btn-cont" onClick={onNext}>Continuer →</button>
+        <button className="btn-cont" onClick={onNext}>Weiter →</button>
       </div>
     </div>
   );
 }
 
-// ── Q5: Durée du retard (EU261/UK261) ─────────────────
 function Q5Delay({ value, onChange, disruption, onBack }) {
   const opts = [
-    { value: 'under2', title: 'Moins de 2 heures' },
-    { value: '2to3',   title: '2 à 3 heures' },
-    { value: '3to4',   title: '3 à 4 heures' },
-    { value: '4plus',  title: '4 heures et plus' },
+    { value: 'under2', title: 'Weniger als 2 Stunden' },
+    { value: '2to3',   title: '2 bis 3 Stunden' },
+    { value: '3to4',   title: '3 bis 4 Stunden' },
+    { value: '4plus',  title: '4 Stunden oder mehr' },
   ];
   if (disruption !== 'delayed') return null;
   return (
     <div className="screen">
       <ProgressBar step={5} total={6} onBack={onBack} />
       <div className="q-body">
-        <div className="q-label">Question 5 sur 6</div>
-        <h2 className="q-head">Quelle a été la durée du retard à l&apos;arrivée?</h2>
+        <div className="q-label">Frage 5 von 6</div>
+        <h2 className="q-head">Wie lang war die Verspätung bei der Ankunft?</h2>
         <div className="opts">
           {opts.map(o => (
             <button
@@ -241,28 +234,27 @@ function Q5Delay({ value, onChange, disruption, onBack }) {
           ))}
         </div>
         <p className="q-helper">
-          L&apos;indemnisation EU261 requiert un <strong>retard de 3 heures ou plus à la destination finale</strong>.
+          EU261 erfordert eine <strong>Verspätung von mindestens 3 Stunden am Zielort</strong>.
         </p>
       </div>
     </div>
   );
 }
 
-// ── Q6: Motif (EU261/UK261) ───────────────────────────
 function Q6Reason({ value, onChange, onBack }) {
   const opts = [
-    { value: 'technical', icon: '🔧', title: 'Problème technique / mécanique', sub: 'Panne d\'appareil, problème de maintenance' },
-    { value: 'crew',      icon: '👥', title: 'Manque de personnel navigant',   sub: 'Équipage absent, problème d\'horaire du personnel' },
-    { value: 'weather',   icon: '🌩️', title: 'Conditions météorologiques',     sub: 'Tempête, brouillard, verglas ou restrictions ATC' },
-    { value: 'none',      icon: '❓', title: 'Aucune raison donnée',            sub: 'La compagnie n\'a pas expliqué' },
-    { value: 'other',     icon: '📋', title: 'Autre',                           sub: 'Grève, congestion aéroportuaire, etc.' },
+    { value: 'technical', icon: '🔧', title: 'Technisches / mechanisches Problem', sub: 'Flugzeugdefekt, Wartungsproblem' },
+    { value: 'crew',      icon: '👥', title: 'Personalmangel',                      sub: 'Fehlendes Personal, Zeitprobleme' },
+    { value: 'weather',   icon: '🌩️', title: 'Wetterbedingungen',                  sub: 'Sturm, Nebel, Eis oder ATC-Beschränkungen' },
+    { value: 'none',      icon: '❓', title: 'Kein Grund angegeben',                sub: 'Die Fluggesellschaft hat nichts erklärt' },
+    { value: 'other',     icon: '📋', title: 'Sonstiges',                           sub: 'Streik, Flughafenüberlastung usw.' },
   ];
   return (
     <div className="screen">
       <ProgressBar step={6} total={6} onBack={onBack} />
       <div className="q-body">
-        <div className="q-label">Question 6 sur 6</div>
-        <h2 className="q-head">Quelle raison la compagnie aérienne a-t-elle donnée?</h2>
+        <div className="q-label">Frage 6 von 6</div>
+        <h2 className="q-head">Welchen Grund hat die Fluggesellschaft angegeben?</h2>
         <div className="opts">
           {opts.map(o => (
             <button
@@ -284,20 +276,19 @@ function Q6Reason({ value, onChange, onBack }) {
   );
 }
 
-// ── Q5 SHY: Durée du retard ───────────────────────────
 function Q5SHYDelay({ value, onChange, onBack }) {
   const opts = [
-    { value: 'under2', title: 'Moins de 2 heures' },
-    { value: '2to3',   title: '2 à 3 heures' },
-    { value: '3to4',   title: '3 à 4 heures' },
-    { value: '4plus',  title: '5 heures et plus' },
+    { value: 'under2', title: 'Weniger als 2 Stunden' },
+    { value: '2to3',   title: '2 bis 3 Stunden' },
+    { value: '3to4',   title: '3 bis 4 Stunden' },
+    { value: '4plus',  title: '5 Stunden oder mehr' },
   ];
   return (
     <div className="screen">
       <ProgressBar step={5} total={6} onBack={onBack} />
       <div className="q-body">
-        <div className="q-label">Question 5 sur 6</div>
-        <h2 className="q-head">Quelle a été la durée du retard à l&apos;arrivée?</h2>
+        <div className="q-label">Frage 5 von 6</div>
+        <h2 className="q-head">Wie lang war die Verspätung bei der Ankunft?</h2>
         <div className="opts">
           {opts.map(o => (
             <button
@@ -313,26 +304,25 @@ function Q5SHYDelay({ value, onChange, onBack }) {
           ))}
         </div>
         <p className="q-helper">
-          Note&nbsp;: en vertu de la réglementation SHY (Turquie), <strong>les retards ne donnent pas droit à une indemnisation financière</strong> — seuls les droits aux soins s&apos;appliquent (repas, hébergement).
+          Hinweis: Nach türkischem SHY-Recht <strong>begründen Verspätungen keinen Anspruch auf finanzielle Entschädigung</strong> — nur Betreuungsrechte (Verpflegung, Unterkunft) gelten.
         </p>
       </div>
     </div>
   );
 }
 
-// ── Q SHY Motif ───────────────────────────────────────
 function QSHYReason({ value, onChange, onBack, step, total }) {
   const opts = [
-    { value: 'airline',      icon: '🔧', title: 'Responsabilité de la compagnie', sub: 'Problème technique, manque d\'équipage, surbooking, problème opérationnel' },
-    { value: 'forcemajeure', icon: '🌩️', title: 'Force majeure',                  sub: 'Conditions météo sévères, instabilité politique, catastrophe naturelle, grève aéroportuaire, risque sécuritaire' },
-    { value: 'unknown',      icon: '❓', title: 'Aucune raison donnée',            sub: 'La compagnie n\'a pas expliqué' },
+    { value: 'airline',      icon: '🔧', title: 'Verantwortlichkeit der Fluggesellschaft', sub: 'Technisches Problem, Personalmangel, Überbuchung, operatives Problem' },
+    { value: 'forcemajeure', icon: '🌩️', title: 'Höhere Gewalt',                           sub: 'Extremwetter, politische Instabilität, Naturkatastrophe, Flughafenstreik, Sicherheitsrisiko' },
+    { value: 'unknown',      icon: '❓', title: 'Kein Grund angegeben',                    sub: 'Die Fluggesellschaft hat nichts erklärt' },
   ];
   return (
     <div className="screen">
       <ProgressBar step={step} total={total} onBack={onBack} />
       <div className="q-body">
-        <div className="q-label">Question {step} sur {total}</div>
-        <h2 className="q-head">Quelle était la cause de l&apos;incident?</h2>
+        <div className="q-label">Frage {step} von {total}</div>
+        <h2 className="q-head">Was hat den Vorfall verursacht?</h2>
         <div className="opts">
           {opts.map(o => (
             <button
@@ -350,25 +340,24 @@ function QSHYReason({ value, onChange, onBack, step, total }) {
           ))}
         </div>
         <p className="q-helper">
-          Les pannes techniques et le manque d&apos;équipage <strong>ne constituent pas</strong> un cas de force majeure en vertu de la réglementation SHY — ils relèvent de la responsabilité de la compagnie.
+          Technische Defekte und Personalmangel <strong>gelten gemäß SHY nicht</strong> als höhere Gewalt — sie fallen in die Verantwortung der Fluggesellschaft.
         </p>
       </div>
     </div>
   );
 }
 
-// ── Q SHY Préavis (annulations) ───────────────────────
 function QSHYNotified({ value, onChange, onBack, step, total }) {
   const opts = [
-    { value: 'yes', icon: '✓', title: 'Oui, 14 jours ou plus à l\'avance', sub: 'J\'ai été informé au moins 14 jours avant le départ' },
-    { value: 'no',  icon: '✕', title: 'Non — moins de 14 jours',           sub: 'Informé moins de 14 jours avant, ou à l\'aéroport' },
+    { value: 'yes', icon: '✓', title: 'Ja, 14+ Tage im Voraus',       sub: 'Ich wurde mindestens 14 Tage vor Abflug benachrichtigt' },
+    { value: 'no',  icon: '✕', title: 'Nein – weniger als 14 Tage',    sub: 'Ich wurde weniger als 14 Tage vorher oder am Flughafen informiert' },
   ];
   return (
     <div className="screen">
       <ProgressBar step={step} total={total} onBack={onBack} />
       <div className="q-body">
-        <div className="q-label">Question {step} sur {total}</div>
-        <h2 className="q-head">Avez-vous été informé de l&apos;annulation à l&apos;avance?</h2>
+        <div className="q-label">Frage {step} von {total}</div>
+        <h2 className="q-head">Wurden Sie im Voraus über die Annullierung informiert?</h2>
         <div className="opts">
           {opts.map(o => (
             <button
@@ -386,27 +375,26 @@ function QSHYNotified({ value, onChange, onBack, step, total }) {
           ))}
         </div>
         <p className="q-helper">
-          La réglementation SHY n&apos;oblige les compagnies à indemniser les annulations que si le préavis a été donné <strong>moins de 14 jours</strong> avant le départ.
+          SHY verpflichtet Fluggesellschaften zur Entschädigung bei Annullierungen nur, wenn die Benachrichtigung <strong>weniger als 14 Tage</strong> vor Abflug erfolgt.
         </p>
       </div>
     </div>
   );
 }
 
-// ── Q5 APPR: Niveau de retard ─────────────────────────
 function Q5APPR({ value, onChange, onBack }) {
   const opts = [
-    { value: 'under3', title: 'Moins de 3 heures' },
-    { value: '3to6',   title: '3 à 6 heures' },
-    { value: '6to9',   title: '6 à 9 heures' },
-    { value: '9plus',  title: '9 heures et plus' },
+    { value: 'under3', title: 'Weniger als 3 Stunden' },
+    { value: '3to6',   title: '3 bis 6 Stunden' },
+    { value: '6to9',   title: '6 bis 9 Stunden' },
+    { value: '9plus',  title: '9 Stunden oder mehr' },
   ];
   return (
     <div className="screen">
       <ProgressBar step={5} total={7} onBack={onBack} />
       <div className="q-body">
-        <div className="q-label">Question 5 sur 7</div>
-        <h2 className="q-head">Quelle a été la durée du retard à l&apos;arrivée?</h2>
+        <div className="q-label">Frage 5 von 7</div>
+        <h2 className="q-head">Wie lang war die Verspätung bei der Ankunft?</h2>
         <div className="opts">
           {opts.map(o => (
             <button
@@ -422,26 +410,25 @@ function Q5APPR({ value, onChange, onBack }) {
           ))}
         </div>
         <p className="q-helper">
-          L&apos;indemnisation RPPA commence à partir de <strong>3 heures de retard à la destination finale</strong>.
+          APPR-Entschädigung beginnt ab einer <strong>Verspätung von 3 Stunden am Zielort</strong>.
         </p>
       </div>
     </div>
   );
 }
 
-// ── Q Taille de la compagnie (APPR) ──────────────────
 function QAirlineSize({ value, onChange, onBack, step, total }) {
   const opts = [
-    { value: 'large',   icon: '✈️', title: 'Grande compagnie aérienne', sub: 'Air Canada, WestJet, Porter, Sunwing, Swoop, Flair, Air Transat' },
-    { value: 'small',   icon: '🛩️', title: 'Petite compagnie aérienne', sub: 'Transporteur régional ou nolisé non listé ci-dessus' },
-    { value: 'unknown', icon: '❓', title: 'Je ne sais pas',             sub: 'Les tarifs des grandes compagnies seront appliqués' },
+    { value: 'large',   icon: '✈️', title: 'Große Fluggesellschaft',   sub: 'Air Canada, WestJet, Porter, Sunwing, Swoop, Flair, Air Transat' },
+    { value: 'small',   icon: '🛩️', title: 'Kleine Fluggesellschaft',  sub: 'Regionaler oder Charter-Beförderer, der oben nicht aufgeführt ist' },
+    { value: 'unknown', icon: '❓', title: 'Nicht sicher',              sub: 'Es gelten die Sätze für große Fluggesellschaften' },
   ];
   return (
     <div className="screen">
       <ProgressBar step={step} total={total} onBack={onBack} />
       <div className="q-body">
-        <div className="q-label">Question {step} sur {total}</div>
-        <h2 className="q-head">Quelle est la taille de la compagnie aérienne?</h2>
+        <div className="q-label">Frage {step} von {total}</div>
+        <h2 className="q-head">Wie groß ist die Fluggesellschaft?</h2>
         <div className="opts">
           {opts.map(o => (
             <button
@@ -459,27 +446,26 @@ function QAirlineSize({ value, onChange, onBack, step, total }) {
           ))}
         </div>
         <p className="q-helper">
-          Les montants d&apos;indemnisation RPPA diffèrent selon la taille de la compagnie.
+          Die APPR-Entschädigungsbeträge unterscheiden sich je nach Größe der Fluggesellschaft.
         </p>
       </div>
     </div>
   );
 }
 
-// ── Q Motif APPR ──────────────────────────────────────
 function QAPPRReason({ value, onChange, onBack, step, total }) {
   const opts = [
-    { value: 'controlled',   icon: '🔧', title: 'Sous le contrôle de la compagnie', sub: 'Problème technique, manque d\'équipage, planification, surbooking' },
-    { value: 'safety',       icon: '⚠️', title: 'Lié à la sécurité',                sub: 'Problème de sécurité exigeant l\'immobilisation de l\'appareil' },
-    { value: 'uncontrolled', icon: '🌩️', title: 'Hors du contrôle de la compagnie', sub: 'Conditions météo sévères, ATC, sécurité aéroportuaire, impact aviaire' },
-    { value: 'unknown',      icon: '❓', title: 'Aucune raison donnée',              sub: 'La compagnie n\'a pas expliqué' },
+    { value: 'controlled',   icon: '🔧', title: 'Im Einflussbereich der Fluggesellschaft',       sub: 'Technisches Problem, Personalmangel, Planung, Überbuchung' },
+    { value: 'safety',       icon: '⚠️', title: 'Sicherheitsbedingt',                            sub: 'Sicherheitsproblem, das die Stilllegung des Flugzeugs erfordert' },
+    { value: 'uncontrolled', icon: '🌩️', title: 'Außerhalb des Einflussbereichs der Fluggesellschaft', sub: 'Extremwetter, ATC, Flughafensicherheit, Vogelschlag' },
+    { value: 'unknown',      icon: '❓', title: 'Kein Grund angegeben',                          sub: 'Die Fluggesellschaft hat nichts erklärt' },
   ];
   return (
     <div className="screen">
       <ProgressBar step={step} total={total} onBack={onBack} />
       <div className="q-body">
-        <div className="q-label">Question {step} sur {total}</div>
-        <h2 className="q-head">Quelle était la cause de l&apos;incident?</h2>
+        <div className="q-label">Frage {step} von {total}</div>
+        <h2 className="q-head">Was hat den Vorfall verursacht?</h2>
         <div className="opts">
           {opts.map(o => (
             <button
@@ -501,7 +487,6 @@ function QAPPRReason({ value, onChange, onBack, step, total }) {
   );
 }
 
-// ── Écran des résultats ───────────────────────────────
 function Expander({ icon, label, children }) {
   const [open, setOpen] = useState(false);
   return (
@@ -518,17 +503,17 @@ function Expander({ icon, label, children }) {
   );
 }
 
-const VERDICT_META_FR = {
-  likely:   { badge: 'VOUS AVEZ PROBABLEMENT DROIT À UNE INDEMNISATION',     dot: '🟢' },
-  possibly: { badge: 'VOUS POURRIEZ AVOIR DROIT À UNE INDEMNISATION',         dot: '🟡' },
-  unlikely: { badge: 'VOUS N\'AVEZ PROBABLEMENT PAS DROIT À UNE INDEMNISATION', dot: '🔴' },
+const VERDICT_META_DE = {
+  likely:   { badge: 'SIE HABEN WAHRSCHEINLICH ANSPRUCH AUF ENTSCHÄDIGUNG',         dot: '🟢' },
+  possibly: { badge: 'SIE KÖNNTEN ANSPRUCH AUF ENTSCHÄDIGUNG HABEN',                dot: '🟡' },
+  unlikely: { badge: 'SIE HABEN WAHRSCHEINLICH KEINEN ANSPRUCH AUF ENTSCHÄDIGUNG',  dot: '🔴' },
 };
 
-const DISRUPTION_LABELS_FR = {
-  cancelled:  'Annulation',
-  delayed:    'Retard',
-  denied:     'Embarquement refusé',
-  downgraded: 'Déclassement',
+const DISRUPTION_LABELS_DE = {
+  cancelled:  'Annullierung',
+  delayed:    'Verspätung',
+  denied:     'Nichtbeförderung',
+  downgraded: 'Herabstufung',
 };
 
 function ResultsScreen({ result, answers, onGetLetter, onReset }) {
@@ -538,7 +523,7 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
   const [captureStatus, setCaptureStatus] = useState('idle');
 
   const { verdict, regulation, compensation, verdictNote, careRights, distanceKm, shyMeta } = result;
-  const meta = VERDICT_META_FR[verdict] ?? VERDICT_META_FR.likely;
+  const meta = VERDICT_META_DE[verdict] ?? VERDICT_META_DE.likely;
   const amountDisplay = compensation?.amount || (verdict !== 'unlikely' ? '€250–€600' : null);
   const isSHYDelay = regulation === 'SHY' && answers.disruption === 'delayed';
   const showPrimaryCTA = verdict === 'likely' || verdict === 'possibly' || isSHYDelay;
@@ -578,62 +563,60 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
   const regLabel = regulation === 'UK261'
     ? 'UK261/2004'
     : regulation === 'APPR'
-    ? 'RPPA — Règlement sur la protection des passagers aériens (SOR/2019-150)'
+    ? 'APPR — Luftfahrt-Fluggastschutzverordnung (SOR/2019-150)'
     : regulation === 'SHY'
-    ? 'SHY — Réglementation turque sur les droits des passagers'
-    : 'Règlement UE 261/2004';
+    ? 'SHY — Türkische Fluggastrechteverordnung'
+    : 'EU-Verordnung 261/2004';
 
   return (
     <div className="res">
       <div className={`vbanner ${verdict}`}>
-        <div className="veyebrow">{meta.dot} Votre résultat</div>
+        <div className="veyebrow">{meta.dot} Ihr Ergebnis</div>
         <div className="vbadge">{meta.badge}</div>
         {amountDisplay ? (
           <>
             <div className="vamount">{amountDisplay}</div>
-            <div className="vreg">en vertu du {regLabel}</div>
+            <div className="vreg">gemäß {regLabel}</div>
           </>
         ) : (
           <div className="vreg" style={{ fontSize: 14, marginTop: 8, lineHeight: 1.5 }}>
-            Pas d&apos;indemnisation financière — des droits aux soins peuvent s&apos;appliquer
+            Keine Barentschädigung — Betreuungsrechte können gelten
           </div>
         )}
         {verdictNote && <p className="vnote">{verdictNote}</p>}
         {shyMeta && (
           <div className="vnote" style={{ marginTop: 8, fontSize: 12, opacity: 0.8 }}>
-            <strong>Date limite&nbsp;:</strong> {shyMeta.deadline}<br />
-            <strong>Escalade&nbsp;:</strong> {shyMeta.escalation}
+            <strong>Frist:</strong> {shyMeta.deadline}<br />
+            <strong>Eskalation:</strong> {shyMeta.escalation}
           </div>
         )}
       </div>
 
       <div className="res-body">
 
-        {/* ── Référence réglementaire ── */}
         {verdict !== 'unlikely' && regulation && (
           <div className="reg-citation">
             {regulation === 'EU261' && (
-              <>En vertu du <strong>Règlement UE 261/2004, article&nbsp;7(1)</strong>, vous pourriez avoir droit à une indemnisation de <strong>{amountDisplay}</strong>. L&apos;article&nbsp;5(1)(c) oblige les compagnies à verser une indemnité pour les annulations lorsque les passagers n&apos;ont pas été informés au moins 14&nbsp;jours à l&apos;avance.</>
+              <>Gemäß <strong>EU-Verordnung 261/2004, Art.&nbsp;7(1)</strong> könnten Sie Anspruch auf eine Entschädigung von <strong>{amountDisplay}</strong> haben. Art.&nbsp;5(1)(c) verpflichtet Fluggesellschaften zur Entschädigung bei Annullierungen, sofern die Passagiere nicht mindestens 14&nbsp;Tage im Voraus informiert wurden.</>
             )}
             {regulation === 'UK261' && (
-              <>En vertu du <strong>Règlement UK261 (droit de l&apos;UE conservé), article&nbsp;7(1)</strong>, vous pourriez avoir droit à une indemnisation de <strong>{amountDisplay}</strong>. La Civil Aviation Authority (CAA) du Royaume-Uni applique ces droits pour les vols au départ du R.-U.</>
+              <>Gemäß <strong>UK-Verordnung 261 (beibehaltenes EU-Recht), Art.&nbsp;7(1)</strong> könnten Sie Anspruch auf eine Entschädigung von <strong>{amountDisplay}</strong> haben. Die britische Civil Aviation Authority (CAA) setzt diese Rechte für Flüge ab UK-Flughäfen durch.</>
             )}
             {regulation === 'APPR' && (
-              <>En vertu du <strong>Règlement sur la protection des passagers aériens (RPPA, DORS/2019-150), article&nbsp;19(1)</strong>, vous pourriez avoir droit à <strong>{amountDisplay}</strong>. L&apos;Office des transports du Canada (OTC) supervise la conformité et peut recevoir des plaintes si la compagnie refuse de payer.</>
+              <>Gemäß der <strong>kanadischen Luftfahrt-Fluggastschutzverordnung (SOR/2019-150), § 19(1)</strong> könnten Sie Anspruch auf <strong>{amountDisplay}</strong> haben. Die Canadian Transportation Agency nimmt Beschwerden entgegen.</>
             )}
             {regulation === 'SHY' && (
-              <>En vertu du <strong>Règlement SHY de la Turquie sur les droits des passagers</strong>, vous pourriez avoir droit à <strong>{amountDisplay}</strong> pour les vols internationaux. La Direction générale de l&apos;aviation civile turque (DGCA) applique ces droits.</>
+              <>Gemäß der <strong>türkischen SHY-Verordnung über Fluggastrechte</strong> könnten Sie für internationale Flüge Anspruch auf <strong>{amountDisplay}</strong> haben. Die türkische Generaldirektion der Zivilluftfahrt (DGCA) setzt diese Rechte durch.</>
             )}
           </div>
         )}
 
-        {/* ── CTA PRINCIPAL ── */}
         {showPrimaryCTA && (() => {
           const disruptionMap = {
-            cancelled:  'Annulation',
-            delayed:    'Retard de plus de 3 heures',
-            denied:     'Embarquement refusé',
-            downgraded: 'Déclassement',
+            cancelled:  'Annullierung',
+            delayed:    'Verspätung von mehr als 3 Stunden',
+            denied:     'Nichtbeförderung',
+            downgraded: 'Herabstufung',
           };
           const params = new URLSearchParams();
           if (answers.flightNumber) params.set('flight',       answers.flightNumber);
@@ -643,33 +626,33 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
           if (answers.disruption)   params.set('disruption',   disruptionMap[answers.disruption] || answers.disruption);
           if (regulation)           params.set('regulation',   regulation);
           if (compensation?.amount) params.set('compensation', compensation.amount);
-          params.set('lang', 'fr');
+          params.set('lang', 'de');
           const authorizeUrl = `/authorize?${params.toString()}`;
 
-          let airlineName = 'la compagnie aérienne';
+          let airlineName = 'der Fluggesellschaft';
           try {
             const carrier = resolveAirline(answers.flightNumber);
             if (carrier?.name) airlineName = carrier.name;
-          } catch { /* keep default */ }
+          } catch { /* Standard beibehalten */ }
 
           return (
             <div className="cta-handle">
               <div className="cta-handle-top">
-                <span className="cta-handle-title">Laissez-nous gérer votre réclamation</span>
+                <span className="cta-handle-title">Lassen Sie uns Ihre Forderung übernehmen</span>
               </div>
               <div className="cta-howit">
-                <div className="cta-step"><span className="cta-step-n">1</span><span>Vous nous autorisez à agir en votre nom.</span></div>
-                <div className="cta-step"><span className="cta-step-n">2</span><span>Nous soumettons votre réclamation directement à {airlineName}.</span></div>
-                <div className="cta-step"><span className="cta-step-n">3</span><span>Nous gérons tous les suivis et les démarches d&apos;escalade.</span></div>
-                <div className="cta-step"><span className="cta-step-n">4</span><span>Vous ne payez que si nous réussissons — 25&nbsp;% de frais. Aucun résultat, aucuns frais.</span></div>
+                <div className="cta-step"><span className="cta-step-n">1</span><span>Sie ermächtigen uns, in Ihrem Namen zu handeln.</span></div>
+                <div className="cta-step"><span className="cta-step-n">2</span><span>Wir reichen Ihre Forderung direkt bei {airlineName} ein.</span></div>
+                <div className="cta-step"><span className="cta-step-n">3</span><span>Wir übernehmen alle weiteren Schritte und Eskalationen.</span></div>
+                <div className="cta-step"><span className="cta-step-n">4</span><span>Sie zahlen nur bei Erfolg – 25&nbsp;% Provision. Kein Erfolg, keine Gebühr.</span></div>
               </div>
               <a className="btn-authorize" href={authorizeUrl}>
-                Commencer l&apos;autorisation →
+                Autorisierung starten →
               </a>
               <div className="notify-fallback">
-                <p className="notify-fallback-label">Pas encore prêt? Laissez votre courriel et nous ferons un suivi.</p>
+                <p className="notify-fallback-label">Noch nicht bereit? Hinterlassen Sie Ihre E-Mail und wir melden uns.</p>
                 {notified ? (
-                  <div className="notify-success">✓ Reçu — nous vous contacterons bientôt.</div>
+                  <div className="notify-success">✓ Erhalten – wir melden uns bald.</div>
                 ) : (
                   <form className="notify-row" onSubmit={handleNotify}>
                     <input
@@ -677,13 +660,13 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
                       type="email"
                       inputMode="email"
                       autoComplete="email"
-                      placeholder="Votre adresse courriel"
+                      placeholder="Ihre E-Mail-Adresse"
                       value={notifyEmail}
                       onChange={e => setNotifyEmail(e.target.value)}
                       required
                     />
                     <button className="btn-notify" type="submit" disabled={!notifyEmail.trim()}>
-                      Me notifier
+                      Benachrichtigen
                     </button>
                   </form>
                 )}
@@ -692,23 +675,22 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
           );
         })()}
 
-        {/* ── CTA SECONDAIRE : Trousse d'indemnisation ── */}
         {showSecondaryCTA && (
           <div className="cta-diy">
             <div className="cta-diy-head">
-              <span className="cta-diy-title">Obtenez votre trousse d&apos;indemnisation</span>
-              <span className="cta-diy-price">14,99&nbsp;$</span>
+              <span className="cta-diy-title">Holen Sie sich Ihr Entschädigungs-Kit</span>
+              <span className="cta-diy-price">$14.99</span>
             </div>
             <p className="cta-diy-desc">
-              Une trousse {regulation} complète&nbsp;: lettre de réclamation personnalisée, guide de soumission à la compagnie aérienne, modèles de suivi et d&apos;escalade. Téléchargez en PDF et envoyez vous-même.
+              Ein vollständiges {regulation} Entschädigungs-Kit: personalisierter Forderungsbrief, Einreichungsleitfaden, Nachfass- und Eskalationsvorlagen. Als PDF herunterladen und selbst einreichen.
             </p>
             <button className="btn-diy" onClick={onGetLetter}>
-              Obtenir ma trousse d&apos;indemnisation — 14,99&nbsp;$
+              Mein Entschädigungs-Kit holen – $14.99
             </button>
           </div>
         )}
 
-        <Expander icon="🛡️" label="Ce que la compagnie aérienne doit vous fournir maintenant">
+        <Expander icon="🛡️" label="Was die Fluggesellschaft Ihnen jetzt zur Verfügung stellen muss">
           {careRights.length > 0 ? (
             <div className="care-list">
               {careRights.map((r, i) => (
@@ -722,22 +704,22 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
             </div>
           ) : (
             <p style={{ color: 'var(--muted)', fontSize: 14, paddingTop: 14, lineHeight: 1.6 }}>
-              Aucune obligation de soins immédiats ne s&apos;applique pour ce niveau d&apos;incident.
+              Für dieses Störungsniveau gelten keine sofortigen Betreuungspflichten.
             </p>
           )}
           <div className="care-clarifier">
-            Ces droits immédiats sont distincts de votre indemnisation légale. La compagnie vous doit les deux.
+            Diese sofortigen Ansprüche sind von Ihrer gesetzlichen Entschädigung getrennt. Die Fluggesellschaft schuldet Ihnen beides.
           </div>
         </Expander>
 
         <div className="summary">
           {[
-            ['Incident',  DISRUPTION_LABELS_FR[answers.disruption] || '—'],
-            ['Vol',       answers.flightNumber || '—'],
-            ['Trajet',    `${answers.from} → ${answers.to}`],
-            ['Distance',  distanceKm ? `~${distanceKm.toLocaleString()} km` : 'Inconnue'],
-            ['Règlement', regulation],
-            ['Date',      answers.flightDate || '—'],
+            ['Vorfall',     DISRUPTION_LABELS_DE[answers.disruption] || '—'],
+            ['Flug',        answers.flightNumber || '—'],
+            ['Route',       `${answers.from} → ${answers.to}`],
+            ['Distanz',     distanceKm ? `~${distanceKm.toLocaleString()} km` : 'Unbekannt'],
+            ['Verordnung',  regulation],
+            ['Datum',       answers.flightDate || '—'],
           ].map(([label, value]) => (
             <div key={label}>
               <div className="sum-label">{label}</div>
@@ -747,18 +729,17 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
         </div>
 
         <div className="res-disclaimer">
-          Avertissement&nbsp;: FlightComp n&apos;est pas un cabinet juridique et ne fournit pas de conseils juridiques. Nous fournissons des informations sur vos droits en vertu du EU261/UK261/RPPA/SHY et des outils pour vous aider à soumettre votre réclamation. Pour des conseils juridiques, consultez un avocat qualifié.
+          Haftungsausschluss: FlightComp ist keine Anwaltskanzlei und gibt keine Rechtsberatung. Wir stellen Informationen über Ihre Rechte gemäß EU261/UK261/APPR/SHY bereit und bieten Tools zur Unterstützung Ihrer Forderung. Für Rechtsberatung wenden Sie sich bitte an einen qualifizierten Anwalt.
         </div>
 
         <div className="reset-link">
-          <button onClick={onReset}>← Vérifier un autre vol</button>
+          <button onClick={onReset}>← Einen anderen Flug prüfen</button>
         </div>
       </div>
     </div>
   );
 }
 
-// ── Écran des coordonnées ─────────────────────────────
 function PersonalDetailsScreen({ details, onChange, onSubmit, onBack }) {
   const [loading, setLoading] = useState(false);
   const canSubmit = details.name.trim() && details.email.trim() && details.address.trim();
@@ -772,20 +753,20 @@ function PersonalDetailsScreen({ details, onChange, onSubmit, onBack }) {
   return (
     <div className="details-screen">
       <div style={{ paddingTop: 20 }}>
-        <button className="prog-back" onClick={onBack}>← Retour aux résultats</button>
+        <button className="prog-back" onClick={onBack}>← Zurück zu den Ergebnissen</button>
       </div>
       <div className="details-body">
         <div>
-          <div className="q-label">Presque terminé</div>
-          <h2 className="q-head" style={{ fontSize: 22 }}>Vos coordonnées pour la lettre</h2>
+          <div className="q-label">Fast geschafft</div>
+          <h2 className="q-head" style={{ fontSize: 22 }}>Ihre Angaben für den Brief</h2>
         </div>
 
         <div className="field-group">
-          <label className="field-label">Nom complet *</label>
+          <label className="field-label">Vollständiger Name *</label>
           <input
             className="field-input"
             type="text"
-            placeholder="p. ex. Marie Tremblay"
+            placeholder="z. B. Maria Müller"
             value={details.name}
             onChange={e => onChange({ name: e.target.value })}
             autoFocus
@@ -793,22 +774,22 @@ function PersonalDetailsScreen({ details, onChange, onSubmit, onBack }) {
         </div>
 
         <div className="field-group">
-          <label className="field-label">Adresse courriel *</label>
+          <label className="field-label">E-Mail-Adresse *</label>
           <input
             className="field-input"
             type="email"
-            placeholder="marie@exemple.com"
+            placeholder="maria@beispiel.de"
             value={details.email}
             onChange={e => onChange({ email: e.target.value })}
           />
-          <span className="field-hint">Votre reçu et les suivis vous seront envoyés ici.</span>
+          <span className="field-hint">Ihre Quittung und etwaige Folgekommunikation werden hierhin gesendet.</span>
         </div>
 
         <div className="field-group">
-          <label className="field-label">Adresse domicile *</label>
+          <label className="field-label">Heimatadresse *</label>
           <textarea
             className="field-textarea"
-            placeholder={"123, rue Principale\nMontréal (Québec)\nH2X 1A1"}
+            placeholder={"Musterstraße 1\nBerlin\n10115"}
             value={details.address}
             onChange={e => onChange({ address: e.target.value })}
             rows={3}
@@ -816,83 +797,54 @@ function PersonalDetailsScreen({ details, onChange, onSubmit, onBack }) {
         </div>
 
         <div className="field-group">
-          <label className="field-label">Numéro de réservation</label>
+          <label className="field-label">Buchungsreferenz</label>
           <input
             className="field-input inp-mono"
             type="text"
-            placeholder="p. ex. ABC123"
+            placeholder="z. B. ABC123"
             value={details.bookingRef}
             onChange={e => onChange({ bookingRef: e.target.value.toUpperCase() })}
             style={{ fontSize: 16 }}
           />
-          <span className="field-hint">Facultatif — renforce votre réclamation.</span>
+          <span className="field-hint">Optional – stärkt Ihre Forderung.</span>
         </div>
 
         <div className="field-group">
-          <label className="field-label">Coordonnées bancaires / de paiement</label>
+          <label className="field-label">Bank-/Zahlungsdaten</label>
           <textarea
             className="field-textarea"
-            placeholder={"IBAN : FR00 0000 0000 0000 0000 0000 000\nou PayPal : marie@exemple.com\n(Facultatif — pour le remboursement de la compagnie aérienne)"}
+            placeholder={"IBAN: DE00 0000 0000 0000 0000 00\noder PayPal: maria@beispiel.de\n(Optional – für die Rückzahlung durch die Fluggesellschaft)"}
             value={details.bankDetails}
             onChange={e => onChange({ bankDetails: e.target.value })}
             rows={3}
           />
-          <span className="field-hint">Facultatif. Utilisé uniquement dans votre lettre.</span>
+          <span className="field-hint">Optional. Wird nur in Ihrem Brief verwendet.</span>
         </div>
 
         <div className="payment-card">
           <span className="payment-card-ico">🔒</span>
           <div className="payment-card-txt">
-            <div className="payment-card-title">Paiement sécurisé via Stripe</div>
+            <div className="payment-card-title">Sicherer Checkout über Stripe</div>
             <div className="payment-card-sub">
-              Votre lettre est générée immédiatement après le paiement.
-              Les données de carte sont traitées par Stripe — nous ne les voyons jamais.
+              Ihr Brief wird sofort nach der Zahlung erstellt.
+              Kartendaten werden von Stripe verarbeitet – wir sehen sie nie.
             </div>
           </div>
-          <span className="payment-price">14,99&nbsp;$</span>
+          <span className="payment-price">$14.99</span>
         </div>
 
         <button className="btn-pay" onClick={handleSubmit} disabled={!canSubmit || loading}>
-          {loading ? 'Redirection…' : 'Payer 14,99 $ et obtenir ma lettre →'}
+          {loading ? 'Weiterleitung…' : '$14.99 zahlen und meinen Brief erhalten →'}
         </button>
-        <div className="secure-note">🔒 Sécurisé par Stripe · Chiffrement SSL</div>
+        <div className="secure-note">🔒 Gesichert durch Stripe · SSL-Verschlüsselung</div>
       </div>
     </div>
   );
 }
 
 /* ══════════════════════════════════════════════════════
-   Page principale — machine à états
+   Sprachumschalter — Modulebene
 ══════════════════════════════════════════════════════ */
-
-const INITIAL_ANSWERS = {
-  disruption: '',
-  flightNumber: '',
-  flightDate: '',
-  from: '',
-  to: '',
-  airlineName: '',
-  airlineCode: '',
-  carrierRegion: '',
-  airlineSizeAutoDetected: false,
-  delayLength: '',
-  reason: '',
-  apprDelayTier: '',
-  airlineSize: '',
-  apprReason: '',
-  shyReason: '',
-  shyNotified14: '',
-  detectedRegulation: '',
-  language: 'fr',
-};
-
-const INITIAL_DETAILS = {
-  name: '',
-  email: '',
-  address: '',
-  bookingRef: '',
-  bankDetails: '',
-};
 
 function LangToggle({ active }) {
   const langs = [
@@ -921,11 +873,44 @@ function LangToggle({ active }) {
   );
 }
 
-export default function FrenchHome() {
+/* ══════════════════════════════════════════════════════
+   Hauptseite — Zustandsmaschine
+══════════════════════════════════════════════════════ */
+
+const INITIAL_ANSWERS = {
+  disruption: '',
+  flightNumber: '',
+  flightDate: '',
+  from: '',
+  to: '',
+  airlineName: '',
+  airlineCode: '',
+  carrierRegion: '',
+  airlineSizeAutoDetected: false,
+  delayLength: '',
+  reason: '',
+  apprDelayTier: '',
+  airlineSize: '',
+  apprReason: '',
+  shyReason: '',
+  shyNotified14: '',
+  detectedRegulation: '',
+  language: 'de',
+};
+
+const INITIAL_DETAILS = {
+  name: '',
+  email: '',
+  address: '',
+  bookingRef: '',
+  bankDetails: '',
+};
+
+export default function GermanHome() {
   const restored = (() => {
     if (typeof window === 'undefined') return null;
     try {
-      const raw = sessionStorage.getItem('fc_claim_fr');
+      const raw = sessionStorage.getItem('fc_claim_de');
       if (!raw) return null;
       const p = JSON.parse(raw);
       return p.answers && p.result ? p : null;
@@ -1045,7 +1030,7 @@ export default function FrenchHome() {
 
   async function handlePay() {
     const payload = { answers, result, details };
-    sessionStorage.setItem('fc_claim_fr', JSON.stringify(payload));
+    sessionStorage.setItem('fc_claim_de', JSON.stringify(payload));
     sessionStorage.setItem('fc_claim', JSON.stringify(payload));
 
     const base = process.env.NEXT_PUBLIC_BASE_URL || window.location.origin;
@@ -1057,7 +1042,7 @@ export default function FrenchHome() {
       route:        `${answers.from || ''}–${answers.to || ''}`,
       regulation:   result?.regulation           || '',
       compensation: result?.compensation?.amount || '',
-      language:     'fr',
+      language:     'de',
     };
 
     const res = await fetch('/api/create-checkout-session', {
@@ -1066,152 +1051,150 @@ export default function FrenchHome() {
       body: JSON.stringify({
         customerEmail: details.email,
         successUrl: `${base}/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancelUrl:  `${base}/fr`,
+        cancelUrl:  `${base}/de`,
         claimMeta,
       }),
     });
 
-    if (!res.ok) { alert('La configuration du paiement a échoué. Veuillez réessayer.'); return; }
+    if (!res.ok) { alert('Die Zahlung konnte nicht eingerichtet werden. Bitte versuchen Sie es erneut.'); return; }
     const { url } = await res.json();
     window.location.href = url;
   }
 
-  const langToggle = <LangToggle active="FR" />;
-
-  // ── Render ─────────────────────────────────────────
+  const langToggle = <LangToggle active="DE" />;
 
   if (screen === 'hook') {
     return (
       <>
         <Head>
-          <title>Compensation Vol Annulé ou Retardé | FlightComp — RPPA &amp; EU261</title>
-          <meta name="description" content="Votre vol a été annulé ou retardé? Vérifiez en 60 secondes si vous avez droit à une indemnisation. Couverture RPPA (Canada), EU261, UK261 et SHY." />
-          <meta name="keywords" content="compensation vol annulé Canada, droits passagers aériens RPPA, indemnisation retard vol, vol annulé remboursement, réclamation compagnie aérienne Canada, EU261 Canada, RPPA indemnisation" />
-          <meta property="og:title" content="Votre vol a été annulé? Découvrez ce que vous êtes en droit de recevoir." />
-          <meta property="og:description" content="Vérification gratuite RPPA / EU261. Obtenez votre résultat en 60 secondes." />
+          <title>Flugverspätung Entschädigung berechnen | FlightComp — EU261 &amp; UK261</title>
+          <meta name="description" content="Flug annulliert oder verspätet? In 60 Sekunden prüfen, ob Ihnen bis zu €600 Entschädigung zustehen. EU261, UK261, Kanada APPR und Türkei SHY." />
+          <meta name="keywords" content="Flugverspätung Entschädigung, EU261 Entschädigung, Flug annulliert Rechte, Flugausfall Entschädigung, Fluggastrechte" />
+          <meta property="og:title" content="Ihr Flug wurde annulliert? Erfahren Sie, was Ihnen zusteht." />
+          <meta property="og:description" content="Kostenlose EU261/UK261-Prüfung. Ihr Ergebnis in 60 Sekunden." />
           <meta property="og:type" content="website" />
-          <meta property="og:url" content="https://www.getflightcomp.com/fr" />
-          <link rel="canonical" href="https://www.getflightcomp.com/fr" />
-          <link rel="alternate" hrefLang="fr" href="https://www.getflightcomp.com/fr" />
-          <link rel="alternate" hrefLang="en" href="https://www.getflightcomp.com" />
+          <meta property="og:url" content="https://www.getflightcomp.com/de" />
+          <link rel="canonical" href="https://www.getflightcomp.com/de" />
+          <link rel="alternate" hrefLang="en" href="https://www.getflightcomp.com/" />
           <link rel="alternate" hrefLang="tr" href="https://www.getflightcomp.com/tr" />
+          <link rel="alternate" hrefLang="fr" href="https://www.getflightcomp.com/fr" />
           <link rel="alternate" hrefLang="de" href="https://www.getflightcomp.com/de" />
           <link rel="alternate" hrefLang="es" href="https://www.getflightcomp.com/es" />
-          <link rel="alternate" hrefLang="x-default" href="https://www.getflightcomp.com" />
+          <link rel="alternate" hrefLang="x-default" href="https://www.getflightcomp.com/" />
         </Head>
 
         {langToggle}
 
         <div className="lp">
 
-          {/* ── HERO ── */}
+          {/* HERO */}
           <section className="lp-hero">
             <div className="lp-hero-inner">
               <h1 className="lp-h1">
-                Votre vol a été annulé ou retardé?<br />
-                Vérifiez vos droits en 60 secondes.
+                Ihr Flug wurde annulliert oder hatte eine Verspätung?<br />
+                Erfahren Sie in 60 Sekunden, was Ihnen zusteht.
               </h1>
-              <div className="lp-badge" style={{ marginTop: 0, marginBottom: 20 }}>✈️ RPPA (Canada) / EU261 / UK261 / SHY (Turquie)</div>
+              <div className="lp-badge" style={{ marginTop: 0, marginBottom: 20 }}>✈️ EU261 / UK261 / Kanada APPR / Türkei SHY</div>
               <p className="lp-sub">
-                Les compagnies aériennes vous doivent légalement jusqu&apos;à 1&nbsp;000&nbsp;$CA (Canada), 600&nbsp;€ (UE/R.-U.) ou 600&nbsp;€ (Turquie) — mais elles utilisent des obstacles administratifs pour éviter de payer. Nous les contournons pour vous.
+                Fluggesellschaften sind gesetzlich verpflichtet, Ihnen bis zu €600 (EU/UK), CA$1.000 (Kanada) oder €600 (Türkei) zu zahlen – aber sie setzen bürokratische Hürden ein, um dies zu vermeiden. Wir überwinden diese für Sie.
               </p>
               <button className="btn-hook lp-cta" onClick={() => setScreen('q1')}>
-                Vérifier mon vol →
+                Meinen Flug prüfen →
               </button>
               <div className="lp-hero-trust">
-                <span>Gratuit</span>
+                <span>Kostenlos</span>
                 <span className="lp-dot">·</span>
-                <span>Sans inscription</span>
+                <span>Ohne Anmeldung</span>
                 <span className="lp-dot">·</span>
-                <span>Résultat instantané</span>
+                <span>Sofortiges Ergebnis</span>
               </div>
               <p style={{ color: 'var(--muted)', fontSize: 13, marginTop: 10 }}>
-                Couvre les vols au Canada, dans l&apos;UE, au R.-U. et en Turquie.
-                Les vols intérieurs américains ne sont pas couverts.
+                Gilt für Flüge in, nach und aus der EU, UK, Kanada und der Türkei.
+                US-Inlandsflüge sind nicht abgedeckt.
               </p>
             </div>
           </section>
 
-          {/* ── COMMENT ÇA MARCHE ── */}
+          {/* SO FUNKTIONIERT'S */}
           <section className="lp-section">
             <div className="lp-section-inner">
-              <h2 className="lp-section-h">Comment ça marche</h2>
+              <h2 className="lp-section-h">So funktioniert&apos;s</h2>
               <div className="lp-steps">
                 <div className="lp-step">
                   <div className="lp-step-top">
                     <span className="lp-step-num">1</span>
                     <span className="lp-step-ico">📋</span>
                   </div>
-                  <div className="lp-step-title">Répondez à 6 questions rapides</div>
-                  <div className="lp-step-body">Numéro de vol, trajet, type d&apos;incident, durée du retard et raison fournie par la compagnie.</div>
+                  <div className="lp-step-title">Beantworten Sie 6 kurze Fragen</div>
+                  <div className="lp-step-body">Flugnummer, Route, Art der Störung, Verspätungsdauer und den Grund der Fluggesellschaft.</div>
                 </div>
                 <div className="lp-step">
                   <div className="lp-step-top">
                     <span className="lp-step-num">2</span>
                     <span className="lp-step-ico">✅</span>
                   </div>
-                  <div className="lp-step-title">Obtenez votre verdict d&apos;admissibilité</div>
-                  <div className="lp-step-body">Nous vérifions vos droits selon le RPPA, EU261, UK261 ou SHY, et vous indiquons si vous êtes admissible — et le montant auquel vous avez droit.</div>
+                  <div className="lp-step-title">Erhalten Sie Ihr Urteil zur Anspruchsberechtigung</div>
+                  <div className="lp-step-body">Wir prüfen Ihre Rechte gemäß EU261, UK261, APPR oder SHY und teilen Ihnen mit, ob Sie berechtigt sind – und wie viel Ihnen zusteht.</div>
                 </div>
                 <div className="lp-step">
                   <div className="lp-step-top">
                     <span className="lp-step-num">3</span>
                     <span className="lp-step-ico">💰</span>
                   </div>
-                  <div className="lp-step-title">On s&apos;occupe de tout</div>
-                  <div className="lp-step-body">Autorisez-nous à soumettre votre réclamation — frais de 25&nbsp;%, aucun résultat aucuns frais. Ou obtenez une trousse d&apos;indemnisation (14,99&nbsp;$) avec votre lettre personnalisée.</div>
+                  <div className="lp-step-title">Wir übernehmen alles</div>
+                  <div className="lp-step-body">Ermächtigen Sie uns, Ihre Forderung einzureichen und den Prozess zu verwalten – 25&nbsp;% Provision, kein Erfolg keine Gebühr. Oder holen Sie sich ein Entschädigungs-Kit (14,99&nbsp;$) mit Ihrem personalisierten Brief und Anleitungen.</div>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* ── DROITS RÉGLEMENTAIRES ── */}
+          {/* VERTRAUENSABSCHNITT */}
           <section className="lp-section lp-trust-section">
             <div className="lp-section-inner">
-              <h2 className="lp-section-h">Fondé sur le RPPA et le Règlement UE 261/2004</h2>
+              <h2 className="lp-section-h">Basierend auf der EU-Verordnung 261/2004</h2>
               <p className="lp-body">
-                Le Règlement sur la protection des passagers aériens (RPPA) et le Règlement UE 261/2004 obligent les compagnies à indemniser les passagers pour les annulations, les longs retards et les refus d&apos;embarquement sur les vols admissibles. Vous n&apos;avez pas besoin d&apos;un avocat — c&apos;est votre droit.
+                EU-Recht verpflichtet Fluggesellschaften zur Entschädigung von Fluggästen mit bis zu €600 bei Annullierungen, langen Verspätungen und Nichtbeförderung auf qualifizierenden Flügen. Sie brauchen keinen Anwalt – es ist Ihr gesetzliches Recht.
               </p>
               <div className="lp-comp-grid">
                 <div className="lp-comp-card">
-                  <span className="lp-comp-amt">400&nbsp;$CA</span>
-                  <span className="lp-comp-lbl">Retard de 3 à 6 heures (grande cie)</span>
+                  <span className="lp-comp-amt">€250</span>
+                  <span className="lp-comp-lbl">Flüge unter 1.500&nbsp;km</span>
                 </div>
                 <div className="lp-comp-card">
-                  <span className="lp-comp-amt">700&nbsp;$CA</span>
-                  <span className="lp-comp-lbl">Retard de 6 à 9 heures (grande cie)</span>
+                  <span className="lp-comp-amt">€400</span>
+                  <span className="lp-comp-lbl">Flüge 1.500–3.500&nbsp;km</span>
                 </div>
                 <div className="lp-comp-card lp-comp-card-hi">
-                  <span className="lp-comp-amt">1&nbsp;000&nbsp;$CA</span>
-                  <span className="lp-comp-lbl">Retard de 9 h et plus (grande cie)</span>
+                  <span className="lp-comp-amt">€600</span>
+                  <span className="lp-comp-lbl">Flüge über 3.500&nbsp;km</span>
                 </div>
               </div>
-              <div className="lp-uk-note">Couvre également les vols de l&apos;UE (EU261 — €250/€400/€600), les vols du R.-U. (UK261 — £220/£350/£520) et les vols en Turquie (SHY — annulations et refus d&apos;embarquement; les retards donnent droit uniquement aux soins).</div>
+              <div className="lp-uk-note">Gilt auch für UK-Flüge (UK261 – £220/£350/£520), kanadische Flüge (APPR – CA$400/CA$700/CA$1.000) und türkische Flüge (SHY – €100 Inland&nbsp;/&nbsp;€250–€600 International für Annullierungen &amp; Nichtbeförderung; Verspätungen erhalten nur Betreuungsrechte).</div>
             </div>
           </section>
 
-          {/* ── CTA FINAL ── */}
+          {/* FINALER CTA */}
           <section className="lp-final-cta">
             <div className="lp-section-inner lp-final-inner">
-              <h2 className="lp-final-h">Vérifiez si votre vol est admissible</h2>
+              <h2 className="lp-final-h">Prüfen Sie, ob Ihr Flug qualifiziert</h2>
               <button className="btn-hook lp-cta" onClick={() => setScreen('q1')}>
-                Vérifier mon vol →
+                Meinen Flug prüfen →
               </button>
-              <div className="lp-final-sub">Gratuit · 60 secondes · Couvre les vols canadiens, de l&apos;UE, du R.-U. et de la Turquie</div>
+              <div className="lp-final-sub">Kostenlos · 60 Sekunden · Gilt für EU-, UK-, kanadische und türkische Flüge</div>
             </div>
           </section>
 
-          {/* ── PIED DE PAGE ── */}
+          {/* FUSSZEILE */}
           <footer className="lp-footer">
             <div className="lp-footer-inner">
-              <div className="lp-footer-brand">FlightComp — Outil d&apos;indemnisation RPPA / EU261 / UK261</div>
+              <div className="lp-footer-brand">FlightComp — EU261/UK261 Fluggastrechte-Tool</div>
               <div className="lp-footer-links">
-                <a href="/about">À propos</a>
-                <a href="/how-it-works">Comment ça marche</a>
-                <a href="/blog">Blogue</a>
-                <a href="/privacy">Politique de confidentialité</a>
-                <a href="/terms">Conditions d&apos;utilisation</a>
-                <a href="mailto:support@getflightcomp.com">Contact</a>
+                <a href="/about">Über uns</a>
+                <a href="/how-it-works">So funktioniert&apos;s</a>
+                <a href="/blog">Blog</a>
+                <a href="/privacy">Datenschutz</a>
+                <a href="/terms">AGB</a>
+                <a href="mailto:support@getflightcomp.com">Kontakt</a>
               </div>
               <div className="lp-footer-copy">© 2026 Noontide Ventures LLC · FlightComp</div>
             </div>
@@ -1286,10 +1269,10 @@ export default function FrenchHome() {
         <div className="screen">
           <div className="q-body" style={{ textAlign: 'center', paddingTop: 40 }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>✈️</div>
-            <h2 className="q-head" style={{ color: 'var(--text)' }}>Vol non couvert</h2>
+            <h2 className="q-head" style={{ color: 'var(--text)' }}>Derzeit nicht abgedeckt</h2>
             <p style={{ color: 'var(--muted)', fontSize: 15, lineHeight: 1.7, marginBottom: 28 }}>
-              D&apos;après votre trajet et votre compagnie aérienne, ce vol n&apos;est pas couvert par le EU261, UK261, le RPPA canadien ou la réglementation SHY turque.
-              Les vols intérieurs américains et les routes en dehors de ces réglementations ne sont pas pris en charge pour l&apos;instant.
+              Basierend auf Ihrer Route und Fluggesellschaft wird dieser Flug nicht von EU261, UK261, dem kanadischen APPR oder dem türkischen SHY abgedeckt.
+              US-Inlandsflüge und Routen außerhalb dieser Regelungen werden derzeit nicht unterstützt.
             </p>
             <button className="btn-cont" onClick={() => {
               setAnswers(INITIAL_ANSWERS);
@@ -1297,7 +1280,7 @@ export default function FrenchHome() {
               setResult(null);
               setScreen('hook');
             }}>
-              Vérifier un autre vol
+              Einen anderen Flug prüfen
             </button>
           </div>
         </div>
