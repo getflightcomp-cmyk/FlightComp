@@ -1068,6 +1068,7 @@ export default function FrenchHome() {
         successUrl: `${base}/success?session_id={CHECKOUT_SESSION_ID}`,
         cancelUrl:  `${base}/fr`,
         claimMeta,
+        language: 'fr',
       }),
     });
 

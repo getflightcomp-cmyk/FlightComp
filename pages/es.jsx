@@ -1072,6 +1072,7 @@ export default function SpanishHome() {
         successUrl: `${base}/success?session_id={CHECKOUT_SESSION_ID}`,
         cancelUrl:  `${base}/es`,
         claimMeta,
+        language: 'es',
       }),
     });
 

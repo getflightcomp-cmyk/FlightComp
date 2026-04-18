@@ -1077,6 +1077,7 @@ export default function TurkishHome() {
         successUrl: `${base}/success?session_id={CHECKOUT_SESSION_ID}`,
         cancelUrl:  `${base}/tr`,
         claimMeta,
+        language: 'tr',
       }),
     });
 

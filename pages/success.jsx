@@ -195,9 +195,605 @@ async function loadUnicodeFont(doc) {
   }
 }
 
+// ── PDF translation strings (5 languages) ────────────
+const PDF_STRINGS = {
+  en: {
+    page_header: 'Flight Compensation Kit',
+    footer_branded: 'Prepared with FlightComp \u2014 getflightcomp.com',
+    page_counter: (n, total) => `Page ${n} of ${total}`,
+    claims_overview_title: 'Claims Overview',
+    claims_overview_sub: 'A summary of your claim details and what to expect.',
+    label_regulation: 'Regulation',
+    label_compensation: 'Target Compensation',
+    label_flight: 'Flight',
+    label_date: 'Date',
+    section_kit_contains: 'THIS KIT CONTAINS',
+    kit_1: 'How to Submit Your Claim \u2014 airline contact details and step-by-step instructions',
+    kit_2: "Formal Compensation Claim Letter \u2014 personalised, ready to send",
+    kit_3: "14-Day Follow-Up Template \u2014 if the airline hasn't responded after 2 weeks",
+    kit_4: '30-Day Escalation Template \u2014 if the airline rejects or ignores your claim',
+    kit_5: 'What to Expect Guide \u2014 common airline responses and how to handle them',
+    quick_start_label: 'QUICK START',
+    qs_email: (email) => `Send the Formal Compensation Claim Letter to ${email}`,
+    qs_portal: (airline) => `Submit via ${airline}'s online claims portal \u2014 see How to Submit Your Claim (page 2) for instructions.`,
+    how_to_submit_title: 'How to Submit Your Claim',
+    airline_line: (airline, reg) => `Airline: ${airline}  \u00B7  Regulation: ${reg}`,
+    section_contact: 'AIRLINE CONTACT DETAILS',
+    send_to: (email) => `Send your claim to: ${email}`,
+    web_form_para: (airline) => `${airline} accepts claims through their online portal. Search "${airline} flight compensation claim" to find their submission page. When filling out the form, use the details and legal citations from the Formal Compensation Claim Letter included in this kit.`,
+    unknown_airline_para: (airline, regSearch) => `We don't have specific contact details for ${airline} on file. Search "${airline} ${regSearch}" or "${airline} customer relations" to find the correct contact.`,
+    section_steps: 'STEP-BY-STEP INSTRUCTIONS',
+    substep_email_1: (email) => `Send the Formal Compensation Claim Letter (page 3) via email to: ${email}`,
+    substep_email_2: 'Use the subject line from the letter as your email subject and copy the full letter text into the body of the email.',
+    substep_email_3: 'Keep a copy of the sent email and note today\'s date as your submission date.',
+    substep_email_4: (days, reg, date) => `The airline has ${days} days to respond under ${reg}. If you do not receive a response by ${date}, send the 14-Day Follow-Up Template included in this kit.`,
+    substep_email_5: (escDate, esc, reg) => `If the airline rejects your claim or you receive no satisfactory response by ${escDate}, send the 30-Day Escalation Template and file a complaint with ${esc}.`,
+    substep_portal_1: (airline) => `Go to ${airline}'s website and find their claims or customer relations portal. Search "${airline} flight compensation claim" to find the correct page.`,
+    substep_portal_2: 'Fill out the airline\'s online form using the details from your Formal Compensation Claim Letter (page 3). In any free-text or description fields, copy the key paragraphs from your claim letter \u2014 especially the legal basis, flight details, and compensation amount.',
+    substep_portal_3: 'Save or screenshot your submission confirmation and any reference number the airline provides.',
+    substep_portal_4: (days, reg, fuDate, airline) => `The airline has ${days} days to respond under ${reg}. If you do not receive a response by ${fuDate}, submit the Follow-Up Template content (page 5) through the same portal or via email to ${airline}'s general customer service.`,
+    substep_portal_5: (escDate, esc) => `If the airline rejects your claim or you receive no satisfactory response by ${escDate}, use the 30-Day Escalation Template and file a complaint with ${esc}.`,
+    section_escalation_authority: 'ESCALATION AUTHORITY',
+    escalation_intro: 'If the airline does not resolve your claim within 30 days, you can file a free complaint with:',
+    formal_letter_title: 'Formal Compensation Claim Letter',
+    callout_email: 'Send this letter to your airline\'s claims department via email. Keep a copy for your records.',
+    callout_portal: (airline) => `Use the content of this letter when submitting your claim through ${airline}'s online portal. Copy the legal citations and compensation details into the form's text fields.`,
+    customer_relations: 'Customer Relations / Claims Department',
+    to_whom: 'To whom it may concern,',
+    opening_sentence: (reg, disruption) => `I am writing to claim statutory compensation under ${reg} for the ${disruption} of the above-referenced flight.`,
+    section_legal: 'LEGAL BASIS & CLAIM',
+    closing_payment_pre: (days) => `I request that you process this compensation claim and provide payment within ${days} days of this letter `,
+    closing_trust: 'I trust you will handle this claim promptly and in accordance with your statutory obligations.',
+    sign_off: 'Sincerely,',
+    dear_sir: 'Dear Sir or Madam,',
+    follow_up_title: '14-Day Follow-Up Template',
+    follow_up_callout_email: (email, date) => `Send this follow-up via email to ${email} if you have not received a response by ${date} (14 days after your original submission).`,
+    follow_up_callout_portal: (airline, date) => `Submit this follow-up through ${airline}'s online portal, or contact their customer service team directly referencing your original claim submission and reference number, if you have not received a response by ${date}.`,
+    section_follow_up: 'FOLLOW-UP LETTER',
+    fu_customer_relations: 'Customer Relations Department',
+    fu_re: (flightNum, flightDate) => `Re: Follow-Up \u2014 Compensation Claim for Flight ${flightNum} on ${flightDate}`,
+    fu_dear: 'Dear Sir or Madam,',
+    fu_para1: (today, flightNum, flightDate, from, to) => `I am writing to follow up on a formal compensation claim I submitted on ${today} regarding flight ${flightNum} on ${flightDate} from ${from} to ${to}.`,
+    fu_para2: (reg) => `I have not yet received a response or acknowledgement of my claim. Under ${reg}, airlines are required to respond to passenger compensation claims within a reasonable timeframe. I submitted my original claim 14 days ago and have still not received a substantive reply.`,
+    fu_para3: 'I kindly request that you acknowledge receipt of my original claim and provide a written update on its status within 7 days of this letter.',
+    fu_para4: (esc) => `If I do not receive a response, I will escalate this matter to the ${esc}.`,
+    fu_sincerely: 'Sincerely,',
+    fu_name_placeholder: '[Your full name]',
+    fu_email_placeholder: '[Your email]',
+    follow_up_note: 'Note: Update the submission date if you are sending this at a different time.',
+    escalation_title: '30-Day Escalation Template',
+    esc_callout_email: (email, date) => `Send this escalation letter via email to ${email} if you have not received a satisfactory response by ${date} (30 days after your original submission).`,
+    esc_callout_portal: (airline, date) => `Submit this escalation through ${airline}'s online portal, or contact their customer service team directly referencing your claim, if you have not received a satisfactory response by ${date}.`,
+    section_escalation_letter: 'ESCALATION LETTER',
+    esc_customer_relations: 'Customer Relations Department',
+    esc_re: (flightNum, flightDate) => `Re: Escalation Notice \u2014 Unanswered Compensation Claim for Flight ${flightNum} on ${flightDate}`,
+    esc_dear: 'Dear Sir or Madam,',
+    esc_para1: (flightNum, flightDate, from, to) => `I am writing to formally escalate my compensation claim regarding flight ${flightNum} on ${flightDate} from ${from} to ${to}.`,
+    esc_para2: (today, reg) => `I submitted a formal claim on ${today} under ${reg}. As of the date of this letter, I have not received a substantive response or resolution.`,
+    esc_para3_amount: (reg, amount) => `Under ${reg}, I am legally entitled to compensation of ${amount} per passenger. This amount remains outstanding.`,
+    esc_para3_no_amount: (reg) => `Under ${reg}, I am legally entitled to compensation for the disruption experienced. This remains outstanding.`,
+    esc_para4: (esc) => `I require a full written response within 14 days of this letter. If I do not receive a satisfactory resolution, I will immediately file a formal complaint with the ${esc} and reserve all rights to pursue further legal remedies, including proceedings in the relevant small claims court.`,
+    esc_sincerely: 'Sincerely,',
+    esc_name_placeholder: '[Your full name]',
+    esc_email_placeholder: '[Your email]',
+    escalation_note: 'Note: Update the original claim submission date before sending.',
+    what_to_expect_title: 'What to Expect After Submitting Your Claim',
+    section_timeline: 'TYPICAL TIMELINE',
+    timeline_1: '1\u20133 days: Acknowledge receipt (most airlines, if you email).',
+    timeline_2: '14\u201330 days: Initial response \u2014 may be an offer, a rejection, or a request for more information.',
+    timeline_3: '30\u201360 days: Full resolution for straightforward claims.',
+    timeline_4: '60\u201390 days: More complex cases, or airlines that are slow to respond.',
+    timeline_5: '90+ days: Escalate to the relevant authority \u2014 do not wait longer than this.',
+    section_responses: 'COMMON AIRLINE RESPONSES',
+    resp_1_head: '"Extraordinary circumstances" or "force majeure"',
+    resp_1_detail: 'Airlines frequently use this defense. If the actual cause was mechanical, crew-related, or operational, this defense does not apply. Respond in writing citing the specific cause and stating it does not meet the legal definition of extraordinary circumstances.',
+    resp_2_head: '"We need more information"',
+    resp_2_detail: 'Respond promptly with any documents requested \u2014 booking confirmation, boarding passes, correspondence. Keep copies of everything you send.',
+    resp_3_head: '"Your claim is rejected"',
+    resp_3_detail: 'Do not accept a rejection without a written explanation citing specific legal grounds. Use the 30-day escalation template (page 5) and file with the relevant authority.',
+    resp_4_head: 'No response after 14 days',
+    resp_4_detail: 'Send the 14-day follow-up template (page 4). If still no response after 30 days total, send the escalation template and file with the authority below.',
+    resp_5_head: '"We offer you a voucher instead"',
+    resp_5_detail: 'You are not obliged to accept a voucher. Under EU261/UK261/APPR, you are entitled to cash compensation. Reply in writing that you do not accept the voucher and require cash payment.',
+    section_your_path: 'YOUR ESCALATION PATH',
+    path_1: (airline) => `Send your Formal Compensation Claim Letter to ${airline} using the contact details in the How to Submit section.`,
+    path_2: 'If no response in 14 days, send the 14-Day Follow-Up Template included in this kit.',
+    path_3: (esc) => `If no resolution in 30 days, send the 30-Day Escalation Template and file with ${esc}.`,
+    path_4: "If the authority doesn't resolve it within 8 weeks, consider Alternative Dispute Resolution (ADR) or small claims court.",
+    final_callout: 'Small claims court is a viable option in most jurisdictions for claims of this size and does not require a solicitor. Filing fees are typically \u00A330\u2013\u00A3100 (UK), \u20AC25\u2013\u20AC75 (EU), or CA$75\u2013$200 (Canada).',
+    row_flight_number: 'Flight number',
+    row_date_of_travel: 'Date of travel',
+    row_route: 'Route',
+    row_distance: 'Distance',
+    row_scheduled: 'Scheduled arrival',
+    row_actual: 'Actual arrival',
+    row_delay: 'Delay duration',
+    disruption_delay: 'delay',
+    disruption_cancel: 'cancellation',
+    disruption_denied: 'denied boarding',
+    disruption_other: 'disruption',
+    route_to: (from, to) => `${from} to ${to}`,
+  },
+  tr: {
+    page_header: 'Ucus Tazminat Kiti',
+    footer_branded: 'FlightComp ile hazirlanmistir \u2014 getflightcomp.com',
+    page_counter: (n, total) => `Sayfa ${n} / ${total}`,
+    claims_overview_title: 'Talep Ozeti',
+    claims_overview_sub: 'Talep bilgilerinizin ozeti ve beklentileriniz.',
+    label_regulation: 'Duzenleme',
+    label_compensation: 'Hedef Tazminat',
+    label_flight: 'Ucus',
+    label_date: 'Tarih',
+    section_kit_contains: 'BU KIT ICERIR',
+    kit_1: 'Talebinizi Nasil Sunarsınız \u2014 havayolu iletisim bilgileri ve adim adim talimatlar',
+    kit_2: 'Resmi Tazminat Talep Mektubu \u2014 kisisellestirilmis, gondermeye hazir',
+    kit_3: '14 Gunluk Takip Sablonu \u2014 2 hafta sonra havayolu yanit vermezse',
+    kit_4: '30 Gunluk Eskalasyon Sablonu \u2014 havayolu talebinizi reddederse veya yanit vermezse',
+    kit_5: 'Beklentiler Rehberi \u2014 yaygin havayolu yanitleri ve nasil ele alinacagi',
+    quick_start_label: 'HIZLI BASLANGIC',
+    qs_email: (email) => `Resmi Tazminat Talep Mektubunu ${email} adresine gonderin`,
+    qs_portal: (airline) => `${airline} sirketinin cevrimici talep portali uzerinden gonderin \u2014 talimatlar icin Talebinizi Nasil Sunarsınız bolumune (sayfa 2) bakin.`,
+    how_to_submit_title: 'Talebinizi Nasil Sunarsınız',
+    airline_line: (airline, reg) => `Havayolu: ${airline}  \u00B7  Duzenleme: ${reg}`,
+    section_contact: 'HAVAYOLU ILETISIM BILGILERI',
+    send_to: (email) => `Talebinizi su adrese gonderin: ${email}`,
+    web_form_para: (airline) => `${airline}, talepleri cevrimici portallari uzerinden kabul etmektedir. Basvuru sayfasini bulmak icin "${airline} ucus tazminati talebi" seklinde arama yapin. Formu doldururken bu kitte yer alan Resmi Tazminat Talep Mektubundaki bilgileri kullanin.`,
+    unknown_airline_para: (airline, regSearch) => `${airline} icin belirli iletisim bilgilerimiz bulunmamaktadir. Dogru iletisimi bulmak icin "${airline} ${regSearch}" veya "${airline} musteri iliskileri" seklinde arama yapin.`,
+    section_steps: 'ADIM ADIM TALIMATLAR',
+    substep_email_1: (email) => `Resmi Tazminat Talep Mektubunu (sayfa 3) e-posta ile su adrese gonderin: ${email}`,
+    substep_email_2: 'Mektuptaki konu satirini e-postanizin konusu olarak kullanin ve mektubun tam metnini e-postanizin govdesine kopyalayin.',
+    substep_email_3: 'Gonderdigeniz e-postanin bir kopyasini saklayin ve bugunun tarihini basvuru tarihiniz olarak not edin.',
+    substep_email_4: (days, reg, date) => `Havayolunun ${reg} kapsaminda ${days} gun icinde yanit vermesi gerekmektedir. ${date} tarihine kadar yanit alamazsaniz, bu kitte yer alan 14 Gunluk Takip Sablonunu gonderin.`,
+    substep_email_5: (escDate, esc) => `Havayolunuz talebinizi reddederse veya ${escDate} tarihine kadar tatmin edici bir yanit alamazsaniz, 30 Gunluk Eskalasyon Sablonunu gonderin ve ${esc} kurumuna sikayet bildirin.`,
+    substep_portal_1: (airline) => `${airline} sirketinin web sitesine gidin ve talep veya musteri iliskileri portalini bulun. Dogru sayfayi bulmak icin "${airline} ucus tazminati talebi" seklinde arama yapin.`,
+    substep_portal_2: "Havayolunun cevrimici formunu Resmi Tazminat Talep Mektubunuzdaki (sayfa 3) bilgileri kullanarak doldurun. Serbest metin alanlarina mektubunuzdaki hukuki dayanak, ucus bilgileri ve tazminat tutarini iceren ana paragraflari kopyalayin.",
+    substep_portal_3: 'Basvuru onayinizi ve havayolunun verdigi referans numarasini kaydedin veya ekran goruntusunu alin.',
+    substep_portal_4: (days, reg, fuDate, airline) => `Havayolunun ${reg} kapsaminda ${days} gun icinde yanit vermesi gerekmektedir. ${fuDate} tarihine kadar yanit alamazsaniz, Takip Sablonu icerigini (sayfa 5) ayni portal uzerinden veya ${airline} musteri hizmetlerine e-posta ile gonderin.`,
+    substep_portal_5: (escDate, esc) => `Havayolunuz talebinizi reddederse veya ${escDate} tarihine kadar tatmin edici bir yanit alamazsaniz, 30 Gunluk Eskalasyon Sablonunu kullanin ve ${esc} kurumuna sikayet bildirin.`,
+    section_escalation_authority: 'YETKILI MERCI',
+    escalation_intro: 'Havayolu 30 gun icinde talebinizi cozmazse, asagidaki kuruma ucretsiz sikayet bildirebilirsiniz:',
+    formal_letter_title: 'Resmi Tazminat Talep Mektubu',
+    callout_email: 'Bu mektubu e-posta ile havayolunuzun talep departmanina gonderin. Kaydınız icin bir kopyasini saklayin.',
+    callout_portal: (airline) => `${airline} sirketinin cevrimici portali uzerinden talebinizi sunarken bu mektubun icerigini kullanin. Hukuki atiflari ve tazminat bilgilerini formdaki metin alanlarina kopyalayin.`,
+    customer_relations: 'Musteri Iliskileri / Talep Departmani',
+    to_whom: 'Ilgili Makama,',
+    opening_sentence: (reg, disruption) => `${reg} kapsaminda yukarida belirtilen ucusun ${disruption}u nedeniyle yasal tazminat talep etmek uzere yaziyorum.`,
+    section_legal: 'HUKUKI DAYANAK VE TALEP',
+    closing_payment_pre: (days) => `Bu tazminat talebini islemek ve mektubun tarihinden itibaren ${days} gun icinde odeme yapmanixi talep ediyorum `,
+    closing_trust: 'Bu talebi derhal ve yasal yukumlulukleriniz cercevesinde ele alacaginiza inaniyorum.',
+    sign_off: 'Saygilarimla,',
+    dear_sir: 'Saygin Yetkili,',
+    follow_up_title: '14 Gunluk Takip Sablonu',
+    follow_up_callout_email: (email, date) => `Orijinal basvurunuzdan 14 gun sonraki son tarih olan ${date} tarihine kadar yanit alamazsaniz bu takip mesajini ${email} adresine gonderin.`,
+    follow_up_callout_portal: (airline, date) => `${date} tarihine kadar yanit alamazsaniz bu takip mesajini ${airline} sirketinin cevrimici portali uzerinden veya musteri hizmetleri ekibiyle dogrudan iletiserek gonderin.`,
+    section_follow_up: 'TAKIP MEKTUBU',
+    fu_customer_relations: 'Musteri Iliskileri Departmani',
+    fu_re: (flightNum, flightDate) => `Konu: Takip \u2014 ${flightNum} Nolu Ucus / ${flightDate} Tarihli Tazminat Talebi`,
+    fu_dear: 'Saygin Yetkili,',
+    fu_para1: (today, flightNum, flightDate, from, to) => `${from}-${to} guzergahinda, ${flightDate} tarihinde gerceklesen ${flightNum} nolu ucusa iliskin ${today} tarihinde yaptigim resmi tazminat talebini takip etmek amaciyla yaziyorum.`,
+    fu_para2: (reg) => `Talebime henuz hicbir yanit veya teyit alinamadim. ${reg} kapsaminda havayollarinin makul sure icerisinde yanit vermesi gerekmektedir. Asil talep mektubumu 14 gun once gonderdigim halde hala somut bir yanit alamadim.`,
+    fu_para3: 'Asil talep mektubumun alindiginin teyit edilmesini ve 7 gun icinde durumu bildiren yazili bir guncelleme yapilmasini talep ediyorum.',
+    fu_para4: (esc) => `Yanit alamamam halinde konuyu ${esc} kurumuna iletecegim.`,
+    fu_sincerely: 'Saygilarimla,',
+    fu_name_placeholder: '[Adiniz Soyadiniz]',
+    fu_email_placeholder: '[E-posta adresiniz]',
+    follow_up_note: 'Not: Bu mektubu farkli bir zamanda gonderiyorsaniz basvuru tarihini guncelleyin.',
+    escalation_title: '30 Gunluk Eskalasyon Sablonu',
+    esc_callout_email: (email, date) => `Orijinal basvurunuzdan 30 gun sonraki son tarih olan ${date} tarihine kadar tatmin edici bir yanit alamazsaniz bu eskalasyon mektubunu ${email} adresine gonderin.`,
+    esc_callout_portal: (airline, date) => `${date} tarihine kadar tatmin edici bir yanit alamazsaniz bu eskalasyonu ${airline} sirketinin cevrimici portali uzerinden gonderin.`,
+    section_escalation_letter: 'ESKALASYON MEKTUBU',
+    esc_customer_relations: 'Musteri Iliskileri Departmani',
+    esc_re: (flightNum, flightDate) => `Konu: Eskalasyon Bildirimi \u2014 ${flightNum} Nolu Ucus / ${flightDate} Tarihli Yanitlanmamis Tazminat Talebi`,
+    esc_dear: 'Saygin Yetkili,',
+    esc_para1: (flightNum, flightDate, from, to) => `${from}-${to} guzergahinda, ${flightDate} tarihinde gerceklesen ${flightNum} nolu ucusa iliskin tazminat talebimi resmi olarak iletmek uzere yaziyorum.`,
+    esc_para2: (today, reg) => `${reg} kapsaminda ${today} tarihinde resmi bir talep sundum. Mektubun tarih itibarıyla, somut bir yanit veya cozum elde edemedim.`,
+    esc_para3_amount: (reg, amount) => `${reg} kapsaminda yolcu basina ${amount} tazminat almaya yasal olarak hakkım bulunmaktadir. Bu tutar hala odenmemistir.`,
+    esc_para3_no_amount: (reg) => `${reg} kapsaminda yasanan aksaklik nedeniyle tazminat almaya yasal olarak hakkım bulunmaktadir. Bu talep hala karsilanmamistir.`,
+    esc_para4: (esc) => `Bu mektubun tarihinden itibaren 14 gun icinde tam yazili yanit verilmesini talep ediyorum. Tatmin edici bir cozum saglanmamasi halinde, derhal ${esc} kurumuna resmi sikayet bildirip kucuk talep mahkemesindeki yargı yollari dahil tum yasal haklarimi saklı tutacagim.`,
+    esc_sincerely: 'Saygilarimla,',
+    esc_name_placeholder: '[Adiniz Soyadiniz]',
+    esc_email_placeholder: '[E-posta adresiniz]',
+    escalation_note: 'Not: Gondermeden once asil talep basvuru tarihini guncelleyin.',
+    what_to_expect_title: 'Talebinizi Gonderdikten Sonra Ne Beklenir',
+    section_timeline: 'TIPIK ZAMAN CIZELGESI',
+    timeline_1: '1\u20133 gun: Alindi onayı (cogu havayolu, e-posta ile basvurularda).',
+    timeline_2: '14\u201330 gun: Ilk yanit \u2014 teklif, red veya ek bilgi talebi olabilir.',
+    timeline_3: '30\u201360 gun: Basit taleplerde tam cozum.',
+    timeline_4: '60\u201390 gun: Daha karmasik davalar veya yavas yanit veren havayollari.',
+    timeline_5: '90+ gun: Ilgili kuruma yonlendirin \u2014 daha uzun beklemeyiniz.',
+    section_responses: 'YAYGIN HAVAYOLU YANITLERI',
+    resp_1_head: '"Olaganustu kosullar" veya "mucbir sebep"',
+    resp_1_detail: 'Havayollari bu savunmayı sik kullanir. Gercek neden mekanik, personel veya operasyonel bir sorunsa bu savunma gecerli degildir. Gercek nedeni belirterek bunun yasal "olaganustu kosul" tanimi kapsamina girmadigini yazili olarak bildirin.',
+    resp_2_head: '"Daha fazla bilgiye ihtiyacimiz var"',
+    resp_2_detail: 'Talep edilen belgeleri \u2014 rezervasyon teyidi, binis kartlari, yazismalar \u2014 derhal gonderin. Gonderdiklerinizin kopyalarini sakladiginizdan emin olun.',
+    resp_3_head: '"Talebiniz reddedildi"',
+    resp_3_detail: 'Belirli hukuki gerekceleri iceren yazili bir aciklama olmaksizin reddi kabul etmeyin. 30 gunluk eskalasyon sablonunu (sayfa 5) kullanin ve ilgili kuruma basvurun.',
+    resp_4_head: '14 gun sonra yanit yok',
+    resp_4_detail: '14 gunluk takip sablonunu (sayfa 4) gonderin. 30 gun sonra hala yanit yoksa eskalasyon sablonunu gonderin ve asagidaki kuruma basvurun.',
+    resp_5_head: '"Size kupon teklif ediyoruz"',
+    resp_5_detail: 'Kupon kabul etmek zorunda degilsiniz. AB261/UK261/APPR kapsaminda nakit tazminat almaya hakkınız vardir. Kuponu kabul etmediginizi ve nakit odeme talep ettiginizi yazili olarak bildirin.',
+    section_your_path: 'ESKALASYON YOLUNUZ',
+    path_1: (airline) => `Talebinizi Nasil Sunarsınız bolumundeki iletisim bilgilerini kullanarak Resmi Tazminat Talep Mektubunuzu ${airline} sirketine gonderin.`,
+    path_2: '14 gun icinde yanit gelmezse bu kitteki 14 Gunluk Takip Sablonunu gonderin.',
+    path_3: (esc) => `30 gun icinde cozum saglanmazsa 30 Gunluk Eskalasyon Sablonunu gonderin ve ${esc} kurumuna basvurun.`,
+    path_4: 'Kurum 8 hafta icinde sorunu cozmazse Alternatif Anlasmazlik Cozumu (ADR) veya kucuk talep mahkemesini dusunun.',
+    final_callout: 'Kucuk talep mahkemesi, bu boyuttaki talepler icin pek cok yargı bolgesinde gecerli bir secenektir ve avukat gerektirmez. Basvuru ucretleri genellikle 30\u2013100 GBP (Birlesik Krallık), 25\u201375 EUR (AB) veya 75\u2013200 CA$ (Kanada) arasındadir.',
+    row_flight_number: 'Ucus numarasi',
+    row_date_of_travel: 'Seyahat tarihi',
+    row_route: 'Guzergah',
+    row_distance: 'Mesafe',
+    row_scheduled: 'Planlanan varis',
+    row_actual: 'Gercek varis',
+    row_delay: 'Gecikme suresi',
+    disruption_delay: 'gecikmesi',
+    disruption_cancel: 'iptali',
+    disruption_denied: 'yolcu kabul reddine',
+    disruption_other: 'aksama',
+    route_to: (from, to) => `${from} - ${to}`,
+  },
+  fr: {
+    page_header: "Kit d'indemnisation de vol",
+    footer_branded: 'Prepare avec FlightComp \u2014 getflightcomp.com',
+    page_counter: (n, total) => `Page ${n} sur ${total}`,
+    claims_overview_title: 'Apercu de la demande',
+    claims_overview_sub: 'Un resume de vos informations de demande et de ce a quoi vous attendre.',
+    label_regulation: 'Reglementation',
+    label_compensation: 'Indemnisation cible',
+    label_flight: 'Vol',
+    label_date: 'Date',
+    section_kit_contains: 'CE KIT CONTIENT',
+    kit_1: 'Comment soumettre votre demande \u2014 coordonnees de la compagnie aerienne et instructions etape par etape',
+    kit_2: "Lettre de demande d'indemnisation officielle \u2014 personnalisee, prete a etre envoyee",
+    kit_3: "Modele de suivi a 14 jours \u2014 si la compagnie aerienne n'a pas repondu apres 2 semaines",
+    kit_4: "Modele d'escalade a 30 jours \u2014 si la compagnie aerienne rejette ou ignore votre demande",
+    kit_5: 'Guide Quoi attendre \u2014 reponses courantes des compagnies aeriennes et comment les gerer',
+    quick_start_label: 'DEMARRAGE RAPIDE',
+    qs_email: (email) => `Envoyez la Lettre de demande d'indemnisation officielle a ${email}`,
+    qs_portal: (airline) => `Soumettez via le portail de reclamations en ligne de ${airline} \u2014 voir Comment soumettre votre demande (page 2) pour les instructions.`,
+    how_to_submit_title: 'Comment soumettre votre demande',
+    airline_line: (airline, reg) => `Compagnie aerienne\u00A0: ${airline}  \u00B7  Reglementation\u00A0: ${reg}`,
+    section_contact: 'COORDONNEES DE LA COMPAGNIE AERIENNE',
+    send_to: (email) => `Envoyez votre demande a\u00A0: ${email}`,
+    web_form_para: (airline) => `${airline} accepte les demandes via son portail en ligne. Recherchez "${airline} demande d'indemnisation de vol" pour trouver la page de soumission. Lors du remplissage du formulaire, utilisez les details et citations juridiques de la Lettre de demande d'indemnisation incluse dans ce kit.`,
+    unknown_airline_para: (airline, regSearch) => `Nous ne disposons pas des coordonnees specifiques de ${airline}. Recherchez "${airline} ${regSearch}" ou "${airline} service client" pour trouver le bon contact.`,
+    section_steps: 'INSTRUCTIONS ETAPE PAR ETAPE',
+    substep_email_1: (email) => `Envoyez la Lettre de demande d'indemnisation officielle (page 3) par e-mail a\u00A0: ${email}`,
+    substep_email_2: "Utilisez la ligne d'objet de la lettre comme sujet de votre e-mail et copiez le texte integral de la lettre dans le corps de l'e-mail.",
+    substep_email_3: "Conservez une copie de l'e-mail envoye et notez la date d'aujourd'hui comme date de soumission.",
+    substep_email_4: (days, reg, date) => `La compagnie aerienne dispose de ${days} jours pour repondre en vertu du ${reg}. Si vous ne recevez pas de reponse avant le ${date}, envoyez le Modele de suivi a 14 jours inclus dans ce kit.`,
+    substep_email_5: (escDate, esc) => `Si la compagnie aerienne rejette votre demande ou si vous ne recevez pas de reponse satisfaisante avant le ${escDate}, envoyez le Modele d'escalade a 30 jours et deposez une plainte aupres de ${esc}.`,
+    substep_portal_1: (airline) => `Rendez-vous sur le site de ${airline} et trouvez leur portail de reclamations ou de service client. Recherchez "${airline} demande d'indemnisation de vol" pour trouver la bonne page.`,
+    substep_portal_2: "Remplissez le formulaire en ligne de la compagnie en utilisant les details de votre Lettre de demande d'indemnisation officielle (page 3). Dans les champs de texte libre, copiez les paragraphes cles de votre lettre \u2014 notamment la base juridique, les details du vol et le montant de l'indemnisation.",
+    substep_portal_3: 'Sauvegardez ou capturez votre confirmation de soumission et tout numero de reference fourni.',
+    substep_portal_4: (days, reg, fuDate, airline) => `La compagnie dispose de ${days} jours pour repondre en vertu du ${reg}. Sans reponse avant le ${fuDate}, soumettez le contenu du Modele de suivi (page 5) via le meme portail ou par e-mail au service client de ${airline}.`,
+    substep_portal_5: (escDate, esc) => `Si la compagnie rejette votre demande ou sans reponse satisfaisante avant le ${escDate}, utilisez le Modele d'escalade a 30 jours et deposez une plainte aupres de ${esc}.`,
+    section_escalation_authority: "AUTORITE DE RECOURS",
+    escalation_intro: "Si la compagnie aerienne ne resout pas votre demande dans les 30 jours, vous pouvez deposer gratuitement une plainte aupres de\u00A0:",
+    formal_letter_title: "Lettre de demande d'indemnisation officielle",
+    callout_email: "Envoyez cette lettre au service des reclamations de votre compagnie aerienne par e-mail. Conservez-en une copie pour vos dossiers.",
+    callout_portal: (airline) => `Utilisez le contenu de cette lettre lors de la soumission de votre demande via le portail en ligne de ${airline}. Copiez les citations juridiques et les details d'indemnisation dans les champs de texte du formulaire.`,
+    customer_relations: 'Service client / Departement des reclamations',
+    to_whom: 'A qui de droit,',
+    opening_sentence: (reg, disruption) => `Je me permets de vous contacter afin de reclamer une indemnisation legale en vertu du ${reg} pour le ${disruption} du vol mentionne ci-dessus.`,
+    section_legal: 'BASE JURIDIQUE ET DEMANDE',
+    closing_payment_pre: (days) => `Je vous prie de bien vouloir traiter cette demande d'indemnisation et d'effectuer le paiement dans les ${days} jours suivant cette lettre `,
+    closing_trust: 'Je vous fais confiance pour traiter cette demande rapidement et conformement a vos obligations legales.',
+    sign_off: 'Cordialement,',
+    dear_sir: 'Madame, Monsieur,',
+    follow_up_title: 'Modele de suivi a 14 jours',
+    follow_up_callout_email: (email, date) => `Envoyez ce suivi par e-mail a ${email} si vous n'avez pas recu de reponse avant le ${date} (14 jours apres votre soumission initiale).`,
+    follow_up_callout_portal: (airline, date) => `Soumettez ce suivi via le portail en ligne de ${airline}, ou contactez directement leur service client en faisant reference a votre soumission initiale, si vous n'avez pas recu de reponse avant le ${date}.`,
+    section_follow_up: 'LETTRE DE SUIVI',
+    fu_customer_relations: 'Service client',
+    fu_re: (flightNum, flightDate) => `Objet\u00A0: Suivi \u2014 Demande d'indemnisation pour le vol ${flightNum} du ${flightDate}`,
+    fu_dear: 'Madame, Monsieur,',
+    fu_para1: (today, flightNum, flightDate, from, to) => `Je me permets de faire suite a une demande d'indemnisation formelle que j'ai soumise le ${today} concernant le vol ${flightNum} du ${flightDate} de ${from} a ${to}.`,
+    fu_para2: (reg) => `Je n'ai pas encore recu de reponse ni d'accuse de reception concernant ma demande. En vertu du ${reg}, les compagnies aeriennes sont tenues de repondre aux demandes d'indemnisation des passagers dans un delai raisonnable. J'ai soumis ma demande initiale il y a 14 jours et n'ai toujours pas recu de reponse concrete.`,
+    fu_para3: "Je vous prie de bien vouloir accuser reception de ma demande initiale et de me communiquer une mise a jour ecrite sur son statut dans les 7 jours suivant cette lettre.",
+    fu_para4: (esc) => `Sans reponse de votre part, je transmettrai cette affaire a ${esc}.`,
+    fu_sincerely: 'Cordialement,',
+    fu_name_placeholder: '[Votre nom complet]',
+    fu_email_placeholder: '[Votre adresse e-mail]',
+    follow_up_note: "Note\u00A0: Mettez a jour la date de soumission si vous envoyez cette lettre a un autre moment.",
+    escalation_title: "Modele d'escalade a 30 jours",
+    esc_callout_email: (email, date) => `Envoyez cette lettre d'escalade par e-mail a ${email} si vous n'avez pas recu de reponse satisfaisante avant le ${date} (30 jours apres votre soumission initiale).`,
+    esc_callout_portal: (airline, date) => `Soumettez cette escalade via le portail en ligne de ${airline}, ou contactez directement leur service client en faisant reference a votre demande, si vous n'avez pas recu de reponse satisfaisante avant le ${date}.`,
+    section_escalation_letter: "LETTRE D'ESCALADE",
+    esc_customer_relations: 'Service client',
+    esc_re: (flightNum, flightDate) => `Objet\u00A0: Avis d'escalade \u2014 Demande d'indemnisation non traitee pour le vol ${flightNum} du ${flightDate}`,
+    esc_dear: 'Madame, Monsieur,',
+    esc_para1: (flightNum, flightDate, from, to) => `Je me permets de faire formellement remonter ma demande d'indemnisation concernant le vol ${flightNum} du ${flightDate} de ${from} a ${to}.`,
+    esc_para2: (today, reg) => `J'ai soumis une demande formelle le ${today} en vertu du ${reg}. A la date de cette lettre, je n'ai toujours pas recu de reponse concrete ni de resolution.`,
+    esc_para3_amount: (reg, amount) => `En vertu du ${reg}, j'ai droit a une indemnisation de ${amount} par passager. Ce montant reste impaye.`,
+    esc_para3_no_amount: (reg) => `En vertu du ${reg}, j'ai droit a une indemnisation pour la perturbation subie. Cette demande reste en attente.`,
+    esc_para4: (esc) => `J'exige une reponse ecrite complete dans les 14 jours suivant cette lettre. Sans resolution satisfaisante, je deposerai immediatement une plainte formelle aupres de ${esc} et me reserve tous les droits de recours juridiques, y compris une procedure devant la juridiction competente.`,
+    esc_sincerely: 'Cordialement,',
+    esc_name_placeholder: '[Votre nom complet]',
+    esc_email_placeholder: '[Votre adresse e-mail]',
+    escalation_note: "Note\u00A0: Mettez a jour la date de soumission initiale avant d'envoyer.",
+    what_to_expect_title: 'A quoi s\'attendre apres avoir soumis votre demande',
+    section_timeline: 'CALENDRIER TYPIQUE',
+    timeline_1: '1\u20133 jours\u00A0: Accuse de reception (la plupart des compagnies, par e-mail).',
+    timeline_2: '14\u201330 jours\u00A0: Reponse initiale \u2014 peut etre une offre, un refus ou une demande d\'informations complementaires.',
+    timeline_3: '30\u201360 jours\u00A0: Resolution complete pour les demandes simples.',
+    timeline_4: '60\u201390 jours\u00A0: Cas plus complexes ou compagnies lentes a repondre.',
+    timeline_5: '90+ jours\u00A0: Transmettez a l\'autorite competente \u2014 n\'attendez pas plus longtemps.',
+    section_responses: 'REPONSES COURANTES DES COMPAGNIES AERIENNES',
+    resp_1_head: '"Circonstances extraordinaires" ou "force majeure"',
+    resp_1_detail: 'Les compagnies aeriennes invoquent frequemment cet argument. Si la cause reelle etait mecanique, liee au personnel ou operationnelle, cet argument ne tient pas. Repondez par ecrit en citant la cause specifique et en indiquant qu\'elle ne correspond pas a la definition juridique des circonstances extraordinaires.',
+    resp_2_head: '"Nous avons besoin de plus d\'informations"',
+    resp_2_detail: 'Repondez rapidement avec les documents demandes \u2014 confirmation de reservation, cartes d\'embarquement, correspondances. Conservez des copies de tout ce que vous envoyez.',
+    resp_3_head: '"Votre demande est rejetee"',
+    resp_3_detail: "N'acceptez pas un refus sans explication ecrite citant des motifs juridiques specifiques. Utilisez le modele d'escalade a 30 jours (page 5) et deposez une plainte aupres de l'autorite competente.",
+    resp_4_head: 'Aucune reponse apres 14 jours',
+    resp_4_detail: "Envoyez le modele de suivi a 14 jours (page 4). Toujours sans reponse apres 30 jours au total, envoyez le modele d'escalade et deposez une plainte aupres de l'autorite ci-dessous.",
+    resp_5_head: '"Nous vous proposons un bon d\'echange"',
+    resp_5_detail: "Vous n'etes pas oblige d'accepter un bon. En vertu d'EU261/UK261/APPR, vous avez droit a une indemnisation en especes. Repondez par ecrit que vous refusez le bon et exigez un paiement en especes.",
+    section_your_path: "VOTRE PARCOURS D'ESCALADE",
+    path_1: (airline) => `Envoyez votre Lettre de demande d'indemnisation officielle a ${airline} en utilisant les coordonnees de la section Comment soumettre.`,
+    path_2: 'Sans reponse dans les 14 jours, envoyez le Modele de suivi a 14 jours inclus dans ce kit.',
+    path_3: (esc) => `Sans resolution dans les 30 jours, envoyez le Modele d'escalade a 30 jours et deposez une plainte aupres de ${esc}.`,
+    path_4: "Si l'autorite ne resout pas le litige dans les 8 semaines, envisagez la Resolution Alternative des Litiges (RAL) ou le tribunal des petits litiges.",
+    final_callout: "Le tribunal des petits litiges est une option viable dans la plupart des pays pour des demandes de cette taille et ne necessite pas d'avocat. Les frais de depot sont generalement de 30\u2013100 GBP (R.-U.), 25\u201375 EUR (UE) ou 75\u2013200 CA$ (Canada).",
+    row_flight_number: 'Numero de vol',
+    row_date_of_travel: 'Date du voyage',
+    row_route: 'Itineraire',
+    row_distance: 'Distance',
+    row_scheduled: 'Arrivee prevue',
+    row_actual: 'Arrivee reelle',
+    row_delay: 'Duree du retard',
+    disruption_delay: 'retard',
+    disruption_cancel: 'annulation',
+    disruption_denied: "refus d'embarquement",
+    disruption_other: 'perturbation',
+    route_to: (from, to) => `${from} a ${to}`,
+  },
+  de: {
+    page_header: 'Fluggastrechte-Kit',
+    footer_branded: 'Erstellt mit FlightComp \u2014 getflightcomp.com',
+    page_counter: (n, total) => `Seite ${n} von ${total}`,
+    claims_overview_title: 'Anspruchsubersicht',
+    claims_overview_sub: 'Eine Zusammenfassung Ihrer Anspruchsdetails und was Sie erwarten konnen.',
+    label_regulation: 'Verordnung',
+    label_compensation: 'Angestrebte Entschadigung',
+    label_flight: 'Flug',
+    label_date: 'Datum',
+    section_kit_contains: 'DIESER KIT ENTHALT',
+    kit_1: 'So reichen Sie Ihren Anspruch ein \u2014 Kontaktdaten der Fluggesellschaft und schrittweise Anleitung',
+    kit_2: 'Formeller Entschadigungsanspruchsbrief \u2014 personalisiert, versandbereit',
+    kit_3: '14-Tage-Nachfassvorlage \u2014 falls die Fluggesellschaft nach 2 Wochen nicht geantwortet hat',
+    kit_4: '30-Tage-Eskalationsvorlage \u2014 falls die Fluggesellschaft Ihren Anspruch ablehnt oder ignoriert',
+    kit_5: 'Erwartungsleitfaden \u2014 haufige Antworten der Fluggesellschaft und wie Sie damit umgehen',
+    quick_start_label: 'SCHNELLSTART',
+    qs_email: (email) => `Senden Sie den formellen Entschadigungsanspruchsbrief an ${email}`,
+    qs_portal: (airline) => `Reichen Sie Ihren Anspruch uber das Online-Portal von ${airline} ein \u2014 Anweisungen finden Sie unter So reichen Sie Ihren Anspruch ein (Seite 2).`,
+    how_to_submit_title: 'So reichen Sie Ihren Anspruch ein',
+    airline_line: (airline, reg) => `Fluggesellschaft: ${airline}  \u00B7  Verordnung: ${reg}`,
+    section_contact: 'KONTAKTDATEN DER FLUGGESELLSCHAFT',
+    send_to: (email) => `Senden Sie Ihren Anspruch an: ${email}`,
+    web_form_para: (airline) => `${airline} nimmt Anspruche uber ihr Online-Portal entgegen. Suchen Sie nach "${airline} Fluggastrechte Anspruch", um die Einreichungsseite zu finden. Verwenden Sie beim Ausfullen des Formulars die Angaben und rechtlichen Zitate aus dem in diesem Kit enthaltenen formellen Entschadigungsanspruchsbrief.`,
+    unknown_airline_para: (airline, regSearch) => `Wir haben keine spezifischen Kontaktdaten fur ${airline} vorliegen. Suchen Sie nach "${airline} ${regSearch}" oder "${airline} Kundenservice", um den richtigen Kontakt zu finden.`,
+    section_steps: 'SCHRITT-FUR-SCHRITT-ANLEITUNG',
+    substep_email_1: (email) => `Senden Sie den formellen Entschadigungsanspruchsbrief (Seite 3) per E-Mail an: ${email}`,
+    substep_email_2: 'Verwenden Sie die Betreffzeile des Briefes als Betreff Ihrer E-Mail und kopieren Sie den vollstandigen Brieftext in den E-Mail-Text.',
+    substep_email_3: 'Bewahren Sie eine Kopie der gesendeten E-Mail auf und notieren Sie das heutige Datum als Ihr Einreichungsdatum.',
+    substep_email_4: (days, reg, date) => `Die Fluggesellschaft hat gemas ${reg} ${days} Tage Zeit zu antworten. Erhalten Sie bis zum ${date} keine Antwort, senden Sie die in diesem Kit enthaltene 14-Tage-Nachfassvorlage.`,
+    substep_email_5: (escDate, esc) => `Lehnt die Fluggesellschaft Ihren Anspruch ab oder erhalten Sie bis zum ${escDate} keine zufriedenstellende Antwort, senden Sie die 30-Tage-Eskalationsvorlage und reichen Sie eine Beschwerde bei ${esc} ein.`,
+    substep_portal_1: (airline) => `Besuchen Sie die Website von ${airline} und finden Sie deren Anspruchs- oder Kundenserviceportal. Suchen Sie nach "${airline} Fluggastrechte Anspruch", um die richtige Seite zu finden.`,
+    substep_portal_2: 'Fullen Sie das Online-Formular der Fluggesellschaft mit den Angaben aus Ihrem formellen Entschadigungsanspruchsbrief (Seite 3) aus. Kopieren Sie in Freitextfelder die wichtigsten Absatze aus Ihrem Brief \u2014 insbesondere die Rechtsgrundlage, Flugdaten und den Entschadigungsbetrag.',
+    substep_portal_3: 'Speichern Sie Ihre Einreichungsbestatigung und jede Referenznummer, die die Fluggesellschaft bereitstellt.',
+    substep_portal_4: (days, reg, fuDate, airline) => `Die Fluggesellschaft hat gemas ${reg} ${days} Tage Zeit zu antworten. Erhalten Sie bis zum ${fuDate} keine Antwort, reichen Sie den Inhalt der Nachfassvorlage (Seite 5) uber dasselbe Portal oder per E-Mail beim allgemeinen Kundenservice von ${airline} ein.`,
+    substep_portal_5: (escDate, esc) => `Lehnt die Fluggesellschaft Ihren Anspruch ab oder erhalten Sie bis zum ${escDate} keine zufriedenstellende Antwort, verwenden Sie die 30-Tage-Eskalationsvorlage und reichen Sie eine Beschwerde bei ${esc} ein.`,
+    section_escalation_authority: 'SCHLICHTUNGSSTELLE',
+    escalation_intro: 'Wenn die Fluggesellschaft Ihren Anspruch innerhalb von 30 Tagen nicht lost, konnen Sie kostenlos eine Beschwerde einreichen bei:',
+    formal_letter_title: 'Formeller Entschadigungsanspruchsbrief',
+    callout_email: 'Senden Sie diesen Brief per E-Mail an die Anspruchsabteilung Ihrer Fluggesellschaft. Bewahren Sie eine Kopie fur Ihre Unterlagen auf.',
+    callout_portal: (airline) => `Verwenden Sie den Inhalt dieses Briefes, wenn Sie Ihren Anspruch uber das Online-Portal von ${airline} einreichen. Kopieren Sie die rechtlichen Zitate und Entschadigungsdetails in die Textfelder des Formulars.`,
+    customer_relations: 'Kundendienst / Reklamationsabteilung',
+    to_whom: 'Sehr geehrte Damen und Herren,',
+    opening_sentence: (reg, disruption) => `Ich schreibe Ihnen, um gemas ${reg} eine gesetzliche Entschadigung fur die ${disruption} des oben genannten Fluges geltend zu machen.`,
+    section_legal: 'RECHTSGRUNDLAGE UND ANSPRUCH',
+    closing_payment_pre: (days) => `Ich bitte Sie, diesen Entschadigungsanspruch zu bearbeiten und die Zahlung innerhalb von ${days} Tagen nach diesem Schreiben zu leisten `,
+    closing_trust: 'Ich vertraue darauf, dass Sie diesen Anspruch umgehend und in Ubereinstimmung mit Ihren gesetzlichen Verpflichtungen bearbeiten werden.',
+    sign_off: 'Mit freundlichen Gruen,',
+    dear_sir: 'Sehr geehrte Damen und Herren,',
+    follow_up_title: '14-Tage-Nachfassvorlage',
+    follow_up_callout_email: (email, date) => `Senden Sie diese Nachfass-E-Mail an ${email}, falls Sie bis zum ${date} (14 Tage nach Ihrer ursprunglichen Einreichung) keine Antwort erhalten haben.`,
+    follow_up_callout_portal: (airline, date) => `Reichen Sie dieses Nachfassschreiben uber das Online-Portal von ${airline} ein oder kontaktieren Sie deren Kundenservice direkt, falls Sie bis zum ${date} keine Antwort erhalten haben.`,
+    section_follow_up: 'NACHFASSBRIEF',
+    fu_customer_relations: 'Kundendienstabteilung',
+    fu_re: (flightNum, flightDate) => `Betr.: Nachfassung \u2014 Entschadigungsanspruch fur Flug ${flightNum} am ${flightDate}`,
+    fu_dear: 'Sehr geehrte Damen und Herren,',
+    fu_para1: (today, flightNum, flightDate, from, to) => `Ich schreibe Ihnen bezuglich eines formellen Entschadigungsanspruchs, den ich am ${today} fur Flug ${flightNum} am ${flightDate} von ${from} nach ${to} eingereicht habe.`,
+    fu_para2: (reg) => `Ich habe noch keine Antwort oder Eingangsbestatigung zu meinem Anspruch erhalten. Gemas ${reg} sind Fluggesellschaften verpflichtet, auf Entschadigungsanspruche von Passagieren innerhalb einer angemessenen Frist zu antworten. Ich habe meinen ursprunglichen Anspruch vor 14 Tagen eingereicht und noch keine substantielle Antwort erhalten.`,
+    fu_para3: 'Ich bitte Sie freundlich, den Eingang meines ursprunglichen Anspruchs zu bestatigen und innerhalb von 7 Tagen nach diesem Schreiben eine schriftliche Aktualisierung zum Bearbeitungsstand zu ubermitteln.',
+    fu_para4: (esc) => `Sollte ich keine Antwort erhalten, werde ich diese Angelegenheit an ${esc} weiterleiten.`,
+    fu_sincerely: 'Mit freundlichen Gruen,',
+    fu_name_placeholder: '[Ihr vollstandiger Name]',
+    fu_email_placeholder: '[Ihre E-Mail-Adresse]',
+    follow_up_note: 'Hinweis: Aktualisieren Sie das Einreichungsdatum, wenn Sie dieses Schreiben zu einem anderen Zeitpunkt versenden.',
+    escalation_title: '30-Tage-Eskalationsvorlage',
+    esc_callout_email: (email, date) => `Senden Sie diesen Eskalationsbrief per E-Mail an ${email}, falls Sie bis zum ${date} (30 Tage nach Ihrer ursprunglichen Einreichung) keine zufriedenstellende Antwort erhalten haben.`,
+    esc_callout_portal: (airline, date) => `Reichen Sie diese Eskalation uber das Online-Portal von ${airline} ein, falls Sie bis zum ${date} keine zufriedenstellende Antwort erhalten haben.`,
+    section_escalation_letter: 'ESKALATIONSBRIEF',
+    esc_customer_relations: 'Kundendienstabteilung',
+    esc_re: (flightNum, flightDate) => `Betr.: Eskalationshinweis \u2014 Unbeantworteter Entschadigungsanspruch fur Flug ${flightNum} am ${flightDate}`,
+    esc_dear: 'Sehr geehrte Damen und Herren,',
+    esc_para1: (flightNum, flightDate, from, to) => `Ich schreibe Ihnen, um meinen Entschadigungsanspruch bezuglich Flug ${flightNum} am ${flightDate} von ${from} nach ${to} formell zu eskalieren.`,
+    esc_para2: (today, reg) => `Ich habe am ${today} gemas ${reg} einen formellen Anspruch eingereicht. Zum Datum dieses Schreibens habe ich noch keine substantielle Antwort oder Losung erhalten.`,
+    esc_para3_amount: (reg, amount) => `Gemas ${reg} habe ich rechtlichen Anspruch auf eine Entschadigung von ${amount} pro Passagier. Dieser Betrag steht noch aus.`,
+    esc_para3_no_amount: (reg) => `Gemas ${reg} habe ich rechtlichen Anspruch auf Entschadigung fur die erlittene Storung. Dieser Anspruch ist noch nicht erfullt.`,
+    esc_para4: (esc) => `Ich fordere eine vollstandige schriftliche Antwort innerhalb von 14 Tagen nach diesem Schreiben. Sollte keine zufriedenstellende Losung erfolgen, werde ich umgehend eine formelle Beschwerde bei ${esc} einreichen und mir alle Rechte auf weitere Rechtsbehelfe vorbehalten, einschliesslich Klagen beim zustandigen Gericht.`,
+    esc_sincerely: 'Mit freundlichen Gruen,',
+    esc_name_placeholder: '[Ihr vollstandiger Name]',
+    esc_email_placeholder: '[Ihre E-Mail-Adresse]',
+    escalation_note: 'Hinweis: Aktualisieren Sie das ursprungliche Einreichungsdatum vor dem Versenden.',
+    what_to_expect_title: 'Was Sie nach der Einreichung Ihres Anspruchs erwarten konnen',
+    section_timeline: 'TYPISCHER ZEITPLAN',
+    timeline_1: '1\u20133 Tage: Eingangsbestatigung (die meisten Fluggesellschaften, bei E-Mail-Einreichung).',
+    timeline_2: '14\u201330 Tage: Erste Antwort \u2014 kann ein Angebot, eine Ablehnung oder eine Anfrage nach weiteren Informationen sein.',
+    timeline_3: '30\u201360 Tage: Vollstandige Losung bei einfachen Anspruchen.',
+    timeline_4: '60\u201390 Tage: Komplexere Falle oder Fluggesellschaften, die langsam reagieren.',
+    timeline_5: '90+ Tage: Wenden Sie sich an die zustandige Behorde \u2014 warten Sie nicht langer.',
+    section_responses: 'HAUFIGE ANTWORTEN DER FLUGGESELLSCHAFT',
+    resp_1_head: '"Aussergewohnliche Umstande" oder "hohere Gewalt"',
+    resp_1_detail: 'Fluggesellschaften verwenden diese Verteidigung haufig. Wenn die tatsachliche Ursache mechanischer, personalbezogener oder betrieblicher Natur war, gilt diese Verteidigung nicht. Antworten Sie schriftlich und nennen Sie die spezifische Ursache, die nicht der rechtlichen Definition aussergewohnlicher Umstande entspricht.',
+    resp_2_head: '"Wir benotigen weitere Informationen"',
+    resp_2_detail: 'Antworten Sie umgehend mit den angeforderten Dokumenten \u2014 Buchungsbestatigung, Bordkarten, Korrespondenz. Bewahren Sie Kopien von allem auf, was Sie versenden.',
+    resp_3_head: '"Ihr Anspruch wird abgelehnt"',
+    resp_3_detail: 'Akzeptieren Sie keine Ablehnung ohne schriftliche Erklarung mit spezifischen rechtlichen Grunden. Verwenden Sie die 30-Tage-Eskalationsvorlage (Seite 5) und reichen Sie eine Beschwerde bei der zustandigen Behorde ein.',
+    resp_4_head: 'Keine Antwort nach 14 Tagen',
+    resp_4_detail: 'Senden Sie die 14-Tage-Nachfassvorlage (Seite 4). Wenn nach insgesamt 30 Tagen noch keine Antwort eingegangen ist, senden Sie die Eskalationsvorlage und reichen Sie eine Beschwerde bei der unten genannten Behorde ein.',
+    resp_5_head: '"Wir bieten Ihnen stattdessen einen Gutschein an"',
+    resp_5_detail: 'Sie sind nicht verpflichtet, einen Gutschein anzunehmen. Gemas EU261/UK261/APPR haben Sie Anspruch auf eine Barentschadigung. Antworten Sie schriftlich, dass Sie den Gutschein nicht akzeptieren und eine Barzahlung verlangen.',
+    section_your_path: 'IHR ESKALATIONSPFAD',
+    path_1: (airline) => `Senden Sie Ihren formellen Entschadigungsanspruchsbrief an ${airline} unter Verwendung der Kontaktdaten im Abschnitt So reichen Sie Ihren Anspruch ein.`,
+    path_2: 'Wenn nach 14 Tagen keine Antwort erfolgt, senden Sie die in diesem Kit enthaltene 14-Tage-Nachfassvorlage.',
+    path_3: (esc) => `Wenn nach 30 Tagen keine Losung erfolgt, senden Sie die 30-Tage-Eskalationsvorlage und reichen Sie eine Beschwerde bei ${esc} ein.`,
+    path_4: 'Wenn die Behorde das Problem nicht innerhalb von 8 Wochen lost, erwaegen Sie alternative Streitbeilegung (ADR) oder das Amtsgericht.',
+    final_callout: 'Das Amtsgericht ist in den meisten Rechtsordnungen fur Anspruche dieser Grosse eine praktikable Option und erfordert keinen Anwalt. Die Anmeldegebuhren betragen in der Regel 30\u2013100 GBP (UK), 25\u201375 EUR (EU) oder 75\u2013200 CA$ (Kanada).',
+    row_flight_number: 'Flugnummer',
+    row_date_of_travel: 'Reisedatum',
+    row_route: 'Strecke',
+    row_distance: 'Entfernung',
+    row_scheduled: 'Geplante Ankunft',
+    row_actual: 'Tatsachliche Ankunft',
+    row_delay: 'Verspatungsdauer',
+    disruption_delay: 'Verspatung',
+    disruption_cancel: 'Annullierung',
+    disruption_denied: 'Nichtbeforderung',
+    disruption_other: 'Storung',
+    route_to: (from, to) => `${from} nach ${to}`,
+  },
+  es: {
+    page_header: 'Kit de compensacion de vuelo',
+    footer_branded: 'Preparado con FlightComp \u2014 getflightcomp.com',
+    page_counter: (n, total) => `Pagina ${n} de ${total}`,
+    claims_overview_title: 'Resumen de la reclamacion',
+    claims_overview_sub: 'Un resumen de los detalles de tu reclamacion y que esperar.',
+    label_regulation: 'Reglamento',
+    label_compensation: 'Compensacion objetivo',
+    label_flight: 'Vuelo',
+    label_date: 'Fecha',
+    section_kit_contains: 'ESTE KIT CONTIENE',
+    kit_1: 'Como presentar tu reclamacion \u2014 datos de contacto de la aerolinea e instrucciones paso a paso',
+    kit_2: 'Carta formal de reclamacion de compensacion \u2014 personalizada, lista para enviar',
+    kit_3: 'Plantilla de seguimiento a 14 dias \u2014 si la aerolinea no ha respondido en 2 semanas',
+    kit_4: 'Plantilla de escalada a 30 dias \u2014 si la aerolinea rechaza o ignora tu reclamacion',
+    kit_5: 'Guia Que esperar \u2014 respuestas habituales de las aerolineas y como gestionarlas',
+    quick_start_label: 'INICIO RAPIDO',
+    qs_email: (email) => `Envia la Carta formal de reclamacion de compensacion a ${email}`,
+    qs_portal: (airline) => `Presenta tu reclamacion a traves del portal de reclamaciones en linea de ${airline} \u2014 consulta Como presentar tu reclamacion (pagina 2) para obtener instrucciones.`,
+    how_to_submit_title: 'Como presentar tu reclamacion',
+    airline_line: (airline, reg) => `Aerolinea: ${airline}  \u00B7  Reglamento: ${reg}`,
+    section_contact: 'DATOS DE CONTACTO DE LA AEROLINEA',
+    send_to: (email) => `Envia tu reclamacion a: ${email}`,
+    web_form_para: (airline) => `${airline} acepta reclamaciones a traves de su portal en linea. Busca "${airline} reclamacion compensacion vuelo" para encontrar la pagina de envio. Al rellenar el formulario, utiliza los detalles y las citas legales de la Carta formal de reclamacion incluida en este kit.`,
+    unknown_airline_para: (airline, regSearch) => `No disponemos de datos de contacto especificos para ${airline}. Busca "${airline} ${regSearch}" o "${airline} atencion al cliente" para encontrar el contacto correcto.`,
+    section_steps: 'INSTRUCCIONES PASO A PASO',
+    substep_email_1: (email) => `Envia la Carta formal de reclamacion de compensacion (pagina 3) por correo electronico a: ${email}`,
+    substep_email_2: 'Utiliza el asunto de la carta como asunto de tu correo electronico y copia el texto completo de la carta en el cuerpo del mensaje.',
+    substep_email_3: 'Guarda una copia del correo enviado y anota la fecha de hoy como tu fecha de envio.',
+    substep_email_4: (days, reg, date) => `La aerolinea tiene ${days} dias para responder segun el ${reg}. Si no recibes respuesta antes del ${date}, envia la Plantilla de seguimiento a 14 dias incluida en este kit.`,
+    substep_email_5: (escDate, esc) => `Si la aerolinea rechaza tu reclamacion o no recibes una respuesta satisfactoria antes del ${escDate}, envia la Plantilla de escalada a 30 dias y presenta una queja ante ${esc}.`,
+    substep_portal_1: (airline) => `Ve al sitio web de ${airline} y busca su portal de reclamaciones o atencion al cliente. Busca "${airline} reclamacion compensacion vuelo" para encontrar la pagina correcta.`,
+    substep_portal_2: 'Rellena el formulario en linea de la aerolinea con los datos de tu Carta formal de reclamacion de compensacion (pagina 3). En los campos de texto libre, copia los parrafos clave de tu carta \u2014 especialmente la base legal, los datos del vuelo y el importe de la compensacion.',
+    substep_portal_3: 'Guarda o captura tu confirmacion de envio y cualquier numero de referencia que proporcione la aerolinea.',
+    substep_portal_4: (days, reg, fuDate, airline) => `La aerolinea tiene ${days} dias para responder segun el ${reg}. Si no recibes respuesta antes del ${fuDate}, presenta el contenido de la Plantilla de seguimiento (pagina 5) a traves del mismo portal o por correo electronico al servicio de atencion al cliente de ${airline}.`,
+    substep_portal_5: (escDate, esc) => `Si la aerolinea rechaza tu reclamacion o no recibes una respuesta satisfactoria antes del ${escDate}, utiliza la Plantilla de escalada a 30 dias y presenta una queja ante ${esc}.`,
+    section_escalation_authority: 'AUTORIDAD DE ESCALADA',
+    escalation_intro: 'Si la aerolinea no resuelve tu reclamacion en 30 dias, puedes presentar gratuitamente una queja ante:',
+    formal_letter_title: 'Carta formal de reclamacion de compensacion',
+    callout_email: 'Envia esta carta al departamento de reclamaciones de tu aerolinea por correo electronico. Guarda una copia para tus registros.',
+    callout_portal: (airline) => `Utiliza el contenido de esta carta cuando presentes tu reclamacion a traves del portal en linea de ${airline}. Copia las citas legales y los detalles de compensacion en los campos de texto del formulario.`,
+    customer_relations: 'Atencion al cliente / Departamento de reclamaciones',
+    to_whom: 'A quien corresponda,',
+    opening_sentence: (reg, disruption) => `Me dirijo a ustedes para reclamar una compensacion estatutaria en virtud del ${reg} por el ${disruption} del vuelo mencionado anteriormente.`,
+    section_legal: 'BASE LEGAL Y RECLAMACION',
+    closing_payment_pre: (days) => `Solicito que procesen esta reclamacion de compensacion y realicen el pago en un plazo de ${days} dias a partir de esta carta `,
+    closing_trust: 'Confio en que gestionaran esta reclamacion con prontitud y de acuerdo con sus obligaciones legales.',
+    sign_off: 'Atentamente,',
+    dear_sir: 'Estimado/a senor/a,',
+    follow_up_title: 'Plantilla de seguimiento a 14 dias',
+    follow_up_callout_email: (email, date) => `Envia este seguimiento por correo electronico a ${email} si no has recibido respuesta antes del ${date} (14 dias despues de tu envio inicial).`,
+    follow_up_callout_portal: (airline, date) => `Presenta este seguimiento a traves del portal en linea de ${airline}, o contacta directamente con su equipo de atencion al cliente haciendo referencia a tu envio inicial, si no has recibido respuesta antes del ${date}.`,
+    section_follow_up: 'CARTA DE SEGUIMIENTO',
+    fu_customer_relations: 'Departamento de atencion al cliente',
+    fu_re: (flightNum, flightDate) => `Asunto: Seguimiento \u2014 Reclamacion de compensacion para el vuelo ${flightNum} del ${flightDate}`,
+    fu_dear: 'Estimado/a senor/a,',
+    fu_para1: (today, flightNum, flightDate, from, to) => `Me pongo en contacto para hacer seguimiento de una reclamacion formal de compensacion que presente el ${today} en relacion con el vuelo ${flightNum} del ${flightDate} de ${from} a ${to}.`,
+    fu_para2: (reg) => `Aun no he recibido respuesta ni acuse de recibo de mi reclamacion. En virtud del ${reg}, las aerolineas estan obligadas a responder a las reclamaciones de compensacion de los pasajeros en un plazo razonable. Presente mi reclamacion inicial hace 14 dias y todavia no he recibido una respuesta sustantiva.`,
+    fu_para3: 'Le ruego que confirme la recepcion de mi reclamacion inicial y proporcione una actualizacion escrita sobre su estado en los 7 dias siguientes a esta carta.',
+    fu_para4: (esc) => `Si no recibo respuesta, escalare este asunto a ${esc}.`,
+    fu_sincerely: 'Atentamente,',
+    fu_name_placeholder: '[Tu nombre completo]',
+    fu_email_placeholder: '[Tu correo electronico]',
+    follow_up_note: 'Nota: Actualiza la fecha de envio si envias esta carta en un momento diferente.',
+    escalation_title: 'Plantilla de escalada a 30 dias',
+    esc_callout_email: (email, date) => `Envia esta carta de escalada por correo electronico a ${email} si no has recibido una respuesta satisfactoria antes del ${date} (30 dias despues de tu envio inicial).`,
+    esc_callout_portal: (airline, date) => `Presenta esta escalada a traves del portal en linea de ${airline}, o contacta directamente con su servicio de atencion al cliente haciendo referencia a tu reclamacion, si no has recibido una respuesta satisfactoria antes del ${date}.`,
+    section_escalation_letter: 'CARTA DE ESCALADA',
+    esc_customer_relations: 'Departamento de atencion al cliente',
+    esc_re: (flightNum, flightDate) => `Asunto: Aviso de escalada \u2014 Reclamacion de compensacion sin respuesta para el vuelo ${flightNum} del ${flightDate}`,
+    esc_dear: 'Estimado/a senor/a,',
+    esc_para1: (flightNum, flightDate, from, to) => `Me dirijo a ustedes para escalar formalmente mi reclamacion de compensacion en relacion con el vuelo ${flightNum} del ${flightDate} de ${from} a ${to}.`,
+    esc_para2: (today, reg) => `Presente una reclamacion formal el ${today} en virtud del ${reg}. A la fecha de esta carta, no he recibido una respuesta sustantiva ni una resolucion.`,
+    esc_para3_amount: (reg, amount) => `En virtud del ${reg}, tengo derecho legal a una compensacion de ${amount} por pasajero. Este importe sigue pendiente.`,
+    esc_para3_no_amount: (reg) => `En virtud del ${reg}, tengo derecho legal a una compensacion por la interrupcion sufrida. Esta reclamacion sigue pendiente.`,
+    esc_para4: (esc) => `Exijo una respuesta escrita completa en los 14 dias siguientes a esta carta. Si no recibo una resolucion satisfactoria, presentare de inmediato una queja formal ante ${esc} y me reservo todos los derechos para ejercer acciones legales, incluidos procedimientos en el tribunal de reclamaciones de menor cuantia correspondiente.`,
+    esc_sincerely: 'Atentamente,',
+    esc_name_placeholder: '[Tu nombre completo]',
+    esc_email_placeholder: '[Tu correo electronico]',
+    escalation_note: 'Nota: Actualiza la fecha de envio de la reclamacion original antes de enviar.',
+    what_to_expect_title: 'Que esperar despues de presentar tu reclamacion',
+    section_timeline: 'CALENDARIO TIPICO',
+    timeline_1: '1\u20133 dias: Acuse de recibo (la mayoria de aerolineas, si envias por correo electronico).',
+    timeline_2: '14\u201330 dias: Respuesta inicial \u2014 puede ser una oferta, un rechazo o una solicitud de mas informacion.',
+    timeline_3: '30\u201360 dias: Resolucion completa para reclamaciones sencillas.',
+    timeline_4: '60\u201390 dias: Casos mas complejos o aerolineas que tardan en responder.',
+    timeline_5: '90+ dias: Escala a la autoridad competente \u2014 no esperes mas.',
+    section_responses: 'RESPUESTAS COMUNES DE LA AEROLINEA',
+    resp_1_head: '"Circunstancias extraordinarias" o "fuerza mayor"',
+    resp_1_detail: 'Las aerolineas utilizan frecuentemente esta defensa. Si la causa real fue mecanica, relacionada con la tripulacion u operativa, esta defensa no se aplica. Responde por escrito citando la causa especifica e indicando que no cumple la definicion legal de circunstancias extraordinarias.',
+    resp_2_head: '"Necesitamos mas informacion"',
+    resp_2_detail: 'Responde rapidamente con los documentos solicitados \u2014 confirmacion de reserva, tarjetas de embarque, correspondencia. Guarda copias de todo lo que envies.',
+    resp_3_head: '"Tu reclamacion ha sido rechazada"',
+    resp_3_detail: 'No aceptes un rechazo sin una explicacion escrita que cite motivos legales especificos. Utiliza la plantilla de escalada a 30 dias (pagina 5) y presenta una queja ante la autoridad competente.',
+    resp_4_head: 'Sin respuesta tras 14 dias',
+    resp_4_detail: 'Envia la plantilla de seguimiento a 14 dias (pagina 4). Si sigues sin respuesta tras 30 dias en total, envia la plantilla de escalada y presenta una queja ante la autoridad indicada a continuacion.',
+    resp_5_head: '"Te ofrecemos un bono en lugar de dinero"',
+    resp_5_detail: 'No estas obligado/a a aceptar un bono. En virtud del EU261/UK261/APPR, tienes derecho a una compensacion en efectivo. Responde por escrito que no aceptas el bono y exiges el pago en efectivo.',
+    section_your_path: 'TU RUTA DE ESCALADA',
+    path_1: (airline) => `Envia tu Carta formal de reclamacion de compensacion a ${airline} utilizando los datos de contacto de la seccion Como presentar tu reclamacion.`,
+    path_2: 'Si no recibes respuesta en 14 dias, envia la Plantilla de seguimiento a 14 dias incluida en este kit.',
+    path_3: (esc) => `Si no hay resolucion en 30 dias, envia la Plantilla de escalada a 30 dias y presenta una queja ante ${esc}.`,
+    path_4: 'Si la autoridad no resuelve el asunto en 8 semanas, considera la Resolucion Alternativa de Disputas (RAD) o el tribunal de reclamaciones de menor cuantia.',
+    final_callout: 'El tribunal de reclamaciones de menor cuantia es una opcion viable en la mayoria de jurisdicciones para reclamaciones de este tamano y no requiere abogado. Las tasas de presentacion suelen ser de 30\u2013100 GBP (RU), 25\u201375 EUR (UE) o 75\u2013200 CA$ (Canada).',
+    row_flight_number: 'Numero de vuelo',
+    row_date_of_travel: 'Fecha de viaje',
+    row_route: 'Ruta',
+    row_distance: 'Distancia',
+    row_scheduled: 'Llegada programada',
+    row_actual: 'Llegada real',
+    row_delay: 'Duracion del retraso',
+    disruption_delay: 'retraso',
+    disruption_cancel: 'cancelacion',
+    disruption_denied: 'denegacion de embarque',
+    disruption_other: 'interrupcion',
+    route_to: (from, to) => `${from} a ${to}`,
+  },
+};
+
 // ── PDF Claim Kit builder ─────────────────────────────
-async function buildPdf({ letter, claimData, details, result, flightDetails }) {
+async function buildPdf({ letter, claimData, details, result, flightDetails, language = 'en' }) {
   const { jsPDF } = await import('jspdf');
+
+  // ── Translation helper ──
+  const _lang = ['en', 'tr', 'fr', 'de', 'es'].includes(language) ? language : 'en';
+  const t = (key, ...args) => {
+    const val = PDF_STRINGS[_lang]?.[key] ?? PDF_STRINGS.en[key] ?? key;
+    return typeof val === 'function' ? val(...args) : val;
+  };
 
   // ── Layout constants ──
   const PAGE_W = 210, PAGE_H = 297;
@@ -274,7 +870,7 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
     setFC(C.BRAND_BLUE);
     doc.rect(0, 0, PAGE_W, HEADER_H, 'F');
     doc.setFont('helvetica', 'bold'); doc.setFontSize(14); setTC(C.WHITE);
-    doc.text('Flight Compensation Kit', ML, 11.5);
+    doc.text(t('page_header'), ML, 11.5);
     if (sectionSubtitle) {
       doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
       doc.setTextColor(195, 219, 248);
@@ -288,9 +884,9 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
     doc.line(ML, FOOTER_Y, PAGE_W - MR, FOOTER_Y);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(7); setTC(C.TEXT_MUTED);
     if (branded) {
-      doc.text('Prepared with FlightComp — getflightcomp.com', ML, FOOTER_Y + 5);
+      doc.text(t('footer_branded'), ML, FOOTER_Y + 5);
     }
-    doc.text(`Page ${pageNum} of ${TOTAL_ALIAS}`, PAGE_W - MR, FOOTER_Y + 5, { align: 'right' });
+    doc.text(t('page_counter', pageNum, TOTAL_ALIAS), PAGE_W - MR, FOOTER_Y + 5, { align: 'right' });
   }
 
   // ── New page ──
@@ -600,9 +1196,9 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
 
   // Title block
   doc.setFont('helvetica', 'bold'); doc.setFontSize(20); setTC(C.TEXT_PRI);
-  doc.text('Claims Overview', ML, y); y += 9;
+  doc.text(t('claims_overview_title'), ML, y); y += 9;
   doc.setFont('helvetica', 'normal'); doc.setFontSize(11); setTC(C.TEXT_LABEL);
-  doc.text('A summary of your claim details and what to expect.', ML, y); y += 10;
+  doc.text(t('claims_overview_sub'), ML, y); y += 10;
 
   // Claim summary box
   const SUMBOX_H = 36;
@@ -618,21 +1214,21 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
     doc.setFont('helvetica', 'bold'); doc.setFontSize(10); setTC(C.DARK_BLUE);
     doc.text(value || '—', cx, bly + 5);
   };
-  drawSumRow('Regulation', regFull, col1);
-  drawSumRow('Target Compensation', compAmount || 'See letter', col2);
+  drawSumRow(t('label_regulation'), regFull, col1);
+  drawSumRow(t('label_compensation'), compAmount || 'See letter', col2);
   bly += 16;
-  drawSumRow('Flight', flightNum || '—', col1);
-  drawSumRow('Date', flightDateFmt || '—', col2);
+  drawSumRow(t('label_flight'), flightNum || '—', col1);
+  drawSumRow(t('label_date'), flightDateFmt || '—', col2);
   y += SUMBOX_H + 8;
 
   // "This kit contains" list
-  drawSection('THIS KIT CONTAINS');
+  drawSection(t('section_kit_contains'));
   const kitItems = [
-    ['1', 'How to Submit Your Claim — airline contact details and step-by-step instructions'],
-    ['2', 'Formal Compensation Claim Letter — personalised, ready to send'],
-    ['3', '14-Day Follow-Up Template — if the airline hasn\'t responded after 2 weeks'],
-    ['4', '30-Day Escalation Template — if the airline rejects or ignores your claim'],
-    ['5', 'What to Expect Guide — common airline responses and how to handle them'],
+    ['1', t('kit_1')],
+    ['2', t('kit_2')],
+    ['3', t('kit_3')],
+    ['4', t('kit_4')],
+    ['5', t('kit_5')],
   ];
   for (const [num, desc] of kitItems) {
     checkPage(8);
@@ -650,11 +1246,11 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
   if (doc.roundedRect) doc.roundedRect(ML, y, CONTENT_W, 22, 3, 3, 'FD');
   else doc.rect(ML, y, CONTENT_W, 22, 'FD');
   doc.setFont('helvetica', 'bold'); doc.setFontSize(9); setTC(C.GREEN);
-  doc.text('QUICK START', ML + 5, y + 7);
+  doc.text(t('quick_start_label'), ML + 5, y + 7);
   doc.setFont('helvetica', 'normal'); doc.setFontSize(9); setTC(C.TEXT_BODY);
   const qs = airlineContact?.claimsEmail
-    ? `Send the Formal Compensation Claim Letter to ${airlineContact.claimsEmail}`
-    : `Submit via ${airlineName}'s online claims portal — see How to Submit Your Claim (page 2) for instructions.`;
+    ? t('qs_email', airlineContact.claimsEmail)
+    : t('qs_portal', airlineName);
   const qsLines = doc.splitTextToSize(qs, CONTENT_W - 10);
   doc.text(qsLines, ML + 5, y + 13);
   y += 26;
@@ -665,50 +1261,50 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
   newPage();
 
   doc.setFont('helvetica', 'bold'); doc.setFontSize(16); setTC(C.TEXT_PRI);
-  doc.text('How to Submit Your Claim', ML, y); y += 8;
+  doc.text(t('how_to_submit_title'), ML, y); y += 8;
   doc.setFont('helvetica', 'normal'); doc.setFontSize(10); setTC(C.TEXT_LABEL);
-  doc.text(`Airline: ${airlineName}  \u00B7  Regulation: ${regFull}`, ML, y); y += 10;
+  doc.text(t('airline_line', airlineName, regFull), ML, y); y += 10;
 
   // Contact block
-  drawSection('AIRLINE CONTACT DETAILS');
+  drawSection(t('section_contact'));
   if (airlineContact?.claimsEmail || airlineContact?.mailingAddress) {
     // Has a direct contact — show email and/or mailing address (no URLs)
     drawContactBox(airlineContact);
     if (airlineContact.claimsEmail) {
-      renderPara(`Send your claim to: ${airlineContact.claimsEmail}`);
+      renderPara(t('send_to', airlineContact.claimsEmail));
     }
     if (airlineContact.webFormOnly || (!airlineContact.claimsEmail && airlineContact.claimsFormUrl)) {
       // Should not normally reach here, but guard just in case
-      renderPara(`${airlineName} accepts claims through their online portal. Search "${airlineName} flight compensation claim" to find their submission page. When filling out the form, use the details and legal citations from the Formal Compensation Claim Letter included in this kit.`);
+      renderPara(t('web_form_para', airlineName));
     }
   } else if (airlineContact?.claimsFormUrl || airlineContact?.webFormOnly) {
     // Web-form-only airline — no printable URL, give search instructions
-    renderPara(`${airlineName} accepts claims through their online portal. Search "${airlineName} flight compensation claim" to find their submission page. When filling out the form, use the details and legal citations from the Formal Compensation Claim Letter included in this kit.`);
+    renderPara(t('web_form_para', airlineName));
   } else {
     // Unknown airline
-    renderPara(`We don't have specific contact details for ${airlineName} on file. Search "${airlineName} ${regSearchTerm}" or "${airlineName} customer relations" to find the correct contact.`);
+    renderPara(t('unknown_airline_para', airlineName, regSearchTerm));
   }
 
   // Step-by-step — instructions differ based on whether airline accepts email or web-form only
-  drawSection('STEP-BY-STEP INSTRUCTIONS');
+  drawSection(t('section_steps'));
   const subSteps = airlineContact?.claimsEmail ? [
-    `Send the Formal Compensation Claim Letter (page 3) via email to: ${airlineContact.claimsEmail}`,
-    `Use the subject line from the letter as your email subject and copy the full letter text into the body of the email.`,
-    `Keep a copy of the sent email and note today's date as your submission date.`,
-    `The airline has ${deadlineDays} days to respond under ${regFull}. If you do not receive a response by ${followUpDateStr}, send the 14-Day Follow-Up Template included in this kit.`,
-    `If the airline rejects your claim or you receive no satisfactory response by ${escalationDateStr}, send the 30-Day Escalation Template and file a complaint with ${escalation.name}.`,
+    t('substep_email_1', airlineContact.claimsEmail),
+    t('substep_email_2'),
+    t('substep_email_3'),
+    t('substep_email_4', deadlineDays, regFull, followUpDateStr),
+    t('substep_email_5', escalationDateStr, escalation.name, regFull),
   ] : [
-    `Go to ${airlineName}'s website and find their claims or customer relations portal. Search "${airlineName} flight compensation claim" to find the correct page.`,
-    `Fill out the airline's online form using the details from your Formal Compensation Claim Letter (page 3). In any free-text or description fields, copy the key paragraphs from your claim letter — especially the legal basis, flight details, and compensation amount.`,
-    `Save or screenshot your submission confirmation and any reference number the airline provides.`,
-    `The airline has ${deadlineDays} days to respond under ${regFull}. If you do not receive a response by ${followUpDateStr}, submit the Follow-Up Template content (page 5) through the same portal or via email to ${airlineName}'s general customer service.`,
-    `If the airline rejects your claim or you receive no satisfactory response by ${escalationDateStr}, use the 30-Day Escalation Template and file a complaint with ${escalation.name}.`,
+    t('substep_portal_1', airlineName),
+    t('substep_portal_2'),
+    t('substep_portal_3'),
+    t('substep_portal_4', deadlineDays, regFull, followUpDateStr, airlineName),
+    t('substep_portal_5', escalationDateStr, escalation.name),
   ];
   subSteps.forEach((step, i) => drawStep(i + 1, step));
 
   y += 4;
-  drawSection('ESCALATION AUTHORITY');
-  renderPara(`If the airline does not resolve your claim within 30 days, you can file a free complaint with:`);
+  drawSection(t('section_escalation_authority'));
+  renderPara(t('escalation_intro'));
   {
     const PAD = 4;
     const nameWrapped = doc.splitTextToSize(escalation.name, CONTENT_W - PAD * 2);
@@ -729,11 +1325,11 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
 
   // Section title + instruction — styled to match follow-up/escalation pages
   doc.setFont('helvetica', 'bold'); doc.setFontSize(16); setTC(C.TEXT_PRI);
-  doc.text('Formal Compensation Claim Letter', ML, y); y += 8;
+  doc.text(t('formal_letter_title'), ML, y); y += 8;
   drawCallout(
     airlineContact?.claimsEmail
-      ? 'Send this letter to your airline\'s claims department via email. Keep a copy for your records.'
-      : `Use the content of this letter when submitting your claim through ${airlineName}'s online portal. Copy the legal citations and compensation details into the form's text fields.`,
+      ? t('callout_email')
+      : t('callout_portal', airlineName),
     C.LT_BLUE_BG, C.LT_BLUE_BD
   );
 
@@ -763,19 +1359,19 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
 
   // Flight details table — before recipient so it reads like a reference block
   const flightRows = [
-    flightNum                               && ['Flight number',    flightNum],
-    flightDate                              && ['Date of travel',   flightDateFmt],
-    (fromIATA && toIATA)                    && ['Route',            `${fromIATA} to ${toIATA}`],
-    result?.distanceKm                      && ['Distance',         `${result.distanceKm.toLocaleString()} km`],
-    flightDetails?.scheduledTime            && ['Scheduled arrival', flightDetails.scheduledTime],
-    flightDetails?.actualTime               && ['Actual arrival',   flightDetails.actualTime],
-    delayInfo                               && ['Delay duration',   delayInfo.label],
+    flightNum                               && [t('row_flight_number'),  flightNum],
+    flightDate                              && [t('row_date_of_travel'), flightDateFmt],
+    (fromIATA && toIATA)                    && [t('row_route'),          t('route_to', fromIATA, toIATA)],
+    result?.distanceKm                      && [t('row_distance'),       `${result.distanceKm.toLocaleString()} km`],
+    flightDetails?.scheduledTime            && [t('row_scheduled'),      flightDetails.scheduledTime],
+    flightDetails?.actualTime               && [t('row_actual'),         flightDetails.actualTime],
+    delayInfo                               && [t('row_delay'),          delayInfo.label],
   ].filter(Boolean);
   if (flightRows.length) { drawTableBox(flightRows); y += 2; }
 
   // Recipient address
   doc.setFont('helvetica', 'normal'); doc.setFontSize(10); setTC(C.TEXT_BODY);
-  doc.text('Customer Relations / Claims Department', ML, y); y += 5;
+  doc.text(t('customer_relations'), ML, y); y += 5;
   doc.text(airlineName, ML, y); y += 8;
 
   // Subject line — fixed format with named-month flight date
@@ -790,7 +1386,7 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
 
   // Salutation
   doc.setFont('helvetica', 'normal'); doc.setFontSize(BODY_SIZE); setTC(C.TEXT_BODY);
-  checkPage(); doc.text('To whom it may concern,', ML, y); y += 8;
+  checkPage(); doc.text(t('to_whom'), ML, y); y += 8;
 
   // Filter body paragraphs — strip header/salutation/sender/opening duplicates from AI letter
   const filteredBodyParas = bodyParas.filter(p => {
@@ -807,31 +1403,31 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
 
   // Fixed opening sentence — references flight details box, avoids repetition
   const disruptionType =
-    claimData?.disruption === 'delayed'    ? 'delay'
-    : claimData?.disruption === 'cancelled'  ? 'cancellation'
-    : claimData?.disruption === 'denied'     ? 'denied boarding'
-    : 'disruption';
-  renderPara(`I am writing to claim statutory compensation under ${regFull} for the ${disruptionType} of the above-referenced flight.`);
+    claimData?.disruption === 'delayed'    ? t('disruption_delay')
+    : claimData?.disruption === 'cancelled'  ? t('disruption_cancel')
+    : claimData?.disruption === 'denied'     ? t('disruption_denied')
+    : t('disruption_other');
+  renderPara(t('opening_sentence', regFull, disruptionType));
 
   // Legal basis — all filtered body paragraphs with date formatting applied
   if (filteredBodyParas.length > 0) {
-    drawSection('LEGAL BASIS & CLAIM');
+    drawSection(t('section_legal'));
     for (const para of filteredBodyParas) renderPara(fmtDatesInText(para));
   }
 
   // Closing — payment request with deadline date in red
   y += 4;
   renderSegs([
-    { text: `I request that you process this compensation claim and provide payment within ${deadlineDays} days of this letter `, bold: false, color: C.TEXT_BODY },
+    { text: t('closing_payment_pre', deadlineDays), bold: false, color: C.TEXT_BODY },
     { text: `(${deadlineDateStr})`, bold: true, color: C.RED },
     { text: '.', bold: false, color: C.TEXT_BODY },
   ]);
-  renderPara('I trust you will handle this claim promptly and in accordance with your statutory obligations.');
+  renderPara(t('closing_trust'));
   y += 2;
 
   // Sign-off — sender name + email only; no duplicate date (Change 5, item 7)
   doc.setFont('helvetica', 'normal'); doc.setFontSize(BODY_SIZE); setTC(C.TEXT_BODY);
-  checkPage(); doc.text('Sincerely,', ML, y); y += 14;
+  checkPage(); doc.text(t('sign_off'), ML, y); y += 14;
   if (senderName) {
     doc.setFont('helvetica', 'bold'); doc.setFontSize(BODY_SIZE); setTC(C.TEXT_PRI);
     checkPage(); doc.text(senderName, ML, y); y += LINE_H;
@@ -848,42 +1444,42 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
   newPage();
 
   doc.setFont('helvetica', 'bold'); doc.setFontSize(16); setTC(C.TEXT_PRI);
-  doc.text('14-Day Follow-Up Template', ML, y); y += 8;
+  doc.text(t('follow_up_title'), ML, y); y += 8;
 
   drawCallout(
     airlineContact?.claimsEmail
-      ? `Send this follow-up via email to ${airlineContact.claimsEmail} if you have not received a response by ${followUpDateStr} (14 days after your original submission).`
-      : `Submit this follow-up through ${airlineName}'s online portal, or contact their customer service team directly referencing your original claim submission and reference number, if you have not received a response by ${followUpDateStr}.`,
+      ? t('follow_up_callout_email', airlineContact.claimsEmail, followUpDateStr)
+      : t('follow_up_callout_portal', airlineName, followUpDateStr),
     C.LT_BLUE_BG, C.LT_BLUE_BD
   );
 
-  drawSection('FOLLOW-UP LETTER');
+  drawSection(t('section_follow_up'));
   drawTemplateLetter([
     followUpDateStr,
     '',
-    'Customer Relations Department',
+    t('fu_customer_relations'),
     airlineName,
     '',
-    `Re: Follow-Up — Compensation Claim for Flight ${flightNum} on ${flightDateFmt}`,
+    t('fu_re', flightNum, flightDateFmt),
     '',
-    `Dear Sir or Madam,`,
+    t('fu_dear'),
     '',
-    `I am writing to follow up on a formal compensation claim I submitted on ${todayStr} regarding flight ${flightNum} on ${flightDateFmt} from ${fromIATA} to ${toIATA}.`,
+    t('fu_para1', todayStr, flightNum, flightDateFmt, fromIATA, toIATA),
     '',
-    `I have not yet received a response or acknowledgement of my claim. Under ${regFull}, airlines are required to respond to passenger compensation claims within a reasonable timeframe. I submitted my original claim 14 days ago and have still not received a substantive reply.`,
+    t('fu_para2', regFull),
     '',
-    `I kindly request that you acknowledge receipt of my original claim and provide a written update on its status within 7 days of this letter.`,
+    t('fu_para3'),
     '',
-    `If I do not receive a response, I will escalate this matter to the ${escalation.name}.`,
+    t('fu_para4', escalation.name),
     '',
-    'Sincerely,',
-    senderName || '[Your full name]',
-    senderEmail || '[Your email]',
+    t('fu_sincerely'),
+    senderName || t('fu_name_placeholder'),
+    senderEmail || t('fu_email_placeholder'),
   ].filter(s => s !== null));
 
   y += 4;
   doc.setFont('helvetica', 'italic'); doc.setFontSize(8); setTC(C.TEXT_MUTED);
-  doc.text('Note: Update the submission date if you are sending this at a different time.', ML, y); y += 8;
+  doc.text(t('follow_up_note'), ML, y); y += 8;
 
   // ═══════════════════════════════════════════════
   // 30-DAY ESCALATION PAGE
@@ -891,44 +1487,44 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
   newPage();
 
   doc.setFont('helvetica', 'bold'); doc.setFontSize(16); setTC(C.TEXT_PRI);
-  doc.text('30-Day Escalation Template', ML, y); y += 8;
+  doc.text(t('escalation_title'), ML, y); y += 8;
 
   drawCallout(
     airlineContact?.claimsEmail
-      ? `Send this escalation letter via email to ${airlineContact.claimsEmail} if you have not received a satisfactory response by ${escalationDateStr} (30 days after your original submission).`
-      : `Submit this escalation through ${airlineName}'s online portal, or contact their customer service team directly referencing your claim, if you have not received a satisfactory response by ${escalationDateStr}.`,
+      ? t('esc_callout_email', airlineContact.claimsEmail, escalationDateStr)
+      : t('esc_callout_portal', airlineName, escalationDateStr),
     [255, 247, 237], [254, 215, 170]
   );
 
-  drawSection('ESCALATION LETTER');
+  drawSection(t('section_escalation_letter'));
   drawTemplateLetter([
     escalationDateStr,
     '',
-    'Customer Relations Department',
+    t('esc_customer_relations'),
     airlineName,
     '',
-    `Re: Escalation Notice — Unanswered Compensation Claim for Flight ${flightNum} on ${flightDateFmt}`,
+    t('esc_re', flightNum, flightDateFmt),
     '',
-    'Dear Sir or Madam,',
+    t('esc_dear'),
     '',
-    `I am writing to formally escalate my compensation claim regarding flight ${flightNum} on ${flightDateFmt} from ${fromIATA} to ${toIATA}.`,
+    t('esc_para1', flightNum, flightDateFmt, fromIATA, toIATA),
     '',
-    `I submitted a formal claim on ${todayStr} under ${regFull}. As of the date of this letter, I have not received a substantive response or resolution.`,
+    t('esc_para2', todayStr, regFull),
     '',
     compAmount
-      ? `Under ${regFull}, I am legally entitled to compensation of ${compAmount} per passenger. This amount remains outstanding.`
-      : `Under ${regFull}, I am legally entitled to compensation for the disruption experienced. This remains outstanding.`,
+      ? t('esc_para3_amount', regFull, compAmount)
+      : t('esc_para3_no_amount', regFull),
     '',
-    `I require a full written response within 14 days of this letter. If I do not receive a satisfactory resolution, I will immediately file a formal complaint with the ${escalation.name} and reserve all rights to pursue further legal remedies, including proceedings in the relevant small claims court.`,
+    t('esc_para4', escalation.name),
     '',
-    'Sincerely,',
-    senderName || '[Your full name]',
-    senderEmail || '[Your email]',
+    t('esc_sincerely'),
+    senderName || t('esc_name_placeholder'),
+    senderEmail || t('esc_email_placeholder'),
   ].filter(s => s !== null));
 
   y += 4;
   doc.setFont('helvetica', 'italic'); doc.setFontSize(8); setTC(C.TEXT_MUTED);
-  doc.text('Note: Update the original claim submission date before sending.', ML, y); y += 8;
+  doc.text(t('escalation_note'), ML, y); y += 8;
 
   // ═══════════════════════════════════════════════
   // WHAT TO EXPECT PAGE
@@ -936,31 +1532,26 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
   newPage();
 
   doc.setFont('helvetica', 'bold'); doc.setFontSize(16); setTC(C.TEXT_PRI);
-  doc.text('What to Expect After Submitting Your Claim', ML, y); y += 10;
+  doc.text(t('what_to_expect_title'), ML, y); y += 10;
 
-  drawSection('TYPICAL TIMELINE');
+  drawSection(t('section_timeline'));
   const timeline = [
-    '1–3 days: Acknowledge receipt (most airlines, if you email).',
-    '14–30 days: Initial response — may be an offer, a rejection, or a request for more information.',
-    '30–60 days: Full resolution for straightforward claims.',
-    '60–90 days: More complex cases, or airlines that are slow to respond.',
-    '90+ days: Escalate to the relevant authority — do not wait longer than this.',
+    t('timeline_1'),
+    t('timeline_2'),
+    t('timeline_3'),
+    t('timeline_4'),
+    t('timeline_5'),
   ];
   for (const t of timeline) renderPara(t, { gap: 3 });
   y += 3;
 
-  drawSection('COMMON AIRLINE RESPONSES');
+  drawSection(t('section_responses'));
   const responses = [
-    ['"Extraordinary circumstances" or "force majeure"',
-     'Airlines frequently use this defense. If the actual cause was mechanical, crew-related, or operational, this defense does not apply. Respond in writing citing the specific cause and stating it does not meet the legal definition of extraordinary circumstances.'],
-    ['"We need more information"',
-     'Respond promptly with any documents requested — booking confirmation, boarding passes, correspondence. Keep copies of everything you send.'],
-    ['"Your claim is rejected"',
-     'Do not accept a rejection without a written explanation citing specific legal grounds. Use the 30-day escalation template (page 5) and file with the relevant authority.'],
-    ['No response after 14 days',
-     'Send the 14-day follow-up template (page 4). If still no response after 30 days total, send the escalation template and file with the authority below.'],
-    ['"We offer you a voucher instead"',
-     'You are not obliged to accept a voucher. Under EU261/UK261/APPR, you are entitled to cash compensation. Reply in writing that you do not accept the voucher and require cash payment.'],
+    [t('resp_1_head'), t('resp_1_detail')],
+    [t('resp_2_head'), t('resp_2_detail')],
+    [t('resp_3_head'), t('resp_3_detail')],
+    [t('resp_4_head'), t('resp_4_detail')],
+    [t('resp_5_head'), t('resp_5_detail')],
   ];
   for (const [heading, detail] of responses) {
     checkPage(20);
@@ -970,17 +1561,14 @@ async function buildPdf({ letter, claimData, details, result, flightDetails }) {
     renderPara(detail, { gap: 6 });
   }
 
-  drawSection('YOUR ESCALATION PATH');
-  drawStep(1, `Send your Formal Compensation Claim Letter to ${airlineName} using the contact details in the How to Submit section.`);
-  drawStep(2, `If no response in 14 days, send the 14-Day Follow-Up Template included in this kit.`);
-  drawStep(3, `If no resolution in 30 days, send the 30-Day Escalation Template and file with ${escalation.name}.`);
-  drawStep(4, `If the authority doesn't resolve it within 8 weeks, consider Alternative Dispute Resolution (ADR) or small claims court.`);
+  drawSection(t('section_your_path'));
+  drawStep(1, t('path_1', airlineName));
+  drawStep(2, t('path_2'));
+  drawStep(3, t('path_3', escalation.name));
+  drawStep(4, t('path_4'));
 
   y += 3;
-  drawCallout(
-    'Small claims court is a viable option in most jurisdictions for claims of this size and does not require a solicitor. Filing fees are typically £30–£100 (UK), €25–€75 (EU), or CA$75–$200 (Canada).',
-    C.GRAY_BG, C.GRAY_BD
-  );
+  drawCallout(t('final_callout'), C.GRAY_BG, C.GRAY_BD);
 
   // ── Final branded footer on last page ──
   drawFooter(true);
@@ -1000,6 +1588,7 @@ export default function Success() {
   const [details, setDetails] = useState(null);
   const [result, setResult] = useState(null);
   const [flightDetails, setFlightDetails] = useState({ scheduledTime: '', actualTime: '', incidentDescription: '' });
+  const [language, setLanguage] = useState('en');
   const [copied, setCopied] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
   const hasFetched = useRef(false);
@@ -1021,6 +1610,8 @@ export default function Success() {
     setClaimData(answers);
     setResult(r);
     setDetails(d);
+    const lang = answers?.language;
+    if (lang && ['en', 'tr', 'fr', 'de', 'es'].includes(lang)) setLanguage(lang);
     setState('collect');
   }, []);
 
@@ -1070,7 +1661,7 @@ export default function Success() {
     if (!letter) return;
     setPdfLoading(true);
     try {
-      const doc = await buildPdf({ letter, claimData, details, result, flightDetails });
+      const doc = await buildPdf({ letter, claimData, details, result, flightDetails, language });
       const flightNum = claimData?.flightNumber?.replace(/\s/g, '') || 'flight';
       const date = claimData?.flightDate || new Date().toISOString().split('T')[0];
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);

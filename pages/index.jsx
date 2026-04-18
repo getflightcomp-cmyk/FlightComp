@@ -1085,6 +1085,7 @@ export default function Home() {
         successUrl: `${base}/success?session_id={CHECKOUT_SESSION_ID}`,
         cancelUrl: `${base}/cancel`,
         claimMeta,
+        language: 'en',
       }),
     });
 

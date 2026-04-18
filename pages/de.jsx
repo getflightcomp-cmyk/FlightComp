@@ -1053,6 +1053,7 @@ export default function GermanHome() {
         successUrl: `${base}/success?session_id={CHECKOUT_SESSION_ID}`,
         cancelUrl:  `${base}/de`,
         claimMeta,
+        language: 'de',
       }),
     });
 
