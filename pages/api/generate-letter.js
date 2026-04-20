@@ -65,21 +65,19 @@ function languageDirective(lang) {
   if (lang === 'en' || !lang) return '';
   const name = LANGUAGE_NAMES[lang] || 'English';
   return `CRITICAL LANGUAGE REQUIREMENT:
-Write the ENTIRE letter in ${name}. Every single sentence, heading, subject line, date format, salutation, legal citation commentary, transition phrase, and closing must be in ${name}.
+Write the ENTIRE letter body in ${name}. Every single sentence, legal citation commentary, and transition phrase must be in ${name}.
 
 Specifically:
-- Subject line: in ${name}
-- Date: in ${name} (use the date format conventions of ${name})
-- Salutation (e.g., "To whom it may concern"): in ${name}
 - All legal analysis and argumentation: in ${name}
 - The regulation NAMES themselves (EU Regulation 261/2004, UK261, APPR SOR/2019-150, SHY) remain untranslated as proper nouns
 - The regulation article numbers (e.g., Article 5(1)(c), Article 7) remain in their formal form
 - Airline name remains as-is
 - Amount + currency remains as-is (€600, £220, CA$900)
-- The closing phrase (equivalent to "Yours faithfully"): in ${name}
 - The passenger's name remains as-is (do not transliterate)
 
 If you find yourself about to write an English phrase, STOP and write it in ${name} instead. No English anywhere except proper nouns and regulation names.
+
+DATE HANDLING: All dates embedded in this prompt are already formatted in ${name} locale. Copy them verbatim into the letter exactly as provided. Do NOT re-format dates in English. Do NOT translate month names — the dates are already in the correct language.
 
 `;
 }
@@ -200,15 +198,15 @@ VERDICT: ${verdict.toUpperCase()}${verdictNote ? `\nContext: ${verdictNote}` : '
 LETTER REQUIREMENTS:
 1. Date: ${today}
 2. Address to: Customer Relations Department, [Airline Name]
-3. Subject: Flight ${flightNumber || '[number]'} — Formal Compensation Claim under ${regulation === 'UK261' ? 'UK261' : 'EU Regulation 261/2004'}
+3. Do NOT include a subject line, date line, or recipient address block at the top of the letter. Those are drawn by the PDF scaffolding. Start the letter body directly with the opening paragraph.
 4. Open with a factual statement of the disruption including exact times if provided above
 5. In one consolidated paragraph, cite the legal basis: ${regulation === 'UK261' ? 'UK Statutory Instrument 2019 No. 278' : 'EU Regulation 261/2004'} — specifically Article 5 (cancellations), Article 6 (delay), or Article 7 (compensation amounts) as relevant to this case
 6. ${compLine}
 7. Include booking reference if provided
 8. Set a firm 14-day response deadline: ${deadline}
 9. State that failure to respond will result in escalation to the ${regulation === 'UK261' ? 'Civil Aviation Authority (CAA)' : 'relevant National Enforcement Body (NEB)'}
-10. Close formally: "Yours faithfully," followed by the passenger's full name
-11. Write the complete letter only — no preamble, commentary, or instructions
+10. Do NOT include a closing (no "Sincerely," no "Yours faithfully," no signature line, no sender name, no sender email, no sender address). The PDF scaffolding will add the closing automatically. End the letter with the final content paragraph about escalation. The letter body must NOT contain any sign-off whatsoever.
+11. Write the complete letter body only — no preamble, commentary, or instructions
 12. Professional and direct tone — firm but not aggressive
 13. The letter must read as if the passenger wrote it directly
 ${bankDetails ? '14. Include payment instructions using the bank/payment details above' : ''}
@@ -276,15 +274,15 @@ VERDICT: ${verdict.toUpperCase()}${verdictNote ? `\nContext: ${verdictNote}` : '
 LETTER REQUIREMENTS:
 1. Date: ${today}
 2. Address to: Customer Relations Department, [Airline Name]
-3. Subject: Flight ${flightNumber || '[number]'} — Compensation Claim under Canada APPR (SOR/2019-150)
+3. Do NOT include a subject line, date line, or recipient address block at the top of the letter. Those are drawn by the PDF scaffolding. Start the letter body directly with the opening paragraph.
 4. Open with a factual statement of the disruption including exact times if provided above
 5. In one consolidated paragraph, cite the legal basis: Air Passenger Protection Regulations (SOR/2019-150) — specifically Section 19 (compensation for delays/cancellations within airline control), Section 10 (treatment standards), or Section 17 (denied boarding) as relevant to this case
 6. ${compLineAPPR}
 7. Include booking reference if provided
 8. Set a 30-day response deadline: ${deadline}
 9. State that failure to respond will result in escalation to the Canadian Transportation Agency (CTA) at https://otc-cta.gc.ca/eng/air-travel-complaints
-10. Close formally: "Yours faithfully," followed by the passenger's full name
-11. Write the complete letter only — no preamble, commentary, or instructions
+10. Do NOT include a closing (no "Sincerely," no "Yours faithfully," no signature line, no sender name, no sender email, no sender address). The PDF scaffolding will add the closing automatically. End the letter with the final content paragraph about escalation. The letter body must NOT contain any sign-off whatsoever.
+11. Write the complete letter body only — no preamble, commentary, or instructions
 12. Professional and direct tone — firm but not aggressive
 13. The letter must read as if the passenger wrote it directly
 ${bankDetails ? '14. Include payment instructions using the bank/payment details above' : ''}
@@ -352,15 +350,15 @@ VERDICT: ${verdict.toUpperCase()}${verdictNote ? `\nContext: ${verdictNote}` : '
 LETTER REQUIREMENTS:
 1. Date: ${today}
 2. Address to: Customer Relations Department, [Airline Name]
-3. Subject: Flight ${flightNumber || '[number]'} — Compensation Claim under SHY Passenger Regulation
+3. Do NOT include a subject line, date line, or recipient address block at the top of the letter. Those are drawn by the PDF scaffolding. Start the letter body directly with the opening paragraph.
 4. Open with a factual statement of the disruption including exact times if provided above
 5. In one consolidated paragraph, cite the legal basis: Turkish Civil Aviation Law No. 2920, Article 143 and the SHY Passenger Regulation; state that compensation is denominated in EUR but payable in Turkish Lira at the Central Bank of Turkey (TCMB) exchange rate on the date of ticket purchase
 6. ${compLineSHY}
 7. Include booking reference if provided
 8. Set a 30-day response deadline: ${deadline}
 9. State that failure to respond will result in escalation to the Turkish Directorate General of Civil Aviation (SHGM — Sivil Havacılık Genel Müdürlüğü) at https://web.shgm.gov.tr
-10. Close formally: "Yours faithfully," followed by the passenger's full name
-11. Write the complete letter only — no preamble, commentary, or instructions
+10. Do NOT include a closing (no "Sincerely," no "Yours faithfully," no signature line, no sender name, no sender email, no sender address). The PDF scaffolding will add the closing automatically. End the letter with the final content paragraph about escalation. The letter body must NOT contain any sign-off whatsoever.
+11. Write the complete letter body only — no preamble, commentary, or instructions
 12. Professional and direct tone — firm but not aggressive
 13. The letter must read as if the passenger wrote it directly
 ${bankDetails ? '14. Include payment instructions using the bank/payment details above' : ''}

@@ -313,6 +313,7 @@ const PDF_STRINGS = {
     disruption_denied: 'denied boarding',
     disruption_other: 'disruption',
     route_to: (from, to) => `${from} to ${to}`,
+    letter_subject_line: (flightNum, flightDate, regFull) => `Re: Flight ${flightNum} on ${flightDate} — Compensation Claim under ${regFull}`,
   },
   tr: {
     page_header: 'Ucus Tazminat Kiti',
@@ -430,6 +431,7 @@ const PDF_STRINGS = {
     disruption_denied: 'yolcu kabul reddine',
     disruption_other: 'aksama',
     route_to: (from, to) => `${from} - ${to}`,
+    letter_subject_line: (flightNum, flightDate, regFull) => `Konu: ${flightNum} numaralı uçuş, ${flightDate} — ${regFull} kapsamında tazminat talebi`,
   },
   fr: {
     page_header: "Kit d'indemnisation de vol",
@@ -547,6 +549,7 @@ const PDF_STRINGS = {
     disruption_denied: "refus d'embarquement",
     disruption_other: 'perturbation',
     route_to: (from, to) => `${from} a ${to}`,
+    letter_subject_line: (flightNum, flightDate, regFull) => `Objet : Vol ${flightNum} du ${flightDate} — Demande d'indemnisation en vertu de ${regFull}`,
   },
   de: {
     page_header: 'Fluggastrechte-Kit',
@@ -664,6 +667,7 @@ const PDF_STRINGS = {
     disruption_denied: 'Nichtbeforderung',
     disruption_other: 'Storung',
     route_to: (from, to) => `${from} nach ${to}`,
+    letter_subject_line: (flightNum, flightDate, regFull) => `Betreff: Flug ${flightNum} am ${flightDate} — Entschadigungsanspruch gemas ${regFull}`,
   },
   es: {
     page_header: 'Kit de compensacion de vuelo',
@@ -781,6 +785,7 @@ const PDF_STRINGS = {
     disruption_denied: 'denegacion de embarque',
     disruption_other: 'interrupcion',
     route_to: (from, to) => `${from} a ${to}`,
+    letter_subject_line: (flightNum, flightDate, regFull) => `Asunto: Vuelo ${flightNum} del ${flightDate} — Reclamacion de compensacion en virtud del ${regFull}`,
   },
 };
 
@@ -1374,8 +1379,8 @@ async function buildPdf({ letter, claimData, details, result, flightDetails, lan
   doc.text(t('customer_relations'), ML, y); y += 5;
   doc.text(airlineName, ML, y); y += 8;
 
-  // Subject line — fixed format with named-month flight date
-  const subjLine = `Re: Flight ${flightNum} on ${flightDateFmt} — Compensation Claim under ${regFull}`;
+  // Subject line — localized per language
+  const subjLine = t('letter_subject_line', flightNum, flightDateFmt, regFull);
   doc.setFont('helvetica', 'bold'); doc.setFontSize(12); setTC(C.TEXT_PRI);
   const subjLines = doc.splitTextToSize(subjLine, CONTENT_W);
   for (const sl of subjLines) { doc.text(sl, ML, y); y += 6.5; }
@@ -1388,16 +1393,39 @@ async function buildPdf({ letter, claimData, details, result, flightDetails, lan
   doc.setFont('helvetica', 'normal'); doc.setFontSize(BODY_SIZE); setTC(C.TEXT_BODY);
   checkPage(); doc.text(t('to_whom'), ML, y); y += 8;
 
-  // Filter body paragraphs — strip header/salutation/sender/opening duplicates from AI letter
+  // Filter body paragraphs — strip header/salutation/sender/closing duplicates from AI letter
   const filteredBodyParas = bodyParas.filter(p => {
-    const t = p.trim();
-    if (/^dear\s/i.test(t)) return false;
-    if (/^to whom it may concern/i.test(t)) return false;
-    if (/^customer relations/i.test(t)) return false;
-    if (/^\d{1,2}\s+\w+\s+\d{4}$/.test(t)) return false;
-    if (senderName && t.startsWith(senderName)) return false;
-    if (senderEmail && t === senderEmail) return false;
-    if (/^i am writing to/i.test(t)) return false; // replaced by fixed opening sentence
+    const txt = p.trim();
+    if (!txt) return false;
+    // Strip common salutations the scaffolding already draws
+    if (/^dear\s/i.test(txt)) return false;
+    if (/^to whom it may concern/i.test(txt)) return false;
+    if (/^sayın\s/i.test(txt)) return false;          // Turkish salutation
+    if (/^estimad[oa]\/a\s/i.test(txt)) return false; // Spanish salutation
+    if (/^sehr geehrte/i.test(txt)) return false;     // German salutation
+    if (/^madame,?\s*monsieur/i.test(txt)) return false; // French salutation
+    // Strip lone "Customer Relations" lines
+    if (/^customer relations/i.test(txt)) return false;
+    if (/^müşteri ilişkileri/i.test(txt)) return false;
+    if (/^service client/i.test(txt)) return false;
+    if (/^kundenservice/i.test(txt)) return false;
+    if (/^atención al cliente/i.test(txt)) return false;
+    // Strip lone date lines (e.g. "20 April 2026")
+    if (/^\d{1,2}\s+\w+\s+\d{4}$/.test(txt)) return false;
+    // Strip sender name / email (catches Claude's self-added closings)
+    if (senderName && txt.includes(senderName)) return false;
+    if (senderEmail && txt.includes(senderEmail)) return false;
+    // Strip closings in all 5 languages
+    if (/^(sincerely|yours faithfully|yours sincerely|regards|kind regards)/i.test(txt)) return false;
+    if (/^(saygılarımla|saygılarımızla)/i.test(txt)) return false;         // Turkish
+    if (/^(cordialement|veuillez agréer|sincères salutations)/i.test(txt)) return false; // French
+    if (/^(mit freundlichen grüßen|hochachtungsvoll)/i.test(txt)) return false; // German
+    if (/^(atentamente|cordialmente|un saludo)/i.test(txt)) return false;  // Spanish
+    // Strip subject-line duplicates (scaffolding now draws its own)
+    if (/^(re:|konu:|objet\s*:|betreff:|asunto:)/i.test(txt)) return false;
+    // Strip "I am writing to..." opening (replaced by fixed opening sentence)
+    if (/^i am writing to/i.test(txt)) return false;
+    if (/^size bu mektubu/i.test(txt)) return false;
     return true;
   });
 
