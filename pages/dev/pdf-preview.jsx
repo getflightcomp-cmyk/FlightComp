@@ -63,13 +63,26 @@ const PRESETS = {
   },
 };
 
+const LANGUAGES = [
+  { code: 'en', label: '🇬🇧 English' },
+  { code: 'tr', label: '🇹🇷 Türkçe' },
+  { code: 'fr', label: '🇫🇷 Français' },
+  { code: 'de', label: '🇩🇪 Deutsch' },
+  { code: 'es', label: '🇪🇸 Español' },
+];
+
 export default function PdfPreview() {
   const router = useRouter();
   const [preset, setPreset] = useState('EU261');
+  const [language, setLanguage] = useState('en');
   const [launched, setLaunched] = useState(false);
 
   function launchPreview() {
-    const data = PRESETS[preset]?.data || PRESETS.EU261.data;
+    const presetData = PRESETS[preset]?.data || PRESETS.EU261.data;
+    const data = {
+      ...presetData,
+      answers: { ...presetData.answers, language },
+    };
     sessionStorage.setItem('fc_claim', JSON.stringify(data));
     setLaunched(true);
     router.push('/success');
@@ -94,6 +107,19 @@ export default function PdfPreview() {
 
         <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 24, marginBottom: 20 }}>
           <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            Language
+          </label>
+          <select
+            value={language}
+            onChange={e => setLanguage(e.target.value)}
+            style={{ width: '100%', padding: '10px 14px', background: '#0f172a', border: '1px solid #334155', borderRadius: 8, color: '#f1f5f9', fontSize: 14, marginBottom: 20 }}
+          >
+            {LANGUAGES.map(({ code, label }) => (
+              <option key={code} value={code}>{label}</option>
+            ))}
+          </select>
+
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             Scenario
           </label>
           <select
@@ -109,6 +135,9 @@ export default function PdfPreview() {
           <div style={{ marginTop: 16, background: '#0f172a', borderRadius: 8, padding: 14 }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               Mock data
+            </div>
+            <div style={{ fontSize: 11, color: '#60a5fa', marginBottom: 6, fontFamily: 'ui-monospace, monospace' }}>
+              language: &quot;{language}&quot;
             </div>
             <pre style={{ fontSize: 12, color: '#94a3b8', margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'ui-monospace, monospace', lineHeight: 1.6 }}>
               {JSON.stringify(PRESETS[preset]?.data || {}, null, 2)}
