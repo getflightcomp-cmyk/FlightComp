@@ -517,8 +517,6 @@ const DISRUPTION_LABELS_DE = {
 };
 
 function ResultsScreen({ result, answers, onGetLetter, onReset }) {
-  const [notifyEmail, setNotifyEmail]     = useState('');
-  const [notified, setNotified]           = useState(false);
   const [captureEmail, setCaptureEmail]   = useState('');
   const [captureStatus, setCaptureStatus] = useState('idle');
 
@@ -528,12 +526,6 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
   const isSHYDelay = regulation === 'SHY' && answers.disruption === 'delayed';
   const showPrimaryCTA = verdict === 'likely' || verdict === 'possibly' || isSHYDelay;
   const showSecondaryCTA = (verdict === 'likely' || verdict === 'possibly') && !isSHYDelay;
-
-  function handleNotify(e) {
-    e.preventDefault();
-    if (!notifyEmail.trim()) return;
-    setNotified(true);
-  }
 
   async function handleCapture(e) {
     e.preventDefault();
@@ -651,21 +643,23 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
               </a>
               <div className="notify-fallback">
                 <p className="notify-fallback-label">Noch nicht bereit? Hinterlassen Sie Ihre E-Mail und wir melden uns.</p>
-                {notified ? (
+                {captureStatus === 'done' ? (
                   <div className="notify-success">✓ Erhalten – wir melden uns bald.</div>
+                ) : captureStatus === 'error' ? (
+                  <div className="notify-error">Etwas ist schiefgelaufen — bitte versuche es erneut.</div>
                 ) : (
-                  <form className="notify-row" onSubmit={handleNotify}>
+                  <form className="notify-row" onSubmit={handleCapture}>
                     <input
                       className="notify-input"
                       type="email"
                       inputMode="email"
                       autoComplete="email"
                       placeholder="Ihre E-Mail-Adresse"
-                      value={notifyEmail}
-                      onChange={e => setNotifyEmail(e.target.value)}
+                      value={captureEmail}
+                      onChange={e => setCaptureEmail(e.target.value)}
                       required
                     />
-                    <button className="btn-notify" type="submit" disabled={!notifyEmail.trim()}>
+                    <button className="btn-notify" type="submit" disabled={!captureEmail.trim() || captureStatus === 'submitting'}>
                       Benachrichtigen
                     </button>
                   </form>

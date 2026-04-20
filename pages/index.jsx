@@ -528,8 +528,6 @@ const DISRUPTION_LABELS = {
 
 function ResultsScreen({ result, answers, onGetLetter, onReset }) {
   const [copied, setCopied] = useState(false);
-  const [notifyEmail, setNotifyEmail] = useState('');
-  const [notified, setNotified] = useState(false);
   const [captureEmail, setCaptureEmail] = useState('');
   const [captureStatus, setCaptureStatus] = useState('idle'); // idle | submitting | done | error
   const { verdict, regulation, compensation, verdictNote, careRights, deskScript, distanceKm, shyMeta, alsoCoveredByEU261 } = result;
@@ -544,14 +542,6 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
-  }
-
-  function handleNotify(e) {
-    e.preventDefault();
-    if (!notifyEmail.trim()) return;
-    // Store for now — Sprint 3 will wire to a real list
-    console.info('[FlightClaim] Notify-me signup:', notifyEmail, { verdict, regulation, compensation: compensation?.amount });
-    setNotified(true);
   }
 
   async function handleCapture(e) {
@@ -660,21 +650,23 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
               </a>
               <div className="notify-fallback">
                 <p className="notify-fallback-label">Not ready yet? Leave your email and we'll follow up.</p>
-                {notified ? (
+                {captureStatus === 'done' ? (
                   <div className="notify-success">✓ Got it — we'll be in touch.</div>
+                ) : captureStatus === 'error' ? (
+                  <div className="notify-error">Something went wrong — please try again.</div>
                 ) : (
-                  <form className="notify-row" onSubmit={handleNotify}>
+                  <form className="notify-row" onSubmit={handleCapture}>
                     <input
                       className="notify-input"
                       type="email"
                       inputMode="email"
                       autoComplete="email"
                       placeholder="Your email address"
-                      value={notifyEmail}
-                      onChange={e => setNotifyEmail(e.target.value)}
+                      value={captureEmail}
+                      onChange={e => setCaptureEmail(e.target.value)}
                       required
                     />
-                    <button className="btn-notify" type="submit" disabled={!notifyEmail.trim()}>
+                    <button className="btn-notify" type="submit" disabled={!captureEmail.trim() || captureStatus === 'submitting'}>
                       Notify Me
                     </button>
                   </form>
