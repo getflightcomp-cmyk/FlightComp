@@ -52,6 +52,50 @@ const SHY_REASON_LABELS = {
   unknown:      'no reason given by the airline',
 };
 
+// ── Language helpers ───────────────────────────────────
+const LANGUAGE_NAMES = {
+  en: 'English',
+  tr: 'Turkish (Türkçe)',
+  fr: 'French (Canadian French — français canadien)',
+  de: 'German (Deutsch)',
+  es: 'Spanish (Español — neutral international register)',
+};
+
+function languageDirective(lang) {
+  if (lang === 'en' || !lang) return '';
+  const name = LANGUAGE_NAMES[lang] || 'English';
+  return `CRITICAL LANGUAGE REQUIREMENT:
+Write the ENTIRE letter in ${name}. Every single sentence, heading, subject line, date format, salutation, legal citation commentary, transition phrase, and closing must be in ${name}.
+
+Specifically:
+- Subject line: in ${name}
+- Date: in ${name} (use the date format conventions of ${name})
+- Salutation (e.g., "To whom it may concern"): in ${name}
+- All legal analysis and argumentation: in ${name}
+- The regulation NAMES themselves (EU Regulation 261/2004, UK261, APPR SOR/2019-150, SHY) remain untranslated as proper nouns
+- The regulation article numbers (e.g., Article 5(1)(c), Article 7) remain in their formal form
+- Airline name remains as-is
+- Amount + currency remains as-is (€600, £220, CA$900)
+- The closing phrase (equivalent to "Yours faithfully"): in ${name}
+- The passenger's name remains as-is (do not transliterate)
+
+If you find yourself about to write an English phrase, STOP and write it in ${name} instead. No English anywhere except proper nouns and regulation names.
+
+`;
+}
+
+const LOCALE_FOR_DATES = {
+  en: 'en-GB',
+  tr: 'tr-TR',
+  fr: 'fr-CA',
+  de: 'de-DE',
+  es: 'es-ES',
+};
+
+function getDateLocale(lang, fallback = 'en-GB') {
+  return LOCALE_FOR_DATES[lang] || fallback;
+}
+
 // ── Delay duration calculator ──────────────────────────
 function calcDelay(scheduledTime, actualTime) {
   if (!scheduledTime || !actualTime) return null;
@@ -97,7 +141,7 @@ function buildTimingBlock(flightDetails = {}, disruption, arrCity, flightNumber,
 }
 
 // ── EU261 / UK261 prompt ──────────────────────────────
-function buildPrompt({ answers, result, details, flightDetails }) {
+function buildPrompt({ answers, result, details, flightDetails, language = 'en' }) {
   const {
     flightNumber, flightDate, from, to, disruption, delayLength, reason,
   } = answers;
@@ -122,12 +166,13 @@ function buildPrompt({ answers, result, details, flightDetails }) {
   const delayLabel      = disruption === 'delayed' ? ` of ${DELAY_LABELS[delayLength] || delayLength}` : '';
   const reasonLabel     = REASON_LABELS[reason] || reason;
 
-  const today    = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-  const deadline = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  const dateLocale = getDateLocale(language, 'en-GB');
+  const today    = new Date().toLocaleDateString(dateLocale, { day: 'numeric', month: 'long', year: 'numeric' });
+  const deadline = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toLocaleDateString(dateLocale, { day: 'numeric', month: 'long', year: 'numeric' });
 
   const timingBlock = buildTimingBlock(flightDetails, disruption, arrCity, flightNumber, flightDate);
 
-  return `Write a formal compensation claim letter on behalf of a passenger. The letter should read as if the passenger wrote it personally — do not reference any claim tool, service, or third party.
+  return `${languageDirective(language)}Write a formal compensation claim letter on behalf of a passenger. The letter should read as if the passenger wrote it personally — do not reference any claim tool, service, or third party.
 
 PASSENGER DETAILS:
 - Full name: ${name}
@@ -172,7 +217,7 @@ Write the letter now:`;
 }
 
 // ── APPR prompt ────────────────────────────────────────
-function buildAPPRPrompt({ answers, result, details, flightDetails }) {
+function buildAPPRPrompt({ answers, result, details, flightDetails, language = 'en' }) {
   const {
     flightNumber, flightDate, from, to, disruption,
     apprDelayTier, airlineSize, apprReason,
@@ -196,12 +241,13 @@ function buildAPPRPrompt({ answers, result, details, flightDetails }) {
   const reasonLabel = APPR_REASON_LABELS[apprReason] || apprReason;
   const sizeLabel  = AIRLINE_SIZE_LABELS[airlineSize] || 'carrier';
 
-  const today    = new Date().toLocaleDateString('en-CA', { day: 'numeric', month: 'long', year: 'numeric' });
-  const deadline = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-CA', { day: 'numeric', month: 'long', year: 'numeric' });
+  const dateLocale = getDateLocale(language, 'en-CA');
+  const today    = new Date().toLocaleDateString(dateLocale, { day: 'numeric', month: 'long', year: 'numeric' });
+  const deadline = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString(dateLocale, { day: 'numeric', month: 'long', year: 'numeric' });
 
   const timingBlock = buildTimingBlock(flightDetails, disruption, arrCity, flightNumber, flightDate);
 
-  return `Write a formal compensation claim letter on behalf of a passenger under Canada's Air Passenger Protection Regulations. The letter should read as if the passenger wrote it personally — do not reference any claim tool, service, or third party.
+  return `${languageDirective(language)}Write a formal compensation claim letter on behalf of a passenger under Canada's Air Passenger Protection Regulations. The letter should read as if the passenger wrote it personally — do not reference any claim tool, service, or third party.
 
 PASSENGER DETAILS:
 - Full name: ${name}
@@ -247,7 +293,7 @@ Write the letter now:`;
 }
 
 // ── SHY (Turkey) prompt ────────────────────────────────
-function buildSHYPrompt({ answers, result, details, flightDetails }) {
+function buildSHYPrompt({ answers, result, details, flightDetails, language = 'en' }) {
   const {
     flightNumber, flightDate, from, to, disruption, delayLength, shyReason, shyNotified14,
   } = answers;
@@ -270,12 +316,13 @@ function buildSHYPrompt({ answers, result, details, flightDetails }) {
   const reasonLabel = SHY_REASON_LABELS[shyReason] || shyReason;
   const routeType  = isDomestic ? 'domestic (Turkey internal)' : 'international';
 
-  const today    = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-  const deadline = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  const dateLocale = getDateLocale(language, 'en-GB');
+  const today    = new Date().toLocaleDateString(dateLocale, { day: 'numeric', month: 'long', year: 'numeric' });
+  const deadline = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString(dateLocale, { day: 'numeric', month: 'long', year: 'numeric' });
 
   const timingBlock = buildTimingBlock(flightDetails, disruption, arrCity, flightNumber, flightDate);
 
-  return `Write a formal compensation claim letter on behalf of a passenger under Turkey's SHY Passenger Regulation. The letter should read as if the passenger wrote it personally — do not reference any claim tool, service, or third party.
+  return `${languageDirective(language)}Write a formal compensation claim letter on behalf of a passenger under Turkey's SHY Passenger Regulation. The letter should read as if the passenger wrote it personally — do not reference any claim tool, service, or third party.
 
 PASSENGER DETAILS:
 - Full name: ${name}
@@ -327,7 +374,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { answers, result, details, flightDetails } = req.body;
+  const { answers, result, details, flightDetails, language } = req.body;
+  const lang = ['en', 'tr', 'fr', 'de', 'es'].includes((language || '').toLowerCase())
+    ? language.toLowerCase()
+    : 'en';
 
   if (!answers || !result || !details) {
     return res.status(400).json({ error: 'Missing required fields' });
@@ -337,30 +387,32 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Name and email are required' });
   }
 
-  // ── Try cached template first (no API call needed) ──
+  // ── Try cached template first (English only — templates are English-only) ──
   const regulation = result.regulation || 'EU261';
   const disruption = answers.disruption || '';
   const reason     = answers.reason || answers.apprReason || answers.shyReason || 'none';
 
-  const templateFn = selectTemplate({ regulation, disruption, reason });
-  if (templateFn) {
-    try {
-      const params = buildTemplateParams({ answers, result, details, flightDetails: flightDetails || {} });
-      const letter = templateFn(params);
-      return res.status(200).json({ letter, source: 'template' });
-    } catch (err) {
-      console.warn('[generate-letter] Template render failed, falling back to Claude:', err.message);
+  if (lang === 'en') {
+    const templateFn = selectTemplate({ regulation, disruption, reason });
+    if (templateFn) {
+      try {
+        const params = buildTemplateParams({ answers, result, details, flightDetails: flightDetails || {} });
+        const letter = templateFn(params);
+        return res.status(200).json({ letter, source: 'template' });
+      } catch (err) {
+        console.warn('[generate-letter] Template render failed, falling back to Claude:', err.message);
+      }
     }
   }
 
-  // ── Fallback: Claude API ──
+  // ── Claude API (always used for non-English; fallback for English) ──
   let prompt;
   if (regulation === 'APPR') {
-    prompt = buildAPPRPrompt({ answers, result, details, flightDetails: flightDetails || {} });
+    prompt = buildAPPRPrompt({ answers, result, details, flightDetails: flightDetails || {}, language: lang });
   } else if (regulation === 'SHY') {
-    prompt = buildSHYPrompt({ answers, result, details, flightDetails: flightDetails || {} });
+    prompt = buildSHYPrompt({ answers, result, details, flightDetails: flightDetails || {}, language: lang });
   } else {
-    prompt = buildPrompt({ answers, result, details, flightDetails: flightDetails || {} });
+    prompt = buildPrompt({ answers, result, details, flightDetails: flightDetails || {}, language: lang });
   }
 
   try {

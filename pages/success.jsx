@@ -1628,6 +1628,7 @@ export default function Success() {
           result,
           details,
           flightDetails: extraDetails,
+          language: language || 'en',
         }),
       });
       if (!res.ok) throw new Error('API error');
