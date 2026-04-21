@@ -16,85 +16,54 @@ function buildEmailHtml({ name, airline, flightNumber, regulation, compensationA
   const authority = getAuthority(regulation);
   const firstName = name ? name.split(' ')[0] : 'there';
   const compLine  = compensationAmount
-    ? `You may be entitled to <strong>${compensationAmount}</strong> in compensation.`
-    : 'You may be entitled to statutory compensation.';
+    ? `you may be entitled to <strong>${compensationAmount}</strong> in compensation`
+    : 'you may be entitled to statutory compensation';
+
+  const flightRef = flightNumber ? ` for flight ${flightNumber}` : '';
+  const airlineRef = airline || 'your airline';
 
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="font-family:Arial,sans-serif;background:#f9fafb;margin:0;padding:0;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;padding:32px 0;">
-    <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:8px;overflow:hidden;border:1px solid #e2e8f0;max-width:600px;width:100%;">
+<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#ffffff;margin:0;padding:0;color:#1a1a1a;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;padding:32px 24px;">
+    <tr><td>
+      <p style="font-size:15px;line-height:1.6;margin:0 0 16px;">Hi ${firstName},</p>
 
-        <!-- Header -->
-        <tr><td style="background:#0c447c;padding:24px 32px;">
-          <p style="color:#fff;font-size:20px;font-weight:bold;margin:0;">FlightComp</p>
-          <p style="color:#c3daf8;font-size:13px;margin:6px 0 0;">Flight Compensation Specialists</p>
-        </td></tr>
+      <p style="font-size:15px;line-height:1.6;margin:0 0 16px;">
+        It's been about 30 days since you submitted your claim to ${airlineRef}${flightRef}. Just checking in — ${compLine}, and I want to make sure you're getting a response.
+      </p>
 
-        <!-- Body -->
-        <tr><td style="padding:32px;">
-          <p style="font-size:16px;color:#1a1a1a;margin:0 0 16px;">Hi ${firstName},</p>
+      <p style="font-size:15px;line-height:1.6;margin:0 0 16px;">
+        If the airline hasn't responded or has rejected your claim, your next step is to escalate to ${authority}. The kit you downloaded includes the 30-day escalation template for this.
+      </p>
 
-          <p style="font-size:15px;color:#333;line-height:1.6;margin:0 0 16px;">
-            30 days ago, you submitted a compensation claim to <strong>${airline || 'your airline'}</strong>
-            ${flightNumber ? `for flight <strong>${flightNumber}</strong>` : ''}.
-            If you haven't heard back — or if they rejected your claim — we can take it from here.
-          </p>
+      <p style="font-size:15px;line-height:1.6;margin:0 0 16px;">
+        If you'd rather have someone handle the escalation for you, we also offer a managed service — no upfront cost, 25% of your compensation only if we win:
+      </p>
 
-          <p style="font-size:15px;color:#333;line-height:1.6;margin:0 0 16px;">
-            ${compLine}
-          </p>
+      <p style="font-size:15px;line-height:1.6;margin:0 0 24px;">
+        <a href="https://getflightcomp.com" style="color:#2563eb;">https://getflightcomp.com</a>
+      </p>
 
-          <!-- Value prop box -->
-          <table width="100%" cellpadding="0" cellspacing="0" style="background:#e6f1fb;border-radius:6px;margin:24px 0;">
-            <tr><td style="padding:20px 24px;">
-              <p style="font-size:14px;font-weight:bold;color:#0c447c;margin:0 0 10px;">Our managed service handles everything:</p>
-              <ul style="font-size:14px;color:#334155;margin:0;padding-left:20px;line-height:1.8;">
-                <li>Follow-up letters and escalation to the airline</li>
-                <li>Formal complaint with ${authority}</li>
-                <li>Legal action if needed — all at no upfront cost</li>
-              </ul>
-            </td></tr>
-          </table>
+      <p style="font-size:15px;line-height:1.6;margin:0 0 24px;">
+        If you've already been paid or resolved your claim, congrats — no action needed.
+      </p>
 
-          <!-- Pricing highlight -->
-          <table width="100%" cellpadding="0" cellspacing="0" style="background:#0c447c;border-radius:6px;margin:0 0 24px;">
-            <tr><td style="padding:18px 24px;text-align:center;">
-              <p style="color:#c3daf8;font-size:12px;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;">Our fee</p>
-              <p style="color:#fff;font-size:22px;font-weight:bold;margin:0;">25% of your compensation</p>
-              <p style="color:#c3daf8;font-size:13px;margin:6px 0 0;">Only if we win &mdash; no upfront cost, no hidden fees, ever.</p>
-            </td></tr>
-          </table>
+      <p style="font-size:15px;line-height:1.6;margin:0 0 24px;">
+        Thanks,<br>
+        Ethan<br>
+        FlightComp
+      </p>
 
-          <!-- CTA -->
-          <table width="100%" cellpadding="0" cellspacing="0">
-            <tr><td align="center" style="padding:8px 0 24px;">
-              <a href="https://getflightcomp.com" style="display:inline-block;background:#3b82f6;color:#fff;font-size:16px;font-weight:bold;text-decoration:none;padding:14px 36px;border-radius:6px;">
-                Let Us Handle It
-              </a>
-            </td></tr>
-          </table>
+      <hr style="border:none;border-top:1px solid #e2e8f0;margin:32px 0 16px;">
 
-          <p style="font-size:13px;color:#64748b;line-height:1.6;margin:0;">
-            If you've already been paid or resolved your claim, no action needed — congrats!
-          </p>
-        </td></tr>
-
-        <!-- Footer -->
-        <tr><td style="background:#f1f5f9;padding:20px 32px;border-top:1px solid #e2e8f0;">
-          <p style="font-size:12px;color:#94a3b8;margin:0 0 6px;line-height:1.6;">
-            You received this because you purchased a Flight Compensation Kit from FlightComp.
-          </p>
-          <p style="font-size:12px;color:#94a3b8;margin:0;">
-            <a href="https://getflightcomp.com" style="color:#94a3b8;">getflightcomp.com</a>
-            &nbsp;&middot;&nbsp;
-            <a href="mailto:support@getflightcomp.com?subject=Unsubscribe" style="color:#94a3b8;">Unsubscribe</a>
-          </p>
-        </td></tr>
-
-      </table>
+      <p style="font-size:12px;color:#64748b;line-height:1.6;margin:0;">
+        You received this because you purchased a Flight Compensation Kit from
+        <a href="https://getflightcomp.com" style="color:#64748b;">getflightcomp.com</a>.
+        If you don't want to receive follow-ups like this,
+        <a href="https://getflightcomp.com/unsubscribe?token=__TOKEN__" style="color:#64748b;">unsubscribe here</a>.
+      </p>
     </td></tr>
   </table>
 </body>
@@ -104,23 +73,33 @@ function buildEmailHtml({ name, airline, flightNumber, regulation, compensationA
 function buildEmailText({ name, airline, flightNumber, regulation, compensationAmount }) {
   const authority = getAuthority(regulation);
   const firstName = name ? name.split(' ')[0] : 'there';
+  const flightRef = flightNumber ? ` for flight ${flightNumber}` : '';
+  const airlineRef = airline || 'your airline';
+  const compLine = compensationAmount
+    ? `you may be entitled to ${compensationAmount} in compensation`
+    : 'you may be entitled to statutory compensation';
+
   return [
     `Hi ${firstName},`,
     '',
-    `30 days ago, you submitted a compensation claim to ${airline || 'your airline'}${flightNumber ? ` for flight ${flightNumber}` : ''}. If you haven't heard back — or if they rejected your claim — we can take it from here.`,
+    `It's been about 30 days since you submitted your claim to ${airlineRef}${flightRef}. Just checking in — ${compLine}, and I want to make sure you're getting a response.`,
     '',
-    compensationAmount ? `You may be entitled to ${compensationAmount} in compensation.` : '',
+    `If the airline hasn't responded or has rejected your claim, your next step is to escalate to ${authority}. The kit you downloaded includes the 30-day escalation template for this.`,
     '',
-    'Our managed service handles follow-ups, escalation to ' + authority + ', and legal action if needed — all at no upfront cost.',
+    "If you'd rather have someone handle the escalation for you, we also offer a managed service — no upfront cost, 25% of your compensation only if we win:",
     '',
-    '25% of your compensation, only if we win. No hidden fees, ever.',
+    'https://getflightcomp.com',
     '',
-    'Let us handle it: https://getflightcomp.com',
+    "If you've already been paid or resolved your claim, congrats — no action needed.",
+    '',
+    'Thanks,',
+    'Ethan',
+    'FlightComp',
     '',
     '---',
-    'You received this because you purchased a Flight Compensation Kit from FlightComp.',
-    'To unsubscribe, reply with "unsubscribe" or email support@getflightcomp.com',
-  ].filter(l => l !== null).join('\n');
+    'You received this because you purchased a Flight Compensation Kit from getflightcomp.com.',
+    'Unsubscribe: https://getflightcomp.com/unsubscribe?token=__TOKEN__',
+  ].join('\n');
 }
 
 export default async function handler(req, res) {
@@ -171,12 +150,26 @@ export default async function handler(req, res) {
       continue;
     }
 
+    const token = purchase.unsubscribeToken || '';
+    const html  = buildEmailHtml(purchase).replace(/__TOKEN__/g, token);
+    const text  = buildEmailText(purchase).replace(/__TOKEN__/g, token);
+
+    const unsubscribeUrl = `https://getflightcomp.com/unsubscribe?token=${token}`;
+    const emailHeaders = {
+      'List-Unsubscribe': `<${unsubscribeUrl}>, <mailto:unsubscribe@getflightcomp.com>`,
+      'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      'Precedence': 'bulk',
+    };
+
     try {
       await sendEmail({
-        to: email,
-        subject: `No response from ${purchase.airline || 'your airline'}? Let us take over.`,
-        html: buildEmailHtml(purchase),
-        text: buildEmailText(purchase),
+        to:      email,
+        subject: purchase.airline
+          ? `Checking in on your ${purchase.airline} claim`
+          : 'Checking in on your flight claim',
+        html,
+        text,
+        headers: emailHeaders,
       });
 
       // Mark as sent

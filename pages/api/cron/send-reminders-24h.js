@@ -16,82 +16,52 @@ import { adminClient } from '../../../lib/supabase';
 import { sendEmail }   from '../../../lib/email';
 
 function buildHtml({ email, airline, compensationAmount, regulation }) {
-  const firstName   = '';
-  const compLine    = compensationAmount
-    ? `You may be entitled to <strong>${compensationAmount}</strong> in compensation.`
-    : 'You may be entitled to statutory compensation.';
+  const compLine = compensationAmount
+    ? `Based on what you entered, you may be entitled to <strong>${compensationAmount}</strong> in statutory compensation.`
+    : 'Based on what you entered, you may be entitled to statutory compensation.';
+
+  const airlinePhrase = airline
+    ? `your ${airline} flight`
+    : 'your disrupted flight';
 
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="font-family:Arial,sans-serif;background:#f9fafb;margin:0;padding:0;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;padding:32px 0;">
-    <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:8px;overflow:hidden;border:1px solid #e2e8f0;max-width:600px;width:100%;">
+<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#ffffff;margin:0;padding:0;color:#1a1a1a;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;padding:32px 24px;">
+    <tr><td>
+      <p style="font-size:15px;line-height:1.6;margin:0 0 16px;">Hi,</p>
 
-        <tr><td style="background:#0c447c;padding:24px 32px;">
-          <p style="color:#fff;font-size:20px;font-weight:bold;margin:0;">FlightComp</p>
-          <p style="color:#c3daf8;font-size:13px;margin:6px 0 0;">Flight Compensation Specialists</p>
-        </td></tr>
+      <p style="font-size:15px;line-height:1.6;margin:0 0 16px;">
+        Following up on ${airlinePhrase} yesterday. ${compLine}
+      </p>
 
-        <tr><td style="padding:32px;">
-          <p style="font-size:16px;color:#1a1a1a;margin:0 0 16px;">Hi there,</p>
+      <p style="font-size:15px;line-height:1.6;margin:0 0 16px;">
+        If you'd like a ready-to-send claim letter with submission instructions and follow-up templates, our Flight Compensation Kit is $14.99 and downloads as a PDF. You can find it here:
+      </p>
 
-          <p style="font-size:15px;color:#333;line-height:1.6;margin:0 0 16px;">
-            Yesterday you checked your eligibility for a compensation claim
-            ${airline ? `against <strong>${airline}</strong>` : 'for a disrupted flight'}.
-            ${compLine}
-          </p>
+      <p style="font-size:15px;line-height:1.6;margin:0 0 24px;">
+        <a href="https://getflightcomp.com" style="color:#2563eb;">https://getflightcomp.com</a>
+      </p>
 
-          <p style="font-size:15px;color:#333;line-height:1.6;margin:0 0 24px;">
-            Our <strong>Flight Compensation Kit</strong> gives you everything you need to claim on your own:
-          </p>
+      <p style="font-size:15px;line-height:1.6;margin:0 0 24px;">
+        If you've already filed your claim, or you'd rather handle it differently, no problem — you can ignore this email.
+      </p>
 
-          <table width="100%" cellpadding="0" cellspacing="0" style="background:#e6f1fb;border-radius:6px;margin:0 0 24px;">
-            <tr><td style="padding:20px 24px;">
-              <ul style="font-size:14px;color:#334155;margin:0;padding-left:20px;line-height:1.9;">
-                <li>Personalised claim letter (ready to send)</li>
-                <li>Step-by-step airline submission guide</li>
-                <li>14-day follow-up template</li>
-                <li>30-day escalation template</li>
-                <li>What to Expect guide</li>
-              </ul>
-            </td></tr>
-          </table>
+      <p style="font-size:15px;line-height:1.6;margin:0 0 24px;">
+        Thanks,<br>
+        Ethan<br>
+        FlightComp
+      </p>
 
-          <table width="100%" cellpadding="0" cellspacing="0" style="background:#0c447c;border-radius:6px;margin:0 0 24px;">
-            <tr><td style="padding:18px 24px;text-align:center;">
-              <p style="color:#c3daf8;font-size:12px;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;">One-time cost</p>
-              <p style="color:#fff;font-size:24px;font-weight:bold;margin:0;">$14.99</p>
-              <p style="color:#c3daf8;font-size:13px;margin:6px 0 0;">Instant PDF download &mdash; claim at your own pace</p>
-            </td></tr>
-          </table>
+      <hr style="border:none;border-top:1px solid #e2e8f0;margin:32px 0 16px;">
 
-          <table width="100%" cellpadding="0" cellspacing="0">
-            <tr><td align="center" style="padding:8px 0 24px;">
-              <a href="https://getflightcomp.com" style="display:inline-block;background:#3b82f6;color:#fff;font-size:16px;font-weight:bold;text-decoration:none;padding:14px 36px;border-radius:6px;">
-                Get My Compensation Kit
-              </a>
-            </td></tr>
-          </table>
-
-          <p style="font-size:13px;color:#64748b;line-height:1.6;margin:0;">
-            Airlines count on passengers not following up. Don't let them keep what's yours.
-          </p>
-        </td></tr>
-
-        <tr><td style="background:#f1f5f9;padding:20px 32px;border-top:1px solid #e2e8f0;">
-          <p style="font-size:12px;color:#94a3b8;margin:0 0 6px;line-height:1.6;">
-            You received this because you checked your flight compensation eligibility at FlightComp.
-          </p>
-          <p style="font-size:12px;color:#94a3b8;margin:0;">
-            <a href="https://getflightcomp.com" style="color:#94a3b8;">getflightcomp.com</a>
-            &nbsp;&middot;&nbsp;
-            <a href="https://getflightcomp.com/unsubscribe?token=__TOKEN__" style="color:#94a3b8;">Unsubscribe</a>
-          </p>
-        </td></tr>
-
-      </table>
+      <p style="font-size:12px;color:#64748b;line-height:1.6;margin:0;">
+        You received this because you checked your flight compensation eligibility at
+        <a href="https://getflightcomp.com" style="color:#64748b;">getflightcomp.com</a>.
+        If you don't want to receive follow-ups like this,
+        <a href="https://getflightcomp.com/unsubscribe?token=__TOKEN__" style="color:#64748b;">unsubscribe here</a>.
+      </p>
     </td></tr>
   </table>
 </body>
@@ -100,26 +70,27 @@ function buildHtml({ email, airline, compensationAmount, regulation }) {
 
 function buildText({ airline, compensationAmount }) {
   const compLine = compensationAmount
-    ? `You may be entitled to ${compensationAmount} in compensation.`
-    : 'You may be entitled to statutory compensation.';
+    ? `Based on what you entered, you may be entitled to ${compensationAmount} in statutory compensation.`
+    : 'Based on what you entered, you may be entitled to statutory compensation.';
+  const airlinePhrase = airline ? `your ${airline} flight` : 'your disrupted flight';
+
   return [
-    'Hi there,',
+    'Hi,',
     '',
-    `Yesterday you checked your eligibility for a compensation claim${airline ? ` against ${airline}` : ''}. ${compLine}`,
+    `Following up on ${airlinePhrase} yesterday. ${compLine}`,
     '',
-    'Our Flight Compensation Kit ($14.99) gives you everything you need to claim on your own:',
-    '  • Personalised claim letter',
-    '  • Step-by-step airline submission guide',
-    '  • 14-day follow-up template',
-    '  • 30-day escalation template',
-    '  • What to Expect guide',
+    "If you'd like a ready-to-send claim letter with submission instructions and follow-up templates, our Flight Compensation Kit is $14.99 and downloads as a PDF. You can find it here:",
     '',
-    'Get your kit: https://getflightcomp.com',
+    'https://getflightcomp.com',
     '',
-    "Airlines count on passengers not following up. Don't let them keep what's yours.",
+    "If you've already filed your claim, or you'd rather handle it differently, no problem — you can ignore this email.",
+    '',
+    'Thanks,',
+    'Ethan',
+    'FlightComp',
     '',
     '---',
-    'You received this because you checked your eligibility at FlightComp.',
+    'You received this because you checked your flight compensation eligibility at getflightcomp.com.',
     'Unsubscribe: https://getflightcomp.com/unsubscribe?token=__TOKEN__',
   ].join('\n');
 }
@@ -133,7 +104,7 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Unauthorised' });
   }
 
-  const now       = new Date();
+  const now         = new Date();
   const windowEnd   = new Date(now.getTime() - 12 * 60 * 60 * 1000); // 12h ago
   const windowStart = new Date(now.getTime() - 36 * 60 * 60 * 1000); // 36h ago
 
@@ -168,14 +139,22 @@ export default async function handler(req, res) {
       compensationAmount: row.compensation_amount,
     }).replace(/__TOKEN__/g, token);
 
+    const unsubscribeUrl = `https://getflightcomp.com/unsubscribe?token=${token}`;
+    const emailHeaders = {
+      'List-Unsubscribe': `<${unsubscribeUrl}>, <mailto:unsubscribe@getflightcomp.com>`,
+      'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      'Precedence': 'bulk',
+    };
+
     try {
       await sendEmail({
         to:      row.email,
         subject: row.airline
-          ? `Your ${row.airline} compensation claim — don't miss your window`
-          : 'Your flight compensation claim — don\'t miss your window',
+          ? `Quick follow-up on your ${row.airline} flight`
+          : 'Quick follow-up on your flight',
         html,
         text,
+        headers: emailHeaders,
       });
 
       await adminClient
