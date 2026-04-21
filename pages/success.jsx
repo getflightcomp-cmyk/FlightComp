@@ -800,6 +800,24 @@ async function buildPdf({ letter, claimData, details, result, flightDetails, lan
     return typeof val === 'function' ? val(...args) : val;
   };
 
+  // ── Locale-aware date formatter ──
+  const DATE_LOCALES = { en: 'en-GB', tr: 'tr-TR', fr: 'fr-CA', de: 'de-DE', es: 'es-ES' };
+  const dateLocale = DATE_LOCALES[_lang] || 'en-GB';
+
+  const fmtDate = (input) => {
+    if (!input) return '';
+    let d;
+    if (input instanceof Date) {
+      d = input;
+    } else {
+      // Parse YYYY-MM-DD as local date to avoid UTC offset issues
+      const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(input));
+      d = iso ? new Date(parseInt(iso[1]), parseInt(iso[2]) - 1, parseInt(iso[3])) : new Date(input);
+    }
+    if (isNaN(d.getTime())) return String(input); // fall back to raw string if unparseable
+    return d.toLocaleDateString(dateLocale, { day: 'numeric', month: 'long', year: 'numeric' });
+  };
+
   // ── Layout constants ──
   const PAGE_W = 210, PAGE_H = 297;
   const ML = 25, MR = 25;
@@ -1114,9 +1132,10 @@ async function buildPdf({ letter, claimData, details, result, flightDetails, lan
   const compAmount   = result?.compensation?.amount || '';
   const senderName   = details?.name  || '';
   const senderEmail  = details?.email || '';
-  const flightNum    = claimData?.flightNumber || '';
-  const flightDate   = claimData?.flightDate   || '';
-  const fromCode     = claimData?.from || '';
+  const flightNum      = claimData?.flightNumber || '';
+  const flightDateRaw  = claimData?.flightDate   || '';
+  const flightDate     = fmtDate(flightDateRaw);  // localized human-readable
+  const fromCode       = claimData?.from || '';
   const toCode       = claimData?.to   || '';
 
   // Airline contact lookup — prefer airlineCode, fall back to flight number prefix
@@ -1126,18 +1145,18 @@ async function buildPdf({ letter, claimData, details, result, flightDetails, lan
   const escalation    = getEscalationAuthority(regulation, result?.depInfo);
   const deadlineDays  = getResponseDeadlineDays(regulation);
 
-  const todayStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  const todayStr = fmtDate(new Date());
   const deadlineDate = new Date();
   deadlineDate.setDate(deadlineDate.getDate() + deadlineDays);
-  const deadlineDateStr = deadlineDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  const deadlineDateStr = fmtDate(deadlineDate);
 
   const followUpDate = new Date();
   followUpDate.setDate(followUpDate.getDate() + 14);
-  const followUpDateStr = followUpDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  const followUpDateStr = fmtDate(followUpDate);
 
   const escalationDate = new Date();
   escalationDate.setDate(escalationDate.getDate() + 30);
-  const escalationDateStr = escalationDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  const escalationDateStr = fmtDate(escalationDate);
 
   const regFull =
     regulation === 'UK261' ? 'UK261/2004'
@@ -1171,23 +1190,15 @@ async function buildPdf({ letter, claimData, details, result, flightDetails, lan
 
   const delayInfo = calcDelay(flightDetails?.scheduledTime, flightDetails?.actualTime);
 
-  // Format any date string (YYYY-MM-DD or similar) as "15 March 2026"
-  const fmtDate = (dateStr) => {
-    if (!dateStr) return dateStr;
-    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
-    if (m) return new Date(parseInt(m[1]), parseInt(m[2]) - 1, parseInt(m[3]))
-      .toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-    const d = new Date(dateStr);
-    return isNaN(d.getTime()) ? dateStr : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-  };
-  const flightDateFmt = fmtDate(flightDate);
+  // flightDate is already locale-formatted; flightDateFmt kept for downstream compatibility
+  const flightDateFmt = flightDate;
 
-  // Replace ISO dates (YYYY-MM-DD) in free text with named-month format
+  // Replace ISO dates (YYYY-MM-DD) in AI letter body text with locale-formatted dates
   const fmtDatesInText = (text) => {
     if (!text) return text;
     return text.replace(/\b(\d{4})-(\d{2})-(\d{2})\b/g, (_, yr, mo, dy) =>
       new Date(parseInt(yr), parseInt(mo) - 1, parseInt(dy))
-        .toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+        .toLocaleDateString(dateLocale, { day: 'numeric', month: 'long', year: 'numeric' })
     );
   };
 
