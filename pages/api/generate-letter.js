@@ -94,6 +94,13 @@ function getDateLocale(lang, fallback = 'en-GB') {
   return LOCALE_FOR_DATES[lang] || fallback;
 }
 
+function formatFlightDate(isoDate, locale) {
+  if (!isoDate) return 'Unknown';
+  const d = new Date(isoDate);
+  if (isNaN(d.getTime())) return isoDate; // fall back to raw string if invalid
+  return d.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
 // ── Delay duration calculator ──────────────────────────
 function calcDelay(scheduledTime, actualTime) {
   if (!scheduledTime || !actualTime) return null;
@@ -111,27 +118,29 @@ function calcDelay(scheduledTime, actualTime) {
 }
 
 // ── Shared timing section for prompts ─────────────────
-function buildTimingBlock(flightDetails = {}, disruption, arrCity, flightNumber, flightDate) {
+function buildTimingBlock(flightDetails = {}, disruption, arrCity, flightNumber, flightDate, dateLocale) {
   const { scheduledTime, actualTime, incidentDescription } = flightDetails;
   const delay = calcDelay(scheduledTime, actualTime);
   const lines = [];
 
   if (scheduledTime && actualTime && delay && disruption === 'delayed') {
-    lines.push(`EXACT FLIGHT TIMING:`);
+    lines.push(`EXACT FLIGHT TIMING (include all of these facts in the letter, written in the target language):`);
     lines.push(`- Scheduled arrival at ${arrCity}: ${scheduledTime}`);
     lines.push(`- Actual arrival: ${actualTime}`);
-    lines.push(`- Calculated delay: ${delay.label}`);
-    lines.push('');
-    lines.push(`IMPORTANT — include this exact sentence in the letter body:`);
-    lines.push(`"Flight ${flightNumber || '[flight number]'} was scheduled to arrive at ${flightDate ? `${arrCity} on ${flightDate}` : arrCity} at ${scheduledTime}. It arrived at ${actualTime}, a delay of ${delay.label}."`);
+    lines.push(`- Calculated delay: ${delay.mins} minutes (approximately ${delay.label} — render this in the target language's natural phrasing)`);
+    lines.push(`- Flight: ${flightNumber || '[flight number]'}`);
+    if (flightDate) {
+      const flightDateFmt = formatFlightDate(flightDate, dateLocale);
+      lines.push(`- Flight date: ${flightDateFmt}`);
+    }
   } else if (scheduledTime && actualTime) {
     lines.push(`TIMING:`);
-    lines.push(`- Scheduled arrival: ${scheduledTime}`);
-    lines.push(`- Actual/disruption time: ${actualTime}`);
+    lines.push(`- Scheduled: ${scheduledTime}`);
+    lines.push(`- Actual: ${actualTime}`);
   }
 
   if (incidentDescription) {
-    lines.push(`PASSENGER'S ACCOUNT (incorporate naturally):`);
+    lines.push(`PASSENGER'S ACCOUNT (incorporate naturally, translated into the target language as needed):`);
     lines.push(`"${incidentDescription}"`);
   }
 
@@ -165,10 +174,11 @@ function buildPrompt({ answers, result, details, flightDetails, language = 'en' 
   const reasonLabel     = REASON_LABELS[reason] || reason;
 
   const dateLocale = getDateLocale(language, 'en-GB');
+  const flightDateFmt = formatFlightDate(flightDate, dateLocale);
   const today    = new Date().toLocaleDateString(dateLocale, { day: 'numeric', month: 'long', year: 'numeric' });
   const deadline = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toLocaleDateString(dateLocale, { day: 'numeric', month: 'long', year: 'numeric' });
 
-  const timingBlock = buildTimingBlock(flightDetails, disruption, arrCity, flightNumber, flightDate);
+  const timingBlock = buildTimingBlock(flightDetails, disruption, arrCity, flightNumber, flightDate, dateLocale);
 
   return `${languageDirective(language)}Write a formal compensation claim letter on behalf of a passenger. The letter should read as if the passenger wrote it personally — do not reference any claim tool, service, or third party.
 
@@ -181,7 +191,7 @@ ${bankDetails ? `- Bank/payment details: ${bankDetails}` : ''}
 
 FLIGHT DETAILS:
 - Flight number: ${flightNumber || 'Unknown'}
-- Date of travel: ${flightDate || 'Unknown'}
+- Date of travel: ${flightDateFmt}
 - Departure: ${depCity}
 - Destination: ${arrCity}
 - Route distance: ${distStr}
@@ -190,6 +200,11 @@ FLIGHT DETAILS:
 - Regulation: ${regFull}
 
 ${compLine}
+
+DATA SANITY CHECK:
+Before writing the letter, internally verify the compensation amount matches the distance under the stated regulation:
+- EU261 / UK261 Article 7: €250 for ≤1500 km; €400 for 1500–3500 km; €600 for >3500 km
+If the stated compensation amount appears INCONSISTENT with the stated distance and regulation (e.g., claiming €600 for a 345 km flight), do NOT demand the higher figure. Instead, state only the correct legally owed amount per the tiered schedule, and do not cite or reference the inconsistent amount. Your primary duty is to write a legally sound letter — overstating the claim would cause the airline to reject it outright.
 
 ${timingBlock}
 
@@ -240,10 +255,11 @@ function buildAPPRPrompt({ answers, result, details, flightDetails, language = '
   const sizeLabel  = AIRLINE_SIZE_LABELS[airlineSize] || 'carrier';
 
   const dateLocale = getDateLocale(language, 'en-CA');
+  const flightDateFmt = formatFlightDate(flightDate, dateLocale);
   const today    = new Date().toLocaleDateString(dateLocale, { day: 'numeric', month: 'long', year: 'numeric' });
   const deadline = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString(dateLocale, { day: 'numeric', month: 'long', year: 'numeric' });
 
-  const timingBlock = buildTimingBlock(flightDetails, disruption, arrCity, flightNumber, flightDate);
+  const timingBlock = buildTimingBlock(flightDetails, disruption, arrCity, flightNumber, flightDate, dateLocale);
 
   return `${languageDirective(language)}Write a formal compensation claim letter on behalf of a passenger under Canada's Air Passenger Protection Regulations. The letter should read as if the passenger wrote it personally — do not reference any claim tool, service, or third party.
 
@@ -256,7 +272,7 @@ ${bankDetails ? `- Bank/payment details: ${bankDetails}` : ''}
 
 FLIGHT DETAILS:
 - Flight number: ${flightNumber || 'Unknown'}
-- Date of travel: ${flightDate || 'Unknown'}
+- Date of travel: ${flightDateFmt}
 - Departure: ${depCity}
 - Destination: ${arrCity}
 - Route distance: ${distStr}
@@ -266,6 +282,12 @@ FLIGHT DETAILS:
 - Regulation: Air Passenger Protection Regulations (SOR/2019-150)
 
 ${compLineAPPR}
+
+DATA SANITY CHECK:
+Before writing the letter, internally verify the compensation amount matches the disruption tier under the stated regulation:
+- APPR Section 19 (large carrier): CA$400 (3–6h delay or cancellation); CA$700 (6–9h); CA$1000 (9h+); CA$900 (denied boarding, large carrier)
+- APPR Section 19 (small carrier): CA$125 / CA$250 / CA$500 for equivalent tiers
+If the stated compensation amount appears INCONSISTENT with the stated disruption tier and airline size, do NOT demand the higher figure. Instead, state only the correct legally owed amount per the tiered schedule, and do not cite or reference the inconsistent amount. Your primary duty is to write a legally sound letter — overstating the claim would cause the airline to reject it outright.
 
 ${timingBlock}
 
@@ -315,10 +337,11 @@ function buildSHYPrompt({ answers, result, details, flightDetails, language = 'e
   const routeType  = isDomestic ? 'domestic (Turkey internal)' : 'international';
 
   const dateLocale = getDateLocale(language, 'en-GB');
+  const flightDateFmt = formatFlightDate(flightDate, dateLocale);
   const today    = new Date().toLocaleDateString(dateLocale, { day: 'numeric', month: 'long', year: 'numeric' });
   const deadline = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString(dateLocale, { day: 'numeric', month: 'long', year: 'numeric' });
 
-  const timingBlock = buildTimingBlock(flightDetails, disruption, arrCity, flightNumber, flightDate);
+  const timingBlock = buildTimingBlock(flightDetails, disruption, arrCity, flightNumber, flightDate, dateLocale);
 
   return `${languageDirective(language)}Write a formal compensation claim letter on behalf of a passenger under Turkey's SHY Passenger Regulation. The letter should read as if the passenger wrote it personally — do not reference any claim tool, service, or third party.
 
@@ -331,7 +354,7 @@ ${bankDetails ? `- Bank/payment details: ${bankDetails}` : ''}
 
 FLIGHT DETAILS:
 - Flight number: ${flightNumber || 'Unknown'}
-- Date of travel: ${flightDate || 'Unknown'}
+- Date of travel: ${flightDateFmt}
 - Departure: ${depCity}
 - Destination: ${arrCity}
 - Route distance: ${distStr}
@@ -342,6 +365,11 @@ ${shyNotified14 === 'yes' ? '- Note: passenger was notified 14+ days in advance'
 - Regulation: SHY Passenger Regulation (Sivil Havacilık Yonetmeligi), Turkish Civil Aviation Law No. 2920, Article 143
 
 ${compLineSHY}
+
+DATA SANITY CHECK:
+Before writing the letter, internally verify the compensation amount matches the distance under the SHY Passenger Regulation (mirrors EU261 Article 7 tiers, denominated in EUR):
+- €250 for ≤1500 km; €400 for 1500–3500 km; €600 for >3500 km
+If the stated compensation amount appears INCONSISTENT with the stated distance, do NOT demand the higher figure. Instead, state only the correct legally owed amount per the tiered schedule, and do not cite or reference the inconsistent amount. Your primary duty is to write a legally sound letter — overstating the claim would cause the airline to reject it outright.
 
 ${timingBlock}
 

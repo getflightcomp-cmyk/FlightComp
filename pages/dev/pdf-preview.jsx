@@ -33,7 +33,7 @@ const PRESETS = {
     label: 'EU261 — CDG → LHR, cancelled (Air France)',
     data: {
       answers: { flightNumber: 'AF1234', flightDate: '2026-03-15', from: 'CDG', to: 'LHR', disruption: 'cancelled', airlineCode: 'AF' },
-      result: { verdict: 'likely', verdictNote: '', regulation: 'EU261', compensation: { amount: '€600', numeric: 600 }, distanceKm: 345, depInfo: { region: 'EU', country: 'France' }, careRights: [], isCovered: true },
+      result: { verdict: 'likely', verdictNote: '', regulation: 'EU261', compensation: { amount: '€250', numeric: 250 }, distanceKm: 345, depInfo: { region: 'EU', country: 'France' }, careRights: [], isCovered: true },
       details: { name: 'Jane Smith', email: 'jane.smith@example.com', address: '123 Test Street, London, UK' },
     },
   },
