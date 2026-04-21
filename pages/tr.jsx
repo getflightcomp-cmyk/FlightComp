@@ -1290,10 +1290,12 @@ export default function TurkishHome() {
         <div className="screen">
           <div className="q-body" style={{ textAlign: 'center', paddingTop: 40 }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>✈️</div>
-            <h2 className="q-head" style={{ color: 'var(--text)' }}>Kapsam Dışı</h2>
+            <h2 className="q-head" style={{ color: 'var(--text)' }}>EU261, UK261, APPR veya SHY kapsamında değil</h2>
             <p style={{ color: 'var(--muted)', fontSize: 15, lineHeight: 1.7, marginBottom: 28 }}>
-              Rotanız ve havayolunuza göre bu uçuş EU261, UK261, Kanada APPR veya Türkiye SHY kapsamında değil.
-              ABD iç hat seferleri ve bu mevzuatlar dışındaki güzergahlar şu an desteklenmemektedir.
+              Girdiğiniz bilgilere göre bu uçuş, ele aldığımız yolcu tazminat mevzuatları kapsamında yer almıyor.
+              EU261 ve UK261 yalnızca bir AB/UK havalimanından kalkan uçuşları (herhangi bir havayolu) veya
+              AB/UK&apos;a Avrupalı bir havayoluyla gelen uçuşları kapsar. AB ya da UK havalimanından kalkan bir
+              dönüş bacağınız varsa, o bacak kapsama girebilir — bunun için ayrıca sorgulama yapabilirsiniz.
             </p>
             <button className="btn-cont" onClick={() => {
               setAnswers(INITIAL_ANSWERS);

@@ -1264,10 +1264,13 @@ export default function GermanHome() {
         <div className="screen">
           <div className="q-body" style={{ textAlign: 'center', paddingTop: 40 }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>✈️</div>
-            <h2 className="q-head" style={{ color: 'var(--text)' }}>Derzeit nicht abgedeckt</h2>
+            <h2 className="q-head" style={{ color: 'var(--text)' }}>Nicht abgedeckt durch EU261, UK261, APPR oder SHY</h2>
             <p style={{ color: 'var(--muted)', fontSize: 15, lineHeight: 1.7, marginBottom: 28 }}>
-              Basierend auf Ihrer Route und Fluggesellschaft wird dieser Flug nicht von EU261, UK261, dem kanadischen APPR oder dem türkischen SHY abgedeckt.
-              US-Inlandsflüge und Routen außerhalb dieser Regelungen werden derzeit nicht unterstützt.
+              Basierend auf Ihren Angaben fällt dieser konkrete Flug nicht unter die Fluggastrechte-Verordnungen,
+              die wir bearbeiten. EU261 und UK261 gelten nur für Flüge, die von einem EU/UK-Flughafen abfliegen
+              (beliebige Airline), oder für Flüge, die auf einem europäischen Carrier in der EU/UK ankommen.
+              Wenn Sie einen Rückflug von einem EU- oder UK-Flughafen haben, könnte dieser Abschnitt abgedeckt
+              sein — Sie können dafür eine separate Prüfung durchführen.
             </p>
             <button className="btn-cont" onClick={() => {
               setAnswers(INITIAL_ANSWERS);

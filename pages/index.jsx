@@ -1288,11 +1288,13 @@ export default function Home() {
       <div className="screen">
         <div className="q-body" style={{ textAlign: 'center', paddingTop: 40 }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>✈️</div>
-          <h2 className="q-head" style={{ color: 'var(--text)' }}>Not Currently Covered</h2>
+          <h2 className="q-head" style={{ color: 'var(--text)' }}>Not covered by EU261, UK261, APPR, or SHY</h2>
           <p style={{ color: 'var(--muted)', fontSize: 15, lineHeight: 1.7, marginBottom: 28 }}>
-            Based on your route and airline, this flight isn&apos;t covered by EU261, UK261,
-            Canada APPR, or Turkey SHY. US domestic flights and routes outside these
-            regulations are not supported at this time.
+            Based on the details you entered, this specific flight isn&apos;t covered by the
+            passenger compensation regulations we handle. EU261 and UK261 only cover flights
+            departing from an EU/UK airport (any airline), or arriving in the EU/UK on a
+            European airline. If you have a return leg departing from an EU or UK airport,
+            that leg may be covered — you can run another check for it.
           </p>
           <button className="btn-cont" onClick={() => {
             setAnswers(INITIAL_ANSWERS);

@@ -1281,10 +1281,13 @@ export default function FrenchHome() {
         <div className="screen">
           <div className="q-body" style={{ textAlign: 'center', paddingTop: 40 }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>✈️</div>
-            <h2 className="q-head" style={{ color: 'var(--text)' }}>Vol non couvert</h2>
+            <h2 className="q-head" style={{ color: 'var(--text)' }}>Non couvert par EU261, UK261, RPPA ou SHY</h2>
             <p style={{ color: 'var(--muted)', fontSize: 15, lineHeight: 1.7, marginBottom: 28 }}>
-              D&apos;après votre trajet et votre compagnie aérienne, ce vol n&apos;est pas couvert par le EU261, UK261, le RPPA canadien ou la réglementation SHY turque.
-              Les vols intérieurs américains et les routes en dehors de ces réglementations ne sont pas pris en charge pour l&apos;instant.
+              D&apos;après les informations que vous avez saisies, ce vol spécifique n&apos;est pas couvert par les
+              réglementations d&apos;indemnisation des passagers que nous traitons. EU261 et UK261 ne couvrent que les
+              vols au départ d&apos;un aéroport UE/UK (toute compagnie), ou à l&apos;arrivée en UE/UK sur une compagnie
+              européenne. Si vous avez un vol retour au départ d&apos;un aéroport UE ou UK, ce trajet est peut-être
+              couvert — vous pouvez effectuer une nouvelle vérification pour celui-ci.
             </p>
             <button className="btn-cont" onClick={() => {
               setAnswers(INITIAL_ANSWERS);

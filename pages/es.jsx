@@ -1286,10 +1286,13 @@ export default function SpanishHome() {
         <div className="screen">
           <div className="q-body" style={{ textAlign: 'center', paddingTop: 40 }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>✈️</div>
-            <h2 className="q-head" style={{ color: 'var(--text)' }}>No cubierto actualmente</h2>
+            <h2 className="q-head" style={{ color: 'var(--text)' }}>No cubierto por EU261, UK261, APPR ni SHY</h2>
             <p style={{ color: 'var(--muted)', fontSize: 15, lineHeight: 1.7, marginBottom: 28 }}>
-              Según tu ruta y aerolínea, este vuelo no está cubierto por EU261, UK261, el APPR canadiense o el SHY turco.
-              Los vuelos domésticos de EE.UU. y las rutas fuera de estas normativas no están soportados actualmente.
+              Según los datos que has introducido, este vuelo en concreto no está cubierto por las normativas de
+              compensación a pasajeros que gestionamos. EU261 y UK261 solo cubren vuelos que salen de un aeropuerto
+              de la UE/UK (cualquier aerolínea), o que llegan a la UE/UK en una aerolínea europea. Si tienes un
+              vuelo de vuelta que sale de un aeropuerto de la UE o el Reino Unido, ese tramo podría estar cubierto
+              — puedes realizar otra consulta para comprobarlo.
             </p>
             <button className="btn-cont" onClick={() => {
               setAnswers(INITIAL_ANSWERS);
