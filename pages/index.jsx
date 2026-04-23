@@ -516,6 +516,35 @@ function Expander({ icon, label, children }) {
   );
 }
 
+const CARE_I18N = {
+  care_meals_title:       'Meals & refreshments',
+  care_meals_eu_prop:     'Proportional to your waiting time. Ask for vouchers at the airport desk right now.',
+  care_meals_appr_3h:     'For delays of 3+ hours, the airline must provide food and drink vouchers.',
+  care_meals_shy_2h:      'For disruptions of 2+ hours, the airline must provide food and drink at no cost.',
+  care_comm_title:        'Free communication',
+  care_comm_eu:           'Phone calls, emails, or faxes to inform family or colleagues.',
+  care_comm_appr:         'The airline must provide means of communication (phone/internet) at no cost.',
+  care_comm_shy:          'The airline must allow phone calls or emails at no cost to inform family or colleagues.',
+  care_hotel_title:       'Hotel accommodation',
+  care_hotel_eu:          'If an overnight stay is required, the airline must arrange and pay for it.',
+  care_hotel_appr:        'If an overnight stay is required, the airline must arrange and pay for a hotel.',
+  care_hotel_shy:         'If an overnight stay is required, the airline must arrange and pay for a hotel.',
+  care_transport_title:   'Airport–hotel transport',
+  care_transport_detail:  'Return transfers between the hotel and airport at no cost.',
+  care_rebook_title:      'Rebooking or refund',
+  care_rebook_eu:         'Choose a full refund of your ticket, or rebooking on the next available flight at no extra charge.',
+  care_rebook_appr:       'You may choose a full refund or rebooking on the next available flight at no extra cost.',
+  care_rebook_shy:        'You may choose a full refund of your ticket or rebooking on the next available flight at no extra charge.',
+};
+
+const VERDICT_NOTES_I18N = {
+  verdict_note_appr_safety:      'Safety-related disruptions are exempt from APPR cash compensation, but airlines must still provide care (meals, hotel) and rebooking.',
+  verdict_note_shy_delay:        'Under SHY, airlines must provide meals, refreshments, and accommodation for delays over 2 hours. However, financial compensation is not available for delays — only for cancellations and denied boarding.',
+  verdict_note_shy_delay_eu261:  'Under SHY, airlines must provide meals, refreshments, and accommodation for delays over 2 hours. However, financial compensation is not available for delays — only for cancellations and denied boarding. Your flight may also qualify under EU261, which provides compensation for delays. We\'ve selected SHY as you departed from Turkey, but consider filing under EU261 if your airline is EU-registered.',
+  verdict_note_shy_forcemajeure: 'Force majeure events (severe weather, political instability, natural disasters, security risks, airport strikes) exempt airlines from SHY financial compensation. Care rights (meals, accommodation, rebooking) still apply.',
+  verdict_note_eu_extraordinary:  'Extraordinary circumstances (weather, ATC strikes, security incidents) exempt airlines from paying cash compensation. However, your care rights — meals, hotel, rebooking — are unaffected.',
+};
+
 const VERDICT_META = {
   likely:   { badge: 'LIKELY ELIGIBLE',   dot: '🟢' },
   possibly: { badge: 'POSSIBLY ELIGIBLE', dot: '🟡' },
@@ -584,7 +613,7 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
             No cash compensation — care rights may still apply
           </div>
         )}
-        {verdictNote && <p className="vnote">{verdictNote}</p>}
+        {verdictNote && <p className="vnote">{VERDICT_NOTES_I18N[verdictNote] ?? verdictNote}</p>}
         {shyMeta && (
           <div className="vnote" style={{ marginTop: 8, fontSize: 12, opacity: 0.8 }}>
             <strong>Deadline:</strong> {shyMeta.deadline}<br />
@@ -700,7 +729,7 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
                 <div key={i} className="care-item">
                   <span className="care-em">{r.emoji}</span>
                   <div className="care-txt">
-                    <strong>{r.title}</strong><br />{r.detail}
+                    <strong>{CARE_I18N[r.titleKey] ?? r.titleKey}</strong><br />{CARE_I18N[r.detailKey] ?? r.detailKey}
                   </div>
                 </div>
               ))}

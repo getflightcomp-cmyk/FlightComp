@@ -518,6 +518,35 @@ function Expander({ icon, label, children }) {
   );
 }
 
+const CARE_I18N_ES = {
+  care_meals_title:       'Comidas y refrigerios',
+  care_meals_eu_prop:     'Proporcionales a su tiempo de espera. Solicite vales de comida en el mostrador de la aerolínea ahora mismo.',
+  care_meals_appr_3h:     'Para retrasos de 3 horas o más, la aerolínea debe proporcionar vales de comida y bebida.',
+  care_meals_shy_2h:      'Para perturbaciones de 2 horas o más, la aerolínea debe proporcionar comida y bebida sin cargo.',
+  care_comm_title:        'Comunicación gratuita',
+  care_comm_eu:           'Llamadas telefónicas, correos electrónicos o faxes para informar a familiares o colegas.',
+  care_comm_appr:         'La aerolínea debe proporcionar medios de comunicación (teléfono/internet) sin costo.',
+  care_comm_shy:          'La aerolínea debe permitir llamadas telefónicas o correos electrónicos sin cargo para informar a familiares o colegas.',
+  care_hotel_title:       'Alojamiento en hotel',
+  care_hotel_eu:          'Si se requiere una noche de hotel, la aerolínea debe organizarla y pagarla.',
+  care_hotel_appr:        'Si se requiere una noche de hotel, la aerolínea debe organizarla y pagarla.',
+  care_hotel_shy:         'Si se requiere una noche de hotel, la aerolínea debe organizarla y pagarla.',
+  care_transport_title:   'Transporte aeropuerto–hotel',
+  care_transport_detail:  'Traslados de ida y vuelta entre el hotel y el aeropuerto sin cargo.',
+  care_rebook_title:      'Cambio de vuelo o reembolso',
+  care_rebook_eu:         'Elija entre un reembolso completo de su billete o un cambio al siguiente vuelo disponible sin costo adicional.',
+  care_rebook_appr:       'Puede elegir entre un reembolso completo o un cambio al siguiente vuelo disponible sin costo adicional.',
+  care_rebook_shy:        'Puede elegir entre un reembolso completo de su billete o un cambio al siguiente vuelo disponible sin costo adicional.',
+};
+
+const VERDICT_NOTES_I18N_ES = {
+  verdict_note_appr_safety:      'Las perturbaciones por razones de seguridad están exentas de la indemnización en efectivo del APPR, pero las aerolíneas aún deben proporcionar atención (comidas, hotel) y cambio de vuelo.',
+  verdict_note_shy_delay:        'Según el SHY, las aerolíneas deben proporcionar comidas, refrigerios y alojamiento para retrasos de más de 2 horas. Sin embargo, no se prevé compensación económica por retrasos — solo por cancelaciones y denegaciones de embarque.',
+  verdict_note_shy_delay_eu261:  'Según el SHY, las aerolíneas deben proporcionar comidas, refrigerios y alojamiento para retrasos de más de 2 horas. No se prevé compensación económica por retrasos. Su vuelo también podría estar cubierto por EU261, que sí contempla indemnización por retrasos. Seleccionamos SHY porque salió de Turquía, pero considere reclamar bajo EU261 si su aerolínea está registrada en la UE.',
+  verdict_note_shy_forcemajeure: 'Los eventos de fuerza mayor (mal tiempo severo, inestabilidad política, desastres naturales, riesgos de seguridad, huelgas aeroportuarias) eximen a las aerolíneas de la compensación económica SHY. Los derechos de atención (comidas, alojamiento, cambio de vuelo) siguen siendo aplicables.',
+  verdict_note_eu_extraordinary:  'Las circunstancias extraordinarias (tiempo, huelgas de control aéreo, incidentes de seguridad) eximen a las aerolíneas de pagar indemnización en efectivo. Sin embargo, sus derechos de atención — comidas, hotel, cambio de vuelo — no se ven afectados.',
+};
+
 const VERDICT_META_ES = {
   likely:   { badge: 'ES PROBABLE QUE TENGAS DERECHO A COMPENSACIÓN',         dot: '🟢' },
   possibly: { badge: 'PODRÍAS TENER DERECHO A COMPENSACIÓN',                   dot: '🟡' },
@@ -590,7 +619,7 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
             Sin compensación económica — pueden aplicarse derechos de atención
           </div>
         )}
-        {verdictNote && <p className="vnote">{verdictNote}</p>}
+        {verdictNote && <p className="vnote">{VERDICT_NOTES_I18N_ES[verdictNote] ?? verdictNote}</p>}
         {shyMeta && (
           <div className="vnote" style={{ marginTop: 8, fontSize: 12, opacity: 0.8 }}>
             <strong>Fecha límite:</strong> {shyMeta.deadline}<br />
@@ -709,7 +738,7 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
                 <div key={i} className="care-item">
                   <span className="care-em">{r.emoji}</span>
                   <div className="care-txt">
-                    <strong>{r.title}</strong><br />{r.detail}
+                    <strong>{CARE_I18N_ES[r.titleKey] ?? r.titleKey}</strong><br />{CARE_I18N_ES[r.detailKey] ?? r.detailKey}
                   </div>
                 </div>
               ))}

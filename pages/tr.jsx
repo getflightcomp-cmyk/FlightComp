@@ -518,6 +518,35 @@ function Expander({ icon, label, children }) {
   );
 }
 
+const CARE_I18N_TR = {
+  care_meals_title:       'Yemek ve ikramlıklar',
+  care_meals_eu_prop:     'Bekleme sürenizle orantılı olarak. Hemen havalimanı masasında yemek kuponu isteyin.',
+  care_meals_appr_3h:     '3 saat ve üzeri gecikmeler için havayolu, yiyecek ve içecek kuponu sağlamak zorundadır.',
+  care_meals_shy_2h:      '2 saat ve üzeri aksamalarda havayolu, yiyecek ve içeceği ücretsiz olarak karşılamak zorundadır.',
+  care_comm_title:        'Ücretsiz iletişim',
+  care_comm_eu:           'Aile veya iş arkadaşlarını bilgilendirmek için telefon, e-posta veya faks.',
+  care_comm_appr:         'Havayolu, ücretsiz iletişim imkânı (telefon/internet) sağlamak zorundadır.',
+  care_comm_shy:          'Havayolu, aile veya iş arkadaşlarını bilgilendirmek için ücretsiz telefon veya e-posta imkânı tanımak zorundadır.',
+  care_hotel_title:       'Otel konaklaması',
+  care_hotel_eu:          'Geceleme gerekiyorsa havayolu otel konaklamasını ayarlamak ve ödemek zorundadır.',
+  care_hotel_appr:        'Geceleme gerekiyorsa havayolu otel konaklamasını ayarlamak ve ödemek zorundadır.',
+  care_hotel_shy:         'Geceleme gerekiyorsa havayolu otel konaklamasını ayarlamak ve ödemek zorundadır.',
+  care_transport_title:   'Havalimanı–otel transferi',
+  care_transport_detail:  'Otel ile havalimanı arasında ücretsiz gidiş-dönüş transfer.',
+  care_rebook_title:      'Yeniden rezervasyon veya iade',
+  care_rebook_eu:         'Biletinizin tam iadesi veya ek ücret ödemeksizin bir sonraki uygun uçuşa yeniden rezervasyon seçeneklerinden birini talep edebilirsiniz.',
+  care_rebook_appr:       'Tam iade veya ek ücret ödemeksizin bir sonraki uygun uçuşa yeniden rezervasyon seçeneklerinden birini talep edebilirsiniz.',
+  care_rebook_shy:        'Biletinizin tam iadesi veya ek ücret ödemeksizin bir sonraki uygun uçuşa yeniden rezervasyon seçeneklerinden birini talep edebilirsiniz.',
+};
+
+const VERDICT_NOTES_I18N_TR = {
+  verdict_note_appr_safety:      'Güvenlikle ilgili aksamalar APPR nakit tazminatından muaftır; ancak havayolları bakım (yemek, otel) ve yeniden rezervasyon sağlamak zorundadır.',
+  verdict_note_shy_delay:        'SHY kapsamında havayolları, 2 saati aşan gecikmelerde yemek, ikramlık ve konaklama sağlamak zorundadır. Ancak gecikmeler için nakit tazminat öngörülmemektedir — yalnızca iptal ve biniş reddi durumlarında tazminat hakkı doğmaktadır.',
+  verdict_note_shy_delay_eu261:  'SHY kapsamında havayolları, 2 saati aşan gecikmelerde yemek, ikramlık ve konaklama sağlamak zorundadır. Ancak gecikmeler için nakit tazminat öngörülmemektedir — yalnızca iptal ve biniş reddi durumlarında tazminat hakkı doğmaktadır. Uçuşunuz aynı zamanda gecikmeler için tazminat öngören AB261 kapsamında da değerlendirilebilir. Türkiye\'den hareket ettiğiniz için SHY\'yi seçtik; ancak havayolunuz AB\'ye kayıtlı ise AB261 kapsamında başvuru yapmayı da düşünebilirsiniz.',
+  verdict_note_shy_forcemajeure: 'Mücbir sebep olayları (şiddetli hava, siyasi istikrarsızlık, doğal afetler, güvenlik riskleri, havalimanı grevleri) havayollarını SHY nakit tazminatından muaf kılar. Bakım hakları (yemek, konaklama, yeniden rezervasyon) geçerliliğini korur.',
+  verdict_note_eu_extraordinary:  'Olağanüstü koşullar (hava durumu, ATC grevleri, güvenlik olayları) havayollarını nakit tazminat ödemekten muaf kılar. Ancak bakım haklarınız — yemek, otel, yeniden rezervasyon — etkilenmez.',
+};
+
 const VERDICT_META_TR = {
   likely:   { badge: 'TAZMİNAT HAKKINIZ MUHTEMEL',     dot: '🟢' },
   possibly: { badge: 'TAZMİNAT HAKKINIZ OLABİLİR',     dot: '🟡' },
@@ -590,7 +619,7 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
             Nakit tazminat yok — bakım hakları geçerli olabilir
           </div>
         )}
-        {verdictNote && <p className="vnote">{verdictNote}</p>}
+        {verdictNote && <p className="vnote">{VERDICT_NOTES_I18N_TR[verdictNote] ?? verdictNote}</p>}
         {shyMeta && (
           <div className="vnote" style={{ marginTop: 8, fontSize: 12, opacity: 0.8 }}>
             <strong>Son başvuru tarihi:</strong> {shyMeta.deadline}<br />
@@ -717,7 +746,7 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
                 <div key={i} className="care-item">
                   <span className="care-em">{r.emoji}</span>
                   <div className="care-txt">
-                    <strong>{r.title}</strong><br />{r.detail}
+                    <strong>{CARE_I18N_TR[r.titleKey] ?? r.titleKey}</strong><br />{CARE_I18N_TR[r.detailKey] ?? r.detailKey}
                   </div>
                 </div>
               ))}

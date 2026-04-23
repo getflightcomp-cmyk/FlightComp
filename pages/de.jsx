@@ -503,6 +503,35 @@ function Expander({ icon, label, children }) {
   );
 }
 
+const CARE_I18N_DE = {
+  care_meals_title:       'Mahlzeiten und Erfrischungen',
+  care_meals_eu_prop:     'Proportional zu Ihrer Wartezeit. Fordern Sie sofort Essensgutscheine am Schalter der Fluggesellschaft an.',
+  care_meals_appr_3h:     'Bei Verspätungen von 3 Stunden oder mehr muss die Airline Verpflegungsgutscheine bereitstellen.',
+  care_meals_shy_2h:      'Bei Störungen von 2 Stunden oder mehr muss die Airline Speisen und Getränke kostenlos bereitstellen.',
+  care_comm_title:        'Kostenlose Kommunikation',
+  care_comm_eu:           'Telefonate, E-Mails oder Faxe, um Familie oder Kollegen zu informieren.',
+  care_comm_appr:         'Die Airline muss kostenlose Kommunikationsmittel (Telefon/Internet) bereitstellen.',
+  care_comm_shy:          'Die Airline muss kostenlose Telefonate oder E-Mails ermöglichen, um Familie oder Kollegen zu informieren.',
+  care_hotel_title:       'Hotelunterbringung',
+  care_hotel_eu:          'Falls eine Übernachtung erforderlich ist, muss die Airline das Hotel organisieren und bezahlen.',
+  care_hotel_appr:        'Falls eine Übernachtung erforderlich ist, muss die Airline das Hotel organisieren und bezahlen.',
+  care_hotel_shy:         'Falls eine Übernachtung erforderlich ist, muss die Airline das Hotel organisieren und bezahlen.',
+  care_transport_title:   'Transfer Flughafen–Hotel',
+  care_transport_detail:  'Kostenlose Hin- und Rücktransfers zwischen Hotel und Flughafen.',
+  care_rebook_title:      'Umbuchung oder Erstattung',
+  care_rebook_eu:         'Wählen Sie eine vollständige Ticketerstattung oder eine Umbuchung auf den nächsten verfügbaren Flug ohne Aufpreis.',
+  care_rebook_appr:       'Sie können eine vollständige Erstattung oder eine Umbuchung auf den nächsten verfügbaren Flug ohne Aufpreis wählen.',
+  care_rebook_shy:        'Sie können eine vollständige Ticketerstattung oder eine Umbuchung auf den nächsten verfügbaren Flug ohne Aufpreis wählen.',
+};
+
+const VERDICT_NOTES_I18N_DE = {
+  verdict_note_appr_safety:      'Sicherheitsbedingte Störungen sind von der APPR-Barentschädigung ausgenommen, aber Airlines müssen weiterhin Betreuungsleistungen (Mahlzeiten, Hotel) und Umbuchungen anbieten.',
+  verdict_note_shy_delay:        'Gemäß SHY müssen Airlines bei Verspätungen von mehr als 2 Stunden Mahlzeiten, Erfrischungen und Unterkunft bereitstellen. Eine finanzielle Entschädigung ist für Verspätungen jedoch nicht vorgesehen — nur für Annullierungen und Nichtbeförderung.',
+  verdict_note_shy_delay_eu261:  'Gemäß SHY müssen Airlines bei Verspätungen von mehr als 2 Stunden Mahlzeiten, Erfrischungen und Unterkunft bereitstellen. Eine finanzielle Entschädigung ist für Verspätungen nicht vorgesehen. Ihr Flug könnte auch unter EU261 fallen, das Entschädigung für Verspätungen vorsieht. Wir haben SHY gewählt, da Sie aus der Türkei abgeflogen sind — erwägen Sie jedoch eine Einreichung unter EU261, wenn Ihre Airline in der EU registriert ist.',
+  verdict_note_shy_forcemajeure: 'Höhere Gewalt (schwerwetterbedingte Umstände, politische Instabilität, Naturkatastrophen, Sicherheitsrisiken, Flughafenstreiks) befreit Airlines von der finanziellen SHY-Entschädigung. Betreuungsrechte (Mahlzeiten, Unterkunft, Umbuchung) bleiben bestehen.',
+  verdict_note_eu_extraordinary:  'Außergewöhnliche Umstände (Wetter, ATC-Streiks, Sicherheitsvorfälle) befreien Airlines von der Zahlung einer Barentschädigung. Ihre Betreuungsrechte — Mahlzeiten, Hotel, Umbuchung — sind davon nicht betroffen.',
+};
+
 const VERDICT_META_DE = {
   likely:   { badge: 'SIE HABEN WAHRSCHEINLICH ANSPRUCH AUF ENTSCHÄDIGUNG',         dot: '🟢' },
   possibly: { badge: 'SIE KÖNNTEN ANSPRUCH AUF ENTSCHÄDIGUNG HABEN',                dot: '🟡' },
@@ -575,7 +604,7 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
             Keine Barentschädigung — Betreuungsrechte können gelten
           </div>
         )}
-        {verdictNote && <p className="vnote">{verdictNote}</p>}
+        {verdictNote && <p className="vnote">{VERDICT_NOTES_I18N_DE[verdictNote] ?? verdictNote}</p>}
         {shyMeta && (
           <div className="vnote" style={{ marginTop: 8, fontSize: 12, opacity: 0.8 }}>
             <strong>Frist:</strong> {shyMeta.deadline}<br />
@@ -691,7 +720,7 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
                 <div key={i} className="care-item">
                   <span className="care-em">{r.emoji}</span>
                   <div className="care-txt">
-                    <strong>{r.title}</strong><br />{r.detail}
+                    <strong>{CARE_I18N_DE[r.titleKey] ?? r.titleKey}</strong><br />{CARE_I18N_DE[r.detailKey] ?? r.detailKey}
                   </div>
                 </div>
               ))}

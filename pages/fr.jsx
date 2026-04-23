@@ -518,6 +518,35 @@ function Expander({ icon, label, children }) {
   );
 }
 
+const CARE_I18N_FR = {
+  care_meals_title:       'Repas et rafraîchissements',
+  care_meals_eu_prop:     'Proportionnels à votre temps d\'attente. Demandez des bons de restauration au comptoir de la compagnie aérienne dès maintenant.',
+  care_meals_appr_3h:     'Pour les retards de 3 heures ou plus, la compagnie doit fournir des bons de restauration.',
+  care_meals_shy_2h:      'Pour les perturbations de 2 heures ou plus, la compagnie doit fournir repas et boissons gratuitement.',
+  care_comm_title:        'Communication gratuite',
+  care_comm_eu:           'Appels téléphoniques, courriels ou télécopies pour informer vos proches ou collègues.',
+  care_comm_appr:         'La compagnie doit fournir un moyen de communication (téléphone/internet) sans frais.',
+  care_comm_shy:          'La compagnie doit permettre des appels téléphoniques ou des courriels sans frais pour informer la famille ou les collègues.',
+  care_hotel_title:       'Hébergement à l\'hôtel',
+  care_hotel_eu:          'Si une nuit d\'hôtel est nécessaire, la compagnie doit l\'organiser et la payer.',
+  care_hotel_appr:        'Si une nuit d\'hôtel est nécessaire, la compagnie doit l\'organiser et la payer.',
+  care_hotel_shy:         'Si une nuit d\'hôtel est nécessaire, la compagnie doit l\'organiser et la payer.',
+  care_transport_title:   'Transfert aéroport–hôtel',
+  care_transport_detail:  'Transferts aller-retour entre l\'hôtel et l\'aéroport sans frais.',
+  care_rebook_title:      'Remboursement ou réservation alternative',
+  care_rebook_eu:         'Choisissez un remboursement intégral de votre billet ou une réservation sur le prochain vol disponible sans frais supplémentaires.',
+  care_rebook_appr:       'Vous pouvez choisir un remboursement intégral ou une réservation sur le prochain vol disponible sans frais supplémentaires.',
+  care_rebook_shy:        'Vous pouvez choisir un remboursement intégral de votre billet ou une réservation sur le prochain vol disponible sans frais supplémentaires.',
+};
+
+const VERDICT_NOTES_I18N_FR = {
+  verdict_note_appr_safety:      'Les perturbations liées à la sécurité sont exemptées de l\'indemnisation en espèces du RPPA, mais les compagnies doivent toujours assurer la prise en charge (repas, hôtel) et le réacheminement.',
+  verdict_note_shy_delay:        'En vertu du SHY, les compagnies doivent fournir repas, rafraîchissements et hébergement pour les retards de plus de 2 heures. Cependant, aucune indemnisation financière n\'est prévue pour les retards — seulement pour les annulations et les refus d\'embarquement.',
+  verdict_note_shy_delay_eu261:  'En vertu du SHY, les compagnies doivent fournir repas, rafraîchissements et hébergement pour les retards de plus de 2 heures. Aucune indemnisation financière n\'est prévue pour les retards. Votre vol pourrait également être couvert par EU261, qui prévoit une indemnisation pour les retards. Nous avons sélectionné SHY car vous avez décollé de Turquie, mais envisagez de déposer une demande sous EU261 si votre compagnie est enregistrée dans l\'UE.',
+  verdict_note_shy_forcemajeure: 'Les événements de force majeure (météo sévère, instabilité politique, catastrophes naturelles, risques de sécurité, grèves aéroportuaires) exemptent les compagnies de l\'indemnisation financière SHY. Les droits de prise en charge (repas, hébergement, réacheminement) restent applicables.',
+  verdict_note_eu_extraordinary:  'Les circonstances extraordinaires (météo, grèves ATC, incidents de sécurité) exemptent les compagnies du paiement d\'une indemnisation en espèces. Vos droits de prise en charge — repas, hôtel, réacheminement — ne sont pas affectés.',
+};
+
 const VERDICT_META_FR = {
   likely:   { badge: 'VOUS AVEZ PROBABLEMENT DROIT À UNE INDEMNISATION',     dot: '🟢' },
   possibly: { badge: 'VOUS POURRIEZ AVOIR DROIT À UNE INDEMNISATION',         dot: '🟡' },
@@ -590,7 +619,7 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
             Pas d&apos;indemnisation financière — des droits aux soins peuvent s&apos;appliquer
           </div>
         )}
-        {verdictNote && <p className="vnote">{verdictNote}</p>}
+        {verdictNote && <p className="vnote">{VERDICT_NOTES_I18N_FR[verdictNote] ?? verdictNote}</p>}
         {shyMeta && (
           <div className="vnote" style={{ marginTop: 8, fontSize: 12, opacity: 0.8 }}>
             <strong>Date limite&nbsp;:</strong> {shyMeta.deadline}<br />
@@ -709,7 +738,7 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
                 <div key={i} className="care-item">
                   <span className="care-em">{r.emoji}</span>
                   <div className="care-txt">
-                    <strong>{r.title}</strong><br />{r.detail}
+                    <strong>{CARE_I18N_FR[r.titleKey] ?? r.titleKey}</strong><br />{CARE_I18N_FR[r.detailKey] ?? r.detailKey}
                   </div>
                 </div>
               ))}
