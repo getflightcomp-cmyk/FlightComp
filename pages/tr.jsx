@@ -545,6 +545,9 @@ const VERDICT_NOTES_I18N_TR = {
   verdict_note_shy_delay_eu261:  'SHY kapsamında havayolları, 2 saati aşan gecikmelerde yemek, ikramlık ve konaklama sağlamak zorundadır. Ancak gecikmeler için nakit tazminat öngörülmemektedir — yalnızca iptal ve biniş reddi durumlarında tazminat hakkı doğmaktadır. Uçuşunuz aynı zamanda gecikmeler için tazminat öngören AB261 kapsamında da değerlendirilebilir. Türkiye\'den hareket ettiğiniz için SHY\'yi seçtik; ancak havayolunuz AB\'ye kayıtlı ise AB261 kapsamında başvuru yapmayı da düşünebilirsiniz.',
   verdict_note_shy_forcemajeure: 'Mücbir sebep olayları (şiddetli hava, siyasi istikrarsızlık, doğal afetler, güvenlik riskleri, havalimanı grevleri) havayollarını SHY nakit tazminatından muaf kılar. Bakım hakları (yemek, konaklama, yeniden rezervasyon) geçerliliğini korur.',
   verdict_note_eu_extraordinary:  'Olağanüstü koşullar (hava durumu, ATC grevleri, güvenlik olayları) havayollarını nakit tazminat ödemekten muaf kılar. Ancak bakım haklarınız — yemek, otel, yeniden rezervasyon — etkilenmez.',
+  shy_deadline:        'Şikayet başvurusunu olaydan itibaren 1 yıl içinde yapmanız gerekmektedir.',
+  shy_escalation_dgca: 'Havayolu yanıt vermezse veya yanıtıyla anlaşamazsanız, Sivil Havacılık Genel Müdürlüğü\'ne (SHGM) şikayet başvurusunda bulunabilirsiniz: https://web.shgm.gov.tr',
+  payable_in_try:      'Türk Lirası olarak ödenir',
 };
 
 const VERDICT_META_TR = {
@@ -566,7 +569,9 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
 
   const { verdict, regulation, compensation, verdictNote, careRights, distanceKm, shyMeta } = result;
   const meta = VERDICT_META_TR[verdict] ?? VERDICT_META_TR.likely;
-  const amountDisplay = compensation?.amount || (verdict !== 'unlikely' ? '€250–€600' : null);
+  const amountDisplay = compensation?.amount
+    ? `${compensation.amount}${compensation.payableInTRY ? ` (${VERDICT_NOTES_I18N_TR.payable_in_try})` : ''}`
+    : (verdict !== 'unlikely' ? '€250–€600' : null);
   const isSHYDelay = regulation === 'SHY' && answers.disruption === 'delayed';
   const showPrimaryCTA = verdict === 'likely' || verdict === 'possibly' || isSHYDelay;
   const showSecondaryCTA = (verdict === 'likely' || verdict === 'possibly') && !isSHYDelay;
@@ -622,8 +627,8 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
         {verdictNote && <p className="vnote">{VERDICT_NOTES_I18N_TR[verdictNote] ?? verdictNote}</p>}
         {shyMeta && (
           <div className="vnote" style={{ marginTop: 8, fontSize: 12, opacity: 0.8 }}>
-            <strong>Son başvuru tarihi:</strong> {shyMeta.deadline}<br />
-            <strong>Şikâyet mercii:</strong> {shyMeta.escalation}
+            <strong>Son başvuru tarihi:</strong> {VERDICT_NOTES_I18N_TR[shyMeta.deadlineKey] ?? shyMeta.deadlineKey}<br />
+            <strong>Şikâyet mercii:</strong> {VERDICT_NOTES_I18N_TR[shyMeta.escalationKey] ?? shyMeta.escalationKey}
           </div>
         )}
       </div>

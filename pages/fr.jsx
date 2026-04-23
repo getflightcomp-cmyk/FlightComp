@@ -545,6 +545,9 @@ const VERDICT_NOTES_I18N_FR = {
   verdict_note_shy_delay_eu261:  'En vertu du SHY, les compagnies doivent fournir repas, rafraîchissements et hébergement pour les retards de plus de 2 heures. Aucune indemnisation financière n\'est prévue pour les retards. Votre vol pourrait également être couvert par EU261, qui prévoit une indemnisation pour les retards. Nous avons sélectionné SHY car vous avez décollé de Turquie, mais envisagez de déposer une demande sous EU261 si votre compagnie est enregistrée dans l\'UE.',
   verdict_note_shy_forcemajeure: 'Les événements de force majeure (météo sévère, instabilité politique, catastrophes naturelles, risques de sécurité, grèves aéroportuaires) exemptent les compagnies de l\'indemnisation financière SHY. Les droits de prise en charge (repas, hébergement, réacheminement) restent applicables.',
   verdict_note_eu_extraordinary:  'Les circonstances extraordinaires (météo, grèves ATC, incidents de sécurité) exemptent les compagnies du paiement d\'une indemnisation en espèces. Vos droits de prise en charge — repas, hôtel, réacheminement — ne sont pas affectés.',
+  shy_deadline:        'Vous avez 1 an à compter de la date de la perturbation pour déposer une réclamation.',
+  shy_escalation_dgca: 'Si la compagnie aérienne ne répond pas ou si vous n\'êtes pas d\'accord avec sa réponse, déposez une plainte auprès de la Direction générale de l\'aviation civile turque (DGCA / SHGM) : https://web.shgm.gov.tr',
+  payable_in_try:      'payable en Lires turques',
 };
 
 const VERDICT_META_FR = {
@@ -566,7 +569,9 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
 
   const { verdict, regulation, compensation, verdictNote, careRights, distanceKm, shyMeta } = result;
   const meta = VERDICT_META_FR[verdict] ?? VERDICT_META_FR.likely;
-  const amountDisplay = compensation?.amount || (verdict !== 'unlikely' ? '€250–€600' : null);
+  const amountDisplay = compensation?.amount
+    ? `${compensation.amount}${compensation.payableInTRY ? ` (${VERDICT_NOTES_I18N_FR.payable_in_try})` : ''}`
+    : (verdict !== 'unlikely' ? '€250–€600' : null);
   const isSHYDelay = regulation === 'SHY' && answers.disruption === 'delayed';
   const showPrimaryCTA = verdict === 'likely' || verdict === 'possibly' || isSHYDelay;
   const showSecondaryCTA = (verdict === 'likely' || verdict === 'possibly') && !isSHYDelay;
@@ -622,8 +627,8 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
         {verdictNote && <p className="vnote">{VERDICT_NOTES_I18N_FR[verdictNote] ?? verdictNote}</p>}
         {shyMeta && (
           <div className="vnote" style={{ marginTop: 8, fontSize: 12, opacity: 0.8 }}>
-            <strong>Date limite&nbsp;:</strong> {shyMeta.deadline}<br />
-            <strong>Escalade&nbsp;:</strong> {shyMeta.escalation}
+            <strong>Date limite&nbsp;:</strong> {VERDICT_NOTES_I18N_FR[shyMeta.deadlineKey] ?? shyMeta.deadlineKey}<br />
+            <strong>Escalade&nbsp;:</strong> {VERDICT_NOTES_I18N_FR[shyMeta.escalationKey] ?? shyMeta.escalationKey}
           </div>
         )}
       </div>

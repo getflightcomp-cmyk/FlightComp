@@ -530,6 +530,9 @@ const VERDICT_NOTES_I18N_DE = {
   verdict_note_shy_delay_eu261:  'Gemäß SHY müssen Airlines bei Verspätungen von mehr als 2 Stunden Mahlzeiten, Erfrischungen und Unterkunft bereitstellen. Eine finanzielle Entschädigung ist für Verspätungen nicht vorgesehen. Ihr Flug könnte auch unter EU261 fallen, das Entschädigung für Verspätungen vorsieht. Wir haben SHY gewählt, da Sie aus der Türkei abgeflogen sind — erwägen Sie jedoch eine Einreichung unter EU261, wenn Ihre Airline in der EU registriert ist.',
   verdict_note_shy_forcemajeure: 'Höhere Gewalt (schwerwetterbedingte Umstände, politische Instabilität, Naturkatastrophen, Sicherheitsrisiken, Flughafenstreiks) befreit Airlines von der finanziellen SHY-Entschädigung. Betreuungsrechte (Mahlzeiten, Unterkunft, Umbuchung) bleiben bestehen.',
   verdict_note_eu_extraordinary:  'Außergewöhnliche Umstände (Wetter, ATC-Streiks, Sicherheitsvorfälle) befreien Airlines von der Zahlung einer Barentschädigung. Ihre Betreuungsrechte — Mahlzeiten, Hotel, Umbuchung — sind davon nicht betroffen.',
+  shy_deadline:        'Sie haben 1 Jahr ab dem Datum der Störung Zeit, um einen Anspruch einzureichen.',
+  shy_escalation_dgca: 'Wenn die Fluggesellschaft nicht antwortet oder Sie mit ihrer Antwort nicht einverstanden sind, reichen Sie eine Beschwerde bei der türkischen Generaldirektion für Zivilluftfahrt (DGCA / SHGM) ein: https://web.shgm.gov.tr',
+  payable_in_try:      'zahlbar in türkischen Lira',
 };
 
 const VERDICT_META_DE = {
@@ -551,7 +554,9 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
 
   const { verdict, regulation, compensation, verdictNote, careRights, distanceKm, shyMeta } = result;
   const meta = VERDICT_META_DE[verdict] ?? VERDICT_META_DE.likely;
-  const amountDisplay = compensation?.amount || (verdict !== 'unlikely' ? '€250–€600' : null);
+  const amountDisplay = compensation?.amount
+    ? `${compensation.amount}${compensation.payableInTRY ? ` (${VERDICT_NOTES_I18N_DE.payable_in_try})` : ''}`
+    : (verdict !== 'unlikely' ? '€250–€600' : null);
   const isSHYDelay = regulation === 'SHY' && answers.disruption === 'delayed';
   const showPrimaryCTA = verdict === 'likely' || verdict === 'possibly' || isSHYDelay;
   const showSecondaryCTA = (verdict === 'likely' || verdict === 'possibly') && !isSHYDelay;
@@ -607,8 +612,8 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
         {verdictNote && <p className="vnote">{VERDICT_NOTES_I18N_DE[verdictNote] ?? verdictNote}</p>}
         {shyMeta && (
           <div className="vnote" style={{ marginTop: 8, fontSize: 12, opacity: 0.8 }}>
-            <strong>Frist:</strong> {shyMeta.deadline}<br />
-            <strong>Eskalation:</strong> {shyMeta.escalation}
+            <strong>Frist:</strong> {VERDICT_NOTES_I18N_DE[shyMeta.deadlineKey] ?? shyMeta.deadlineKey}<br />
+            <strong>Eskalation:</strong> {VERDICT_NOTES_I18N_DE[shyMeta.escalationKey] ?? shyMeta.escalationKey}
           </div>
         )}
       </div>

@@ -543,6 +543,9 @@ const VERDICT_NOTES_I18N = {
   verdict_note_shy_delay_eu261:  'Under SHY, airlines must provide meals, refreshments, and accommodation for delays over 2 hours. However, financial compensation is not available for delays — only for cancellations and denied boarding. Your flight may also qualify under EU261, which provides compensation for delays. We\'ve selected SHY as you departed from Turkey, but consider filing under EU261 if your airline is EU-registered.',
   verdict_note_shy_forcemajeure: 'Force majeure events (severe weather, political instability, natural disasters, security risks, airport strikes) exempt airlines from SHY financial compensation. Care rights (meals, accommodation, rebooking) still apply.',
   verdict_note_eu_extraordinary:  'Extraordinary circumstances (weather, ATC strikes, security incidents) exempt airlines from paying cash compensation. However, your care rights — meals, hotel, rebooking — are unaffected.',
+  shy_deadline:        'You have 1 year from the date of the disruption to file a claim.',
+  shy_escalation_dgca: 'If the airline does not respond or you disagree with their response, file a complaint with the Turkish Directorate General of Civil Aviation (DGCA / SHGM): https://web.shgm.gov.tr',
+  payable_in_try:      'payable in Turkish Lira',
 };
 
 const VERDICT_META = {
@@ -561,7 +564,9 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
   const [captureStatus, setCaptureStatus] = useState('idle'); // idle | submitting | done | error
   const { verdict, regulation, compensation, verdictNote, careRights, deskScript, distanceKm, shyMeta, alsoCoveredByEU261 } = result;
   const meta = VERDICT_META[verdict] ?? VERDICT_META.likely;
-  const amountDisplay = compensation?.amount || (verdict !== 'unlikely' ? '€250–€600' : null);
+  const amountDisplay = compensation?.amount
+    ? `${compensation.amount}${compensation.payableInTRY ? ` (${VERDICT_NOTES_I18N.payable_in_try})` : ''}`
+    : (verdict !== 'unlikely' ? '€250–€600' : null);
   const isSHYDelay = regulation === 'SHY' && answers.disruption === 'delayed';
   const showPrimaryCTA = verdict === 'likely' || verdict === 'possibly' || isSHYDelay;
   const showSecondaryCTA = (verdict === 'likely' || verdict === 'possibly') && !isSHYDelay;
@@ -616,8 +621,8 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
         {verdictNote && <p className="vnote">{VERDICT_NOTES_I18N[verdictNote] ?? verdictNote}</p>}
         {shyMeta && (
           <div className="vnote" style={{ marginTop: 8, fontSize: 12, opacity: 0.8 }}>
-            <strong>Deadline:</strong> {shyMeta.deadline}<br />
-            <strong>Escalation:</strong> {shyMeta.escalation}
+            <strong>Deadline:</strong> {VERDICT_NOTES_I18N[shyMeta.deadlineKey] ?? shyMeta.deadlineKey}<br />
+            <strong>Escalation:</strong> {VERDICT_NOTES_I18N[shyMeta.escalationKey] ?? shyMeta.escalationKey}
           </div>
         )}
       </div>
