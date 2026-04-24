@@ -1142,7 +1142,7 @@ export default function FrenchHome() {
               </h1>
               <div className="lp-badge" style={{ marginTop: 0, marginBottom: 20 }}>✈️ RPPA (Canada) / EU261 / UK261 / SHY (Turquie)</div>
               <p className="lp-sub">
-                Les compagnies aériennes vous doivent légalement jusqu&apos;à 1&nbsp;000&nbsp;$CA (Canada), 600&nbsp;€ (UE/R.-U.) ou 600&nbsp;€ (Turquie) — mais elles utilisent des obstacles administratifs pour éviter de payer. Nous les contournons pour vous.
+                Les compagnies aériennes peuvent vous devoir une indemnisation lorsqu&apos;elles perturbent votre vol — mais elles rendent la réclamation difficile. Nous vous facilitons l&apos;obtention de ce qui vous est dû.
               </p>
               <button className="btn-hook lp-cta" onClick={() => setScreen('q1')}>
                 Vérifier mon vol →

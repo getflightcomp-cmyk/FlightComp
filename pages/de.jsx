@@ -1125,7 +1125,7 @@ export default function GermanHome() {
               </h1>
               <div className="lp-badge" style={{ marginTop: 0, marginBottom: 20 }}>✈️ EU261 / UK261 / Kanada APPR / Türkei SHY</div>
               <p className="lp-sub">
-                Fluggesellschaften sind gesetzlich verpflichtet, Ihnen bis zu €600 (EU/UK), CA$1.000 (Kanada) oder €600 (Türkei) zu zahlen – aber sie setzen bürokratische Hürden ein, um dies zu vermeiden. Wir überwinden diese für Sie.
+                Fluggesellschaften schulden Ihnen möglicherweise eine Entschädigung, wenn sie Ihren Flug stören – aber sie machen es schwer, diese einzufordern. Wir machen es einfach, zu bekommen, was Ihnen zusteht.
               </p>
               <button className="btn-hook lp-cta" onClick={() => setScreen('q1')}>
                 Meinen Flug prüfen →

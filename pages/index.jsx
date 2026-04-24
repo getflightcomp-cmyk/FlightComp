@@ -1158,7 +1158,7 @@ export default function Home() {
               </h1>
               <div className="lp-badge" style={{ marginTop: 0, marginBottom: 20 }}>✈️ EU261 / UK261 / Canada APPR / Turkey SHY</div>
               <p className="lp-sub">
-                Airlines legally owe you up to €600 (EU/UK), CA$1,000 (Canada), or €600 (Turkey) — but they use friction to avoid paying. We cut through it.
+                Airlines may owe you compensation when they disrupt your flight — but they make it hard to claim. We make it easy to get what you&apos;re owed.
               </p>
               <button className="btn-hook lp-cta" onClick={() => setScreen('q1')}>
                 Check My Flight →

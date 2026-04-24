@@ -1147,7 +1147,7 @@ export default function SpanishHome() {
               </h1>
               <div className="lp-badge" style={{ marginTop: 0, marginBottom: 20 }}>✈️ EU261 / UK261 / Canadá APPR / Turquía SHY</div>
               <p className="lp-sub">
-                Las aerolíneas están legalmente obligadas a pagarte hasta €600 (UE/R.U.), CA$1.000 (Canadá) o €600 (Turquía) — pero usan trabas burocráticas para evitarlo. Nosotros las superamos.
+                Las aerolíneas pueden deberte una compensación cuando interrumpen tu vuelo — pero hacen difícil reclamarla. Nosotros te facilitamos obtener lo que te corresponde.
               </p>
               <button className="btn-hook lp-cta" onClick={() => setScreen('q1')}>
                 Verificar mi vuelo →

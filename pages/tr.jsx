@@ -1151,7 +1151,7 @@ export default function TurkishHome() {
               </h1>
               <div className="lp-badge" style={{ marginTop: 0, marginBottom: 20 }}>✈️ SHY / EU261 / UK261 / Kanada APPR</div>
               <p className="lp-sub">
-                Havayolları yasal olarak size €600&apos;a kadar (AB/İngiltere), CA$1.000&apos;e kadar (Kanada) veya €600&apos;a kadar (Türkiye) tazminat ödemek zorundadır — ancak bürokratik engeller koyarak bunu zorlaştırırlar. Biz bu engelleri aşıyoruz.
+                Havayolları, uçuşunuzu aksattıklarında size tazminat ödemek zorunda kalabilir — ancak bunu talep etmeyi zorlaştırırlar. Size hak ettiğinizi almanızı kolaylaştırıyoruz.
               </p>
               <button className="btn-hook lp-cta" onClick={() => setScreen('q1')}>
                 Uçuşumu Sorgula →
