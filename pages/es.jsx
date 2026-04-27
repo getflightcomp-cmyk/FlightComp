@@ -1142,22 +1142,25 @@ export default function SpanishHome() {
           <section className="lp-hero">
             <div className="lp-hero-inner">
               <h1 className="lp-h1">
-                Tu vuelo fue cancelado o retrasado.<br />
-                Descubre en 60 segundos lo que te deben.
+                ¿Vuelo retrasado o cancelado?<br />
+                Comprueba en menos de 60 segundos si tienes derecho a compensación.
               </h1>
-              <div className="lp-badge" style={{ marginTop: 0, marginBottom: 20 }}>✈️ EU261 / UK261 / Canadá APPR / Turquía SHY</div>
+              <div className="lp-badge" style={{ marginTop: 0, marginBottom: 20 }}>✈️ Cubre vuelos en Europa, Reino Unido, Canadá y Turquía</div>
               <p className="lp-sub">
-                Las aerolíneas pueden deberte una compensación cuando interrumpen tu vuelo — pero hacen difícil reclamarla. Nosotros te facilitamos obtener lo que te corresponde.
+                Las aerolíneas deben compensaciones con más frecuencia de lo que crees. La mayoría de los pasajeros nunca lo reclama.
               </p>
               <button className="btn-hook lp-cta" onClick={() => setScreen('q1')}>
                 Verificar mi vuelo →
               </button>
+              <p style={{ color: 'var(--muted)', fontSize: 13, marginTop: 10 }}>
+                Responde unas preguntas rápidas → obtén un resultado inmediato
+              </p>
               <div className="lp-hero-trust">
-                <span>Gratis</span>
+                <span>~30 segundos</span>
                 <span className="lp-dot">·</span>
                 <span>Sin registro</span>
                 <span className="lp-dot">·</span>
-                <span>Resultado inmediato</span>
+                <span>Sin tarjeta de crédito</span>
               </div>
               <p style={{ color: 'var(--muted)', fontSize: 13, marginTop: 10 }}>
                 Cubre vuelos en la UE, Reino Unido, Canadá y Turquía.

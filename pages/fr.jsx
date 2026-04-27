@@ -1137,22 +1137,25 @@ export default function FrenchHome() {
           <section className="lp-hero">
             <div className="lp-hero-inner">
               <h1 className="lp-h1">
-                Votre vol a été annulé ou retardé?<br />
-                Vérifiez vos droits en 60 secondes.
+                Vol retardé ou annulé&nbsp;?<br />
+                Vérifiez en moins de 60 secondes si vous avez droit à une indemnisation.
               </h1>
-              <div className="lp-badge" style={{ marginTop: 0, marginBottom: 20 }}>✈️ RPPA (Canada) / EU261 / UK261 / SHY (Turquie)</div>
+              <div className="lp-badge" style={{ marginTop: 0, marginBottom: 20 }}>✈️ Couvre les vols en Europe, au Royaume-Uni, au Canada et en Turquie</div>
               <p className="lp-sub">
-                Les compagnies aériennes peuvent vous devoir une indemnisation lorsqu&apos;elles perturbent votre vol — mais elles rendent la réclamation difficile. Nous vous facilitons l&apos;obtention de ce qui vous est dû.
+                Les compagnies aériennes doivent des indemnisations plus souvent qu&apos;on ne le croit. La plupart des passagers ne réclament jamais rien.
               </p>
               <button className="btn-hook lp-cta" onClick={() => setScreen('q1')}>
                 Vérifier mon vol →
               </button>
+              <p style={{ color: 'var(--muted)', fontSize: 13, marginTop: 10 }}>
+                Répondez à quelques questions rapides → obtenez un résultat instantané
+              </p>
               <div className="lp-hero-trust">
-                <span>Gratuit</span>
+                <span>~30 secondes</span>
                 <span className="lp-dot">·</span>
                 <span>Sans inscription</span>
                 <span className="lp-dot">·</span>
-                <span>Résultat instantané</span>
+                <span>Sans carte bancaire</span>
               </div>
               <p style={{ color: 'var(--muted)', fontSize: 13, marginTop: 10 }}>
                 Couvre les vols au Canada, dans l&apos;UE, au R.-U. et en Turquie.

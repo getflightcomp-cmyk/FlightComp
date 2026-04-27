@@ -1153,22 +1153,25 @@ export default function Home() {
           <section className="lp-hero">
             <div className="lp-hero-inner">
               <h1 className="lp-h1">
-                Your flight was cancelled.<br />
-                Find out what you&apos;re owed in 60 seconds.
+                Flight delayed or cancelled?<br />
+                Check if you&apos;re owed compensation in under 60 seconds.
               </h1>
-              <div className="lp-badge" style={{ marginTop: 0, marginBottom: 20 }}>✈️ EU261 / UK261 / Canada APPR / Turkey SHY</div>
+              <div className="lp-badge" style={{ marginTop: 0, marginBottom: 20 }}>✈️ Covers flights in Europe, UK, Canada &amp; Turkey</div>
               <p className="lp-sub">
-                Airlines may owe you compensation when they disrupt your flight — but they make it hard to claim. We make it easy to get what you&apos;re owed.
+                Airlines owe compensation more often than you&apos;d think. Most people never claim it.
               </p>
               <button className="btn-hook lp-cta" onClick={() => setScreen('q1')}>
                 Check My Flight →
               </button>
+              <p style={{ color: 'var(--muted)', fontSize: 13, marginTop: 10 }}>
+                Answer a few quick questions → get an instant eligibility result
+              </p>
               <div className="lp-hero-trust">
-                <span>Free</span>
+                <span>Takes ~30 seconds</span>
                 <span className="lp-dot">·</span>
                 <span>No signup</span>
                 <span className="lp-dot">·</span>
-                <span>Instant result</span>
+                <span>No credit card</span>
               </div>
               <p style={{ color: 'var(--muted)', fontSize: 13, marginTop: 10 }}>
                 Covers flights in, to, or from the EU, UK, Canada, and Turkey.

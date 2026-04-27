@@ -1146,22 +1146,25 @@ export default function TurkishHome() {
           <section className="lp-hero">
             <div className="lp-hero-inner">
               <h1 className="lp-h1">
-                Uçuşunuz iptal mi edildi veya gecikti mi?<br />
-                60 saniyede tazminat hakkınızı öğrenin.
+                Uçuşunuz gecikti mi veya iptal mi edildi?<br />
+                60 saniyeden kısa sürede tazminata hak kazanıp kazanmadığınızı öğrenin.
               </h1>
-              <div className="lp-badge" style={{ marginTop: 0, marginBottom: 20 }}>✈️ SHY / EU261 / UK261 / Kanada APPR</div>
+              <div className="lp-badge" style={{ marginTop: 0, marginBottom: 20 }}>✈️ Avrupa, İngiltere, Kanada ve Türkiye&apos;deki uçuşları kapsar</div>
               <p className="lp-sub">
-                Havayolları, uçuşunuzu aksattıklarında size tazminat ödemek zorunda kalabilir — ancak bunu talep etmeyi zorlaştırırlar. Size hak ettiğinizi almanızı kolaylaştırıyoruz.
+                Havayolları düşündüğünüzden daha sık tazminat ödemek zorunda. Çoğu yolcu hiç başvurmuyor.
               </p>
               <button className="btn-hook lp-cta" onClick={() => setScreen('q1')}>
                 Uçuşumu Sorgula →
               </button>
+              <p style={{ color: 'var(--muted)', fontSize: 13, marginTop: 10 }}>
+                Birkaç hızlı soruyu yanıtlayın → anında uygunluk sonucunu alın
+              </p>
               <div className="lp-hero-trust">
-                <span>Ücretsiz</span>
+                <span>~30 saniye sürer</span>
                 <span className="lp-dot">·</span>
                 <span>Kayıt gerekmez</span>
                 <span className="lp-dot">·</span>
-                <span>Anında sonuç</span>
+                <span>Kredi kartı gerekmez</span>
               </div>
               <p style={{ color: 'var(--muted)', fontSize: 13, marginTop: 10 }}>
                 AB, İngiltere, Kanada ve Türkiye&apos;deki uçuşları kapsar.

@@ -1120,22 +1120,25 @@ export default function GermanHome() {
           <section className="lp-hero">
             <div className="lp-hero-inner">
               <h1 className="lp-h1">
-                Ihr Flug wurde annulliert oder hatte eine Verspätung?<br />
-                Erfahren Sie in 60 Sekunden, was Ihnen zusteht.
+                Flug verspätet oder gestrichen?<br />
+                Prüfen Sie in unter 60 Sekunden, ob Ihnen eine Entschädigung zusteht.
               </h1>
-              <div className="lp-badge" style={{ marginTop: 0, marginBottom: 20 }}>✈️ EU261 / UK261 / Kanada APPR / Türkei SHY</div>
+              <div className="lp-badge" style={{ marginTop: 0, marginBottom: 20 }}>✈️ Gilt für Flüge in Europa, Großbritannien, Kanada und der Türkei</div>
               <p className="lp-sub">
-                Fluggesellschaften schulden Ihnen möglicherweise eine Entschädigung, wenn sie Ihren Flug stören – aber sie machen es schwer, diese einzufordern. Wir machen es einfach, zu bekommen, was Ihnen zusteht.
+                Fluggesellschaften schulden öfter Entschädigung, als die meisten denken. Die wenigsten Passagiere fordern sie ein.
               </p>
               <button className="btn-hook lp-cta" onClick={() => setScreen('q1')}>
                 Meinen Flug prüfen →
               </button>
+              <p style={{ color: 'var(--muted)', fontSize: 13, marginTop: 10 }}>
+                Beantworten Sie ein paar kurze Fragen → sofortiges Ergebnis erhalten
+              </p>
               <div className="lp-hero-trust">
-                <span>Kostenlos</span>
+                <span>Ca. 30 Sekunden</span>
                 <span className="lp-dot">·</span>
-                <span>Ohne Anmeldung</span>
+                <span>Keine Anmeldung</span>
                 <span className="lp-dot">·</span>
-                <span>Sofortiges Ergebnis</span>
+                <span>Keine Kreditkarte</span>
               </div>
               <p style={{ color: 'var(--muted)', fontSize: 13, marginTop: 10 }}>
                 Gilt für Flüge in, nach und aus der EU, UK, Kanada und der Türkei.
