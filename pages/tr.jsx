@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { assessClaim, assessClaimAPPR, assessClaimSHY, detectRegulation, tryResolveAirport } from '../lib/eu261';
 import { resolveAirline, getCarrierRegion, isLargeCanadianCarrier } from '../lib/carriers';
+import { trackEvent } from '../lib/analytics';
 
 /* ══════════════════════════════════════════════════════
    Turkish localization — standalone page
@@ -576,6 +577,12 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
   const showPrimaryCTA = verdict === 'likely' || verdict === 'possibly' || isSHYDelay;
   const showSecondaryCTA = (verdict === 'likely' || verdict === 'possibly') && !isSHYDelay;
 
+  // GA4: fire once when results screen mounts
+  useEffect(() => {
+    trackEvent('eligibility_check_completed');
+    trackEvent('verdict_shown', { eligible: verdict !== 'unlikely' });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   async function handleCapture(e) {
     e.preventDefault();
     const email = captureEmail.trim();
@@ -1097,6 +1104,8 @@ export default function TurkishHome() {
       language:     'tr',
     };
 
+    trackEvent('kit_purchase_started');
+
     const res = await fetch('/api/create-checkout-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1153,7 +1162,7 @@ export default function TurkishHome() {
               <p className="lp-sub">
                 Havayolları düşündüğünüzden daha sık tazminat ödemek zorunda. Çoğu yolcu hiç başvurmuyor.
               </p>
-              <button className="btn-hook lp-cta" onClick={() => setScreen('q1')}>
+              <button className="btn-hook lp-cta" onClick={() => { trackEvent('eligibility_check_started'); setScreen('q1'); }}>
                 Uçuşumu Sorgula →
               </button>
               <p style={{ color: 'var(--muted)', fontSize: 13, marginTop: 10 }}>
@@ -1235,7 +1244,7 @@ export default function TurkishHome() {
           <section className="lp-final-cta">
             <div className="lp-section-inner lp-final-inner">
               <h2 className="lp-final-h">Uçuşunuzun uygun olup olmadığını kontrol edin</h2>
-              <button className="btn-hook lp-cta" onClick={() => setScreen('q1')}>
+              <button className="btn-hook lp-cta" onClick={() => { trackEvent('eligibility_check_started'); setScreen('q1'); }}>
                 Uçuşumu Sorgula →
               </button>
               <div className="lp-final-sub">Ücretsiz · 60 saniye · AB, İngiltere, Kanada ve Türkiye uçuşlarını kapsar</div>

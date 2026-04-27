@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { getAirlineContact, getEscalationAuthority, getResponseDeadlineDays } from '../lib/airline-contacts';
 import { tryResolveAirport } from '../lib/eu261';
+import { trackEvent } from '../lib/analytics';
 
 /* ══════════════════════════════════════════════════════
    Success page — shown after Stripe payment completes
@@ -1651,6 +1652,7 @@ export default function Success() {
     setDetails(d);
     const lang = answers?.language;
     if (lang && ['en', 'tr', 'fr', 'de', 'es'].includes(lang)) setLanguage(lang);
+    trackEvent('kit_purchase_completed');
     setState('collect');
   }, []);
 

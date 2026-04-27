@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { assessClaim, assessClaimAPPR, assessClaimSHY, detectRegulation, tryResolveAirport } from '../lib/eu261';
+import { trackEvent } from '../lib/analytics';
 import { resolveAirline, getCarrierRegion, isLargeCanadianCarrier } from '../lib/carriers';
 
 /* ══════════════════════════════════════════════════════
@@ -576,6 +577,12 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
   const showPrimaryCTA = verdict === 'likely' || verdict === 'possibly' || isSHYDelay;
   const showSecondaryCTA = (verdict === 'likely' || verdict === 'possibly') && !isSHYDelay;
 
+  // GA4: fire once when results screen mounts
+  useEffect(() => {
+    trackEvent('eligibility_check_completed');
+    trackEvent('verdict_shown', { eligible: verdict !== 'unlikely' });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   async function handleCapture(e) {
     e.preventDefault();
     const email = captureEmail.trim();
@@ -1092,6 +1099,8 @@ export default function SpanishHome() {
       language:     'es',
     };
 
+    trackEvent('kit_purchase_started');
+
     const res = await fetch('/api/create-checkout-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1149,7 +1158,7 @@ export default function SpanishHome() {
               <p className="lp-sub">
                 Las aerolíneas deben compensaciones con más frecuencia de lo que crees. La mayoría de los pasajeros nunca lo reclama.
               </p>
-              <button className="btn-hook lp-cta" onClick={() => setScreen('q1')}>
+              <button className="btn-hook lp-cta" onClick={() => { trackEvent('eligibility_check_started'); setScreen('q1'); }}>
                 Verificar mi vuelo →
               </button>
               <p style={{ color: 'var(--muted)', fontSize: 13, marginTop: 10 }}>
@@ -1231,7 +1240,7 @@ export default function SpanishHome() {
           <section className="lp-final-cta">
             <div className="lp-section-inner lp-final-inner">
               <h2 className="lp-final-h">Comprueba si tu vuelo es elegible</h2>
-              <button className="btn-hook lp-cta" onClick={() => setScreen('q1')}>
+              <button className="btn-hook lp-cta" onClick={() => { trackEvent('eligibility_check_started'); setScreen('q1'); }}>
                 Verificar mi vuelo →
               </button>
               <div className="lp-final-sub">Gratis · 60 segundos · Cubre vuelos de la UE, R.U., Canadá y Turquía</div>
