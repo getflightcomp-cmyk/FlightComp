@@ -1146,7 +1146,7 @@ export default function Home() {
           <meta property="og:description" content="Free EU261/UK261 eligibility checker. Get your verdict in 60 seconds." />
           <meta property="og:type" content="website" />
           <meta property="og:url" content="https://www.getflightcomp.com" />
-          <link rel="canonical" href="https://www.getflightcomp.com" />
+          <link rel="canonical" key="canonical" href="https://www.getflightcomp.com" />
           <link rel="alternate" hrefLang="en" href="https://www.getflightcomp.com" />
           <link rel="alternate" hrefLang="tr" href="https://www.getflightcomp.com/tr" />
           <link rel="alternate" hrefLang="fr" href="https://www.getflightcomp.com/fr" />
