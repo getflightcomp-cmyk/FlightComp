@@ -1104,8 +1104,6 @@ export default function TurkishHome() {
       language:     'tr',
     };
 
-    trackEvent('kit_purchase_started');
-
     const res = await fetch('/api/create-checkout-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1120,6 +1118,9 @@ export default function TurkishHome() {
 
     if (!res.ok) { alert('Ödeme başlatılamadı. Lütfen tekrar deneyin.'); return; }
     const { url } = await res.json();
+    // Fire event immediately before redirect so GA4 has time to flush the hit
+    trackEvent('kit_purchase_started');
+    await new Promise(resolve => setTimeout(resolve, 300));
     window.location.href = url;
   }
 

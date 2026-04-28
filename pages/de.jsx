@@ -1080,8 +1080,6 @@ export default function GermanHome() {
       language:     'de',
     };
 
-    trackEvent('kit_purchase_started');
-
     const res = await fetch('/api/create-checkout-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1096,6 +1094,9 @@ export default function GermanHome() {
 
     if (!res.ok) { alert('Die Zahlung konnte nicht eingerichtet werden. Bitte versuchen Sie es erneut.'); return; }
     const { url } = await res.json();
+    // Fire event immediately before redirect so GA4 has time to flush the hit
+    trackEvent('kit_purchase_started');
+    await new Promise(resolve => setTimeout(resolve, 300));
     window.location.href = url;
   }
 

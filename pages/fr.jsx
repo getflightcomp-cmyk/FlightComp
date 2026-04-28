@@ -1095,8 +1095,6 @@ export default function FrenchHome() {
       language:     'fr',
     };
 
-    trackEvent('kit_purchase_started');
-
     const res = await fetch('/api/create-checkout-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1111,6 +1109,9 @@ export default function FrenchHome() {
 
     if (!res.ok) { alert('La configuration du paiement a échoué. Veuillez réessayer.'); return; }
     const { url } = await res.json();
+    // Fire event immediately before redirect so GA4 has time to flush the hit
+    trackEvent('kit_purchase_started');
+    await new Promise(resolve => setTimeout(resolve, 300));
     window.location.href = url;
   }
 
