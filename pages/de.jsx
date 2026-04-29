@@ -788,6 +788,8 @@ function PersonalDetailsScreen({ details, onChange, onSubmit, onBack }) {
   const canSubmit = details.name.trim() && details.email.trim() && details.address.trim();
 
   async function handleSubmit() {
+    // eslint-disable-next-line no-console
+    console.log('[GA4 debug] kit purchase button clicked');
     setLoading(true);
     await onSubmit();
     setLoading(false);
@@ -1083,6 +1085,10 @@ export default function GermanHome() {
   }
 
   async function handlePay() {
+    // Fire kit_purchase_started immediately — before any async work so it fires
+    // even if the Stripe checkout creation fails later.
+    trackEvent('kit_purchase_started');
+
     const payload = { answers, result, details };
     sessionStorage.setItem('fc_claim_de', JSON.stringify(payload));
     sessionStorage.setItem('fc_claim', JSON.stringify(payload));
@@ -1114,11 +1120,6 @@ export default function GermanHome() {
     if (!res.ok) { alert('Die Zahlung konnte nicht eingerichtet werden. Bitte versuchen Sie es erneut.'); return; }
     const { url } = await res.json();
     sessionStorage.setItem('fc_restore_pending', '1');
-    // Fire event immediately before redirect so GA4 has time to flush the hit
-    // eslint-disable-next-line no-console
-    console.log('[GA4 debug] Firing kit_purchase_started');
-    trackEvent('kit_purchase_started');
-    await new Promise(resolve => setTimeout(resolve, 300));
     window.location.href = url;
   }
 

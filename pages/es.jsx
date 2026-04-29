@@ -807,6 +807,8 @@ function PersonalDetailsScreen({ details, onChange, onSubmit, onBack }) {
   const canSubmit = details.name.trim() && details.email.trim() && details.address.trim();
 
   async function handleSubmit() {
+    // eslint-disable-next-line no-console
+    console.log('[GA4 debug] kit purchase button clicked');
     setLoading(true);
     await onSubmit();
     setLoading(false);
@@ -1102,6 +1104,10 @@ export default function SpanishHome() {
   }
 
   async function handlePay() {
+    // Fire kit_purchase_started immediately — before any async work so it fires
+    // even if the Stripe checkout creation fails later.
+    trackEvent('kit_purchase_started');
+
     const payload = { answers, result, details };
     sessionStorage.setItem('fc_claim_es', JSON.stringify(payload));
     sessionStorage.setItem('fc_claim', JSON.stringify(payload));
@@ -1120,7 +1126,7 @@ export default function SpanishHome() {
 
     const res = await fetch('/api/create-checkout-session', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json'},
       body: JSON.stringify({
         customerEmail: details.email,
         successUrl: `${base}/success?session_id={CHECKOUT_SESSION_ID}`,
@@ -1133,11 +1139,6 @@ export default function SpanishHome() {
     if (!res.ok) { alert('La configuración del pago ha fallado. Por favor, inténtalo de nuevo.'); return; }
     const { url } = await res.json();
     sessionStorage.setItem('fc_restore_pending', '1');
-    // Fire event immediately before redirect so GA4 has time to flush the hit
-    // eslint-disable-next-line no-console
-    console.log('[GA4 debug] Firing kit_purchase_started');
-    trackEvent('kit_purchase_started');
-    await new Promise(resolve => setTimeout(resolve, 300));
     window.location.href = url;
   }
 
