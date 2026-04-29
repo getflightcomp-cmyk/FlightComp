@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import { assessClaim, assessClaimAPPR, assessClaimSHY, detectRegulation, tryResolveAirport } from '../lib/eu261';
 import { trackEvent } from '../lib/analytics';
@@ -549,7 +549,7 @@ const DISRUPTION_LABELS_DE = {
   downgraded: 'Herabstufung',
 };
 
-function ResultsScreen({ result, answers, onGetLetter, onReset }) {
+function ResultsScreen({ result, answers, onGetLetter, onReset, flowStartedRef }) {
   const [captureEmail, setCaptureEmail]   = useState('');
   const [captureStatus, setCaptureStatus] = useState('idle');
 
@@ -562,10 +562,18 @@ function ResultsScreen({ result, answers, onGetLetter, onReset }) {
   const showPrimaryCTA = verdict === 'likely' || verdict === 'possibly' || isSHYDelay;
   const showSecondaryCTA = (verdict === 'likely' || verdict === 'possibly') && !isSHYDelay;
 
-  // GA4: fire once when results screen mounts
+  // GA4: fire once when results screen mounts — only for flows started this session,
+  // not for sessions restored from sessionStorage on page load.
   useEffect(() => {
-    trackEvent('eligibility_check_completed');
-    trackEvent('verdict_shown', { eligible: verdict !== 'unlikely' });
+    // eslint-disable-next-line no-console
+    console.log('[GA4 debug] ResultsScreen mounted — flowStartedRef?.current:', flowStartedRef?.current);
+    if (flowStartedRef?.current) {
+      trackEvent('eligibility_check_completed');
+      trackEvent('verdict_shown', { eligible: verdict !== 'unlikely' });
+    } else {
+      // eslint-disable-next-line no-console
+      console.log('[GA4 debug] Skipping completion events — restored session (no active flow)');
+    }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleCapture(e) {
@@ -947,7 +955,16 @@ export default function GermanHome() {
     try {
       const raw = sessionStorage.getItem('fc_claim_de');
       if (!raw) return null;
+      const pending = sessionStorage.getItem('fc_restore_pending');
+      if (!pending) {
+        // eslint-disable-next-line no-console
+        console.log('[GA4 debug] fc_claim_de present but no restore flag — starting fresh (stale session ignored)');
+        return null;
+      }
+      sessionStorage.removeItem('fc_restore_pending');
       const p = JSON.parse(raw);
+      // eslint-disable-next-line no-console
+      console.warn('[GA4 debug] ⚠️ Restoring session from Stripe cancel — click "Start Over" for a new flow.');
       return p.answers && p.result ? p : null;
     } catch { return null; }
   })();
@@ -956,6 +973,8 @@ export default function GermanHome() {
   const [answers, setAnswers] = useState(restored?.answers || INITIAL_ANSWERS);
   const [result, setResult]   = useState(restored?.result || null);
   const [details, setDetails] = useState(restored?.details || INITIAL_DETAILS);
+
+  const checkInProgressRef = useRef(false);
 
   function update(key, val) {
     setAnswers(a => ({ ...a, [key]: val }));
@@ -1094,7 +1113,10 @@ export default function GermanHome() {
 
     if (!res.ok) { alert('Die Zahlung konnte nicht eingerichtet werden. Bitte versuchen Sie es erneut.'); return; }
     const { url } = await res.json();
+    sessionStorage.setItem('fc_restore_pending', '1');
     // Fire event immediately before redirect so GA4 has time to flush the hit
+    // eslint-disable-next-line no-console
+    console.log('[GA4 debug] Firing kit_purchase_started');
     trackEvent('kit_purchase_started');
     await new Promise(resolve => setTimeout(resolve, 300));
     window.location.href = url;
@@ -1137,7 +1159,7 @@ export default function GermanHome() {
               <p className="lp-sub">
                 Fluggesellschaften schulden öfter Entschädigung, als die meisten denken. Die wenigsten Passagiere fordern sie ein.
               </p>
-              <button className="btn-hook lp-cta" onClick={() => { trackEvent('eligibility_check_started'); setScreen('q1'); }}>
+              <button className="btn-hook lp-cta" onClick={() => { console.log('[GA4 debug] CTA clicked — checkInProgressRef.current:', checkInProgressRef.current); if (!checkInProgressRef.current) { checkInProgressRef.current = true; trackEvent('eligibility_check_started'); } setScreen('q1'); }}>
                 Meinen Flug prüfen →
               </button>
               <p style={{ color: 'var(--muted)', fontSize: 13, marginTop: 10 }}>
@@ -1219,7 +1241,7 @@ export default function GermanHome() {
           <section className="lp-final-cta">
             <div className="lp-section-inner lp-final-inner">
               <h2 className="lp-final-h">Prüfen Sie, ob Ihr Flug qualifiziert</h2>
-              <button className="btn-hook lp-cta" onClick={() => { trackEvent('eligibility_check_started'); setScreen('q1'); }}>
+              <button className="btn-hook lp-cta" onClick={() => { console.log('[GA4 debug] CTA clicked — checkInProgressRef.current:', checkInProgressRef.current); if (!checkInProgressRef.current) { checkInProgressRef.current = true; trackEvent('eligibility_check_started'); } setScreen('q1'); }}>
                 Meinen Flug prüfen →
               </button>
               <div className="lp-final-sub">Kostenlos · 60 Sekunden · Gilt für EU-, UK-, kanadische und türkische Flüge</div>
@@ -1320,6 +1342,7 @@ export default function GermanHome() {
               sein — Sie können dafür eine separate Prüfung durchführen.
             </p>
             <button className="btn-cont" onClick={() => {
+              checkInProgressRef.current = false;
               setAnswers(INITIAL_ANSWERS);
               setDetails(INITIAL_DETAILS);
               setResult(null);
@@ -1454,7 +1477,9 @@ export default function GermanHome() {
           result={result}
           answers={answers}
           onGetLetter={() => setScreen('details')}
+          flowStartedRef={checkInProgressRef}
           onReset={() => {
+            checkInProgressRef.current = false;
             setAnswers(INITIAL_ANSWERS);
             setDetails(INITIAL_DETAILS);
             setResult(null);
