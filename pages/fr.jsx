@@ -745,7 +745,12 @@ function ResultsScreen({ result, answers, onGetLetter, onReset, flowStartedRef }
             <p className="cta-diy-desc">
               Une trousse {regulation} complète&nbsp;: lettre de réclamation personnalisée, guide de soumission à la compagnie aérienne, modèles de suivi et d&apos;escalade. Téléchargez en PDF et envoyez vous-même.
             </p>
-            <button className="btn-diy" onClick={onGetLetter}>
+            <button className="btn-diy" onClick={() => {
+              // eslint-disable-next-line no-console
+              console.log('[GA4 debug] verdict-page paid kit button clicked');
+              trackEvent('kit_purchase_started');
+              onGetLetter();
+            }}>
               Obtenir ma trousse d&apos;indemnisation — 14,99&nbsp;$
             </button>
           </div>
@@ -1100,9 +1105,7 @@ export default function FrenchHome() {
   }
 
   async function handlePay() {
-    // Fire kit_purchase_started immediately — before any async work so it fires
-    // even if the Stripe checkout creation fails later.
-    trackEvent('kit_purchase_started');
+    // kit_purchase_started is fired on the btn-diy click in ResultsScreen (not here).
 
     const payload = { answers, result, details };
     sessionStorage.setItem('fc_claim_fr', JSON.stringify(payload));

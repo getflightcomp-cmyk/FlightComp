@@ -727,7 +727,12 @@ function ResultsScreen({ result, answers, onGetLetter, onReset, flowStartedRef }
             <p className="cta-diy-desc">
               Ein vollständiges {regulation} Entschädigungs-Kit: personalisierter Forderungsbrief, Einreichungsleitfaden, Nachfass- und Eskalationsvorlagen. Als PDF herunterladen und selbst einreichen.
             </p>
-            <button className="btn-diy" onClick={onGetLetter}>
+            <button className="btn-diy" onClick={() => {
+              // eslint-disable-next-line no-console
+              console.log('[GA4 debug] verdict-page paid kit button clicked');
+              trackEvent('kit_purchase_started');
+              onGetLetter();
+            }}>
               Mein Entschädigungs-Kit holen – $14.99
             </button>
           </div>
@@ -1085,9 +1090,7 @@ export default function GermanHome() {
   }
 
   async function handlePay() {
-    // Fire kit_purchase_started immediately — before any async work so it fires
-    // even if the Stripe checkout creation fails later.
-    trackEvent('kit_purchase_started');
+    // kit_purchase_started is fired on the btn-diy click in ResultsScreen (not here).
 
     const payload = { answers, result, details };
     sessionStorage.setItem('fc_claim_de', JSON.stringify(payload));

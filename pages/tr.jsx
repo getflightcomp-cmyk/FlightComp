@@ -753,7 +753,12 @@ function ResultsScreen({ result, answers, onGetLetter, onReset, flowStartedRef }
             <p className="cta-diy-desc">
               Kişiselleştirilmiş talep mektubu, havayoluna başvuru rehberi ve takip şablonlarını içeren eksiksiz {regulation} Uçuş Tazminat Kiti. PDF olarak indirin ve kendiniz gönderin.
             </p>
-            <button className="btn-diy" onClick={onGetLetter}>
+            <button className="btn-diy" onClick={() => {
+              // eslint-disable-next-line no-console
+              console.log('[GA4 debug] verdict-page paid kit button clicked');
+              trackEvent('kit_purchase_started');
+              onGetLetter();
+            }}>
               Uçuş Tazminat Kitini Al — $14.99
             </button>
           </div>
@@ -1108,9 +1113,7 @@ export default function TurkishHome() {
   }
 
   async function handlePay() {
-    // Fire kit_purchase_started immediately — before any async work so it fires
-    // even if the Stripe checkout creation fails later.
-    trackEvent('kit_purchase_started');
+    // kit_purchase_started is fired on the btn-diy click in ResultsScreen (not here).
 
     const payload = { answers, result, details };
     sessionStorage.setItem('fc_claim_tr', JSON.stringify(payload));
